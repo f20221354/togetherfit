@@ -1,0 +1,54 @@
+export type ModuleKey =
+  | "sanctuary"
+  | "posture"
+  | "urgesurfer"
+  | "circadian"
+  | "microStroll";
+
+export type ScoreKey = "posture" | "focus" | "movement" | "circadian" | "recovery";
+
+export type EventType =
+  | "sunlight_completed"
+  | "walk_completed"
+  | "breathing_completed"
+  | "grounding_completed"
+  | "hydration_logged"
+  | "posture_corrected"
+  | "slouch_detected"
+  | "doomscroll_detected"
+  | "focus_session_completed"
+  | "sleep_window_completed"
+  | "urge_reset_completed"
+  | "morning_light_completed"
+  | "evening_dim_recommended";
+
+export type EventSeverity = "positive" | "info" | "warning";
+
+export interface WellnessEvent {
+  id: string;
+  timestamp: string;
+  module: ModuleKey;
+  type: EventType;
+  severity: EventSeverity;
+  label: string;
+  duration?: number;
+  scoreImpact: Partial<Record<ScoreKey, number>>;
+}
+
+export interface Habits {
+  hydrated: boolean;
+  stretched: boolean;
+  sunlightWalk: boolean;
+  noDoomscroll: boolean;
+}
+
+export interface RecommendationCard {
+  id: string;
+  reason: string;
+  metric: string;
+  action: string;
+  ctaLabel: string;
+  destination: ModuleKey;
+}
+
+export type ThemeMode = "light" | "dark";
