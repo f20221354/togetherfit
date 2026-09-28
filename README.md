@@ -77,7 +77,7 @@ The Move & Coach chat (`/move/coach`) calls a server route at
 `/api/coach` with a resilient 3-tier fallback, so it always responds:
 
 1. **Groq (free tier)** — if `GROQ_API_KEY` is set as an environment
-   variable, responses come from Groq's hosted `llama-3.1-8b-instant`
+   variable, responses come from Groq's hosted `openai/gpt-oss-20b`
    model. This is the only tier that works on a deployed site, since
    Vercel's servers can't reach a local machine. Get a free key at
    [console.groq.com/keys](https://console.groq.com/keys) and add it
