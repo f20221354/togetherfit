@@ -79,15 +79,23 @@ export default function SettingsPage() {
           <span className="text-muted">Email</span>
           <span className="text-foreground">{user?.email ?? "—"}</span>
         </div>
-        <button
-          onClick={() => {
-            logOut();
-            router.push("/login");
-          }}
-          className="self-start rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
-        >
-          Log Out
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => router.push("/personal")}
+            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
+          >
+            👤 My Profile &amp; Modules
+          </button>
+          <button
+            onClick={() => {
+              logOut();
+              router.push("/login");
+            }}
+            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
+          >
+            Log Out
+          </button>
+        </div>
       </SettingsSection>
 
       <SettingsSection title="Camera & Privacy">
