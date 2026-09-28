@@ -27,6 +27,7 @@ interface MoveState {
 
   addExerciseToDraft: (exerciseSlug: string) => void;
   removeExerciseFromDraft: (exerciseSlug: string) => void;
+  reorderDraft: (fromIndex: number, toIndex: number) => void;
   clearDraft: () => void;
 
   createGoal: (goal: Omit<Goal, "id" | "createdAt">) => void;
@@ -94,6 +95,23 @@ export const useMoveStore = create<MoveState>()(
         set((state) => ({
           customWorkoutDraft: state.customWorkoutDraft.filter((e) => e.exerciseSlug !== exerciseSlug),
         })),
+
+      reorderDraft: (fromIndex, toIndex) =>
+        set((state) => {
+          if (
+            fromIndex === toIndex ||
+            fromIndex < 0 ||
+            toIndex < 0 ||
+            fromIndex >= state.customWorkoutDraft.length ||
+            toIndex >= state.customWorkoutDraft.length
+          ) {
+            return state;
+          }
+          const next = [...state.customWorkoutDraft];
+          const [moved] = next.splice(fromIndex, 1);
+          next.splice(toIndex, 0, moved);
+          return { customWorkoutDraft: next };
+        }),
 
       clearDraft: () => set({ customWorkoutDraft: [] }),
 

@@ -12,14 +12,73 @@ import { WorkoutTemplate } from "@/lib/move/types";
 
 type Stage = "select" | "player" | "complete";
 
+function DraftExerciseRow({
+  slug,
+  sets,
+  reps,
+  index,
+  draggedIndex,
+  onDragStart,
+  onDrop,
+  onDragEnd,
+  onRemove,
+}: {
+  slug: string;
+  sets: number;
+  reps: string;
+  index: number;
+  draggedIndex: number | null;
+  onDragStart: (index: number) => void;
+  onDrop: (index: number) => void;
+  onDragEnd: () => void;
+  onRemove: (slug: string) => void;
+}) {
+  const exercise = getExerciseBySlug(slug);
+  if (!exercise) return null;
+
+  return (
+    <div
+      draggable
+      onDragStart={() => onDragStart(index)}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={() => onDrop(index)}
+      onDragEnd={onDragEnd}
+      className={`flex items-center gap-3 rounded-xl border bg-surface px-3 py-2.5 transition-colors ${
+        draggedIndex === index ? "border-accent/50 opacity-60" : "border-border"
+      }`}
+    >
+      <span className="cursor-grab select-none text-muted" aria-hidden="true">
+        ⋮⋮
+      </span>
+      <ExerciseAnimation motionType={exercise.motion} size={44} />
+      <div className="flex-1">
+        <div className="text-sm font-medium text-foreground">{exercise.name}</div>
+        <div className="text-xs text-muted">
+          {sets} × {reps}
+        </div>
+      </div>
+      <button
+        onClick={() => onRemove(slug)}
+        aria-label={`Remove ${exercise.name}`}
+        className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-foreground"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 export default function WorkoutPage() {
   const logWorkoutSession = useMoveStore((s) => s.logWorkoutSession);
   const workoutHistory = useMoveStore((s) => s.workoutHistory);
   const customWorkoutDraft = useMoveStore((s) => s.customWorkoutDraft);
   const clearDraft = useMoveStore((s) => s.clearDraft);
+  const removeExerciseFromDraft = useMoveStore((s) => s.removeExerciseFromDraft);
+  const reorderDraft = useMoveStore((s) => s.reorderDraft);
   const logWellnessEvent = useWellnessStore((s) => s.logEvent);
 
   const [stage, setStage] = useState<Stage>("select");
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [template, setTemplate] = useState<WorkoutTemplate | null>(null);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [completedSets, setCompletedSets] = useState(0);
@@ -59,17 +118,26 @@ export default function WorkoutPage() {
         {customWorkoutDraft.length > 0 && (
           <div className="rounded-2xl border border-accent/30 bg-accent/5 p-5">
             <div className="mb-1 text-sm font-semibold text-foreground">My Custom Workout</div>
-            <div className="mb-3 text-xs text-muted">{customWorkoutDraft.length} exercises added from the library</div>
-            <ol className="mb-4 flex flex-col gap-1 text-xs text-muted">
-              {customWorkoutDraft.map((ex, i) => {
-                const exercise = getExerciseBySlug(ex.exerciseSlug);
-                return (
-                  <li key={i}>
-                    {i + 1}. {exercise?.name} — {ex.sets} × {ex.reps}
-                  </li>
-                );
-              })}
-            </ol>
+            <div className="mb-3 text-xs text-muted">{customWorkoutDraft.length} exercises added from the library — drag ⋮⋮ to reorder</div>
+            <div className="mb-4 flex flex-col gap-2">
+              {customWorkoutDraft.map((ex, i) => (
+                <DraftExerciseRow
+                  key={ex.exerciseSlug}
+                  slug={ex.exerciseSlug}
+                  sets={ex.sets}
+                  reps={ex.reps}
+                  index={i}
+                  draggedIndex={draggedIndex}
+                  onDragStart={setDraggedIndex}
+                  onDrop={(toIndex) => {
+                    if (draggedIndex !== null) reorderDraft(draggedIndex, toIndex);
+                    setDraggedIndex(null);
+                  }}
+                  onDragEnd={() => setDraggedIndex(null)}
+                  onRemove={removeExerciseFromDraft}
+                />
+              ))}
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() =>
