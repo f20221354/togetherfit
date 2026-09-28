@@ -57,12 +57,20 @@ export default function CircadianPage() {
       {!circadianMorningLightDone && (environmentalLight === "bright" || environmentalLight === "optimal") && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4 text-sm">
           <span className="text-foreground">Good time for a sunlight walk.</span>
-          <Link
-            href="/move/activity/walk"
-            className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
-          >
-            Start Sunlight Walk
-          </Link>
+          <div className="flex shrink-0 gap-2">
+            <Link
+              href="/move/walk"
+              className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
+            >
+              Start Sunlight Walk
+            </Link>
+            <Link
+              href="/connect/discover?activity=walking"
+              className="rounded-full border border-accent/40 px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/10"
+            >
+              Find Walking Partner
+            </Link>
+          </div>
         </div>
       )}
 

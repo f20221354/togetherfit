@@ -29,7 +29,7 @@ export default function ConnectDashboardPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <div className="flex items-start justify-between gap-3">
         <PageHeader icon="🤝" title="Activity" subtitle="Find an activity, and people who fit your wellness routine." />
-        <Link href="/move/activity/my-profile" className="mt-1 shrink-0 text-xs font-medium text-accent-foreground hover:underline">
+        <Link href="/connect/my-profile" className="mt-1 shrink-0 text-xs font-medium text-accent-foreground hover:underline">
           My Profile →
         </Link>
       </div>
@@ -40,7 +40,7 @@ export default function ConnectDashboardPage() {
           {QUICK_ACTIVITIES.map((activity) => (
             <Link
               key={activity}
-              href={activity === "walking" ? "/move/activity/walk" : `/move/activity/discover?activity=${activity}`}
+              href={activity === "walking" ? "/move/walk" : `/connect/discover?activity=${activity}`}
               className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 text-center text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-surface-2"
             >
               <span className="text-2xl">{ACTIVITY_META[activity].icon}</span>
@@ -57,7 +57,7 @@ export default function ConnectDashboardPage() {
             {upcomingPlans.map((plan) => (
               <Link
                 key={plan.id}
-                href={`/move/activity/plan/${plan.id}`}
+                href={`/connect/plan/${plan.id}`}
                 className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
               >
                 <div>
@@ -78,7 +78,7 @@ export default function ConnectDashboardPage() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Suggested Partners</h2>
-          <Link href="/move/activity/discover" className="text-xs font-medium text-accent-foreground hover:underline">
+          <Link href="/connect/discover" className="text-xs font-medium text-accent-foreground hover:underline">
             Find more →
           </Link>
         </div>
@@ -86,7 +86,7 @@ export default function ConnectDashboardPage() {
           {suggested.map(({ partner, score }) => (
             <Link
               key={partner.id}
-              href={`/move/activity/profile/${partner.id}`}
+              href={`/connect/profile/${partner.id}`}
               className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
             >
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-2 text-xl">
@@ -114,7 +114,7 @@ export default function ConnectDashboardPage() {
               return (
                 <Link
                   key={id}
-                  href={`/move/activity/profile/${id}`}
+                  href={`/connect/profile/${id}`}
                   className="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
                 >
                   <span>{partner.avatar}</span>
@@ -133,7 +133,7 @@ export default function ConnectDashboardPage() {
             {groupPlans.map((plan) => (
               <Link
                 key={plan.id}
-                href={`/move/activity/plan/${plan.id}`}
+                href={`/connect/plan/${plan.id}`}
                 className="rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
               >
                 <div className="text-sm font-medium text-foreground">

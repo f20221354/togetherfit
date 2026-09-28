@@ -3,17 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import clsx from "clsx";
-import { useMoveStore } from "@/lib/store/moveStore";
+import { useConnectStore } from "@/lib/store/connectStore";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { getTrainer } from "@/lib/move/trainers";
 
 export default function TrainerSessionChatPage() {
   const params = useParams<{ requestId: string }>();
   const router = useRouter();
-  const trainerRequests = useMoveStore((s) => s.trainerRequests);
-  const trainerMessages = useMoveStore((s) => s.trainerMessages);
-  const sendTrainerMessage = useMoveStore((s) => s.sendTrainerMessage);
-  const respondTrainerRequest = useMoveStore((s) => s.respondTrainerRequest);
+  const trainerRequests = useConnectStore((s) => s.trainerRequests);
+  const trainerMessages = useConnectStore((s) => s.trainerMessages);
+  const sendTrainerMessage = useConnectStore((s) => s.sendTrainerMessage);
+  const respondTrainerRequest = useConnectStore((s) => s.respondTrainerRequest);
   const logWellnessEvent = useWellnessStore((s) => s.logEvent);
 
   const [draft, setDraft] = useState("");
@@ -40,13 +40,13 @@ export default function TrainerSessionChatPage() {
   function markComplete() {
     logWellnessEvent("trainer_session_completed", { duration: 2700 });
     respondTrainerRequest(request!.id, "completed");
-    router.push("/move/trainers");
+    router.push("/connect/trainers");
   }
 
   return (
     <div className="mx-auto flex h-[calc(100vh-12rem)] max-w-2xl flex-col rounded-2xl border border-border bg-surface">
       <div className="flex items-center gap-3 border-b border-border p-4">
-        <button onClick={() => router.push(`/move/trainers/${trainer.id}`)} className="text-muted hover:text-foreground">
+        <button onClick={() => router.push(`/connect/trainers/${trainer.id}`)} className="text-muted hover:text-foreground">
           ←
         </button>
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-lg">

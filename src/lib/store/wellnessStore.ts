@@ -105,43 +105,43 @@ const EVENT_CATALOG: Record<EventType, EventConfig> = {
     scoreImpact: { posture: 4 },
   },
   run_completed: {
-    module: "move",
+    module: "connect",
     severity: "positive",
     label: "Run completed with a wellness partner",
     scoreImpact: { movement: 12, recovery: 3 },
   },
   gym_session_completed: {
-    module: "move",
+    module: "connect",
     severity: "positive",
     label: "Gym session completed with a wellness partner",
     scoreImpact: { movement: 10, recovery: 4 },
   },
   cycling_completed: {
-    module: "move",
+    module: "connect",
     severity: "positive",
     label: "Cycling session completed with a wellness partner",
     scoreImpact: { movement: 10, circadian: 3 },
   },
   yoga_completed: {
-    module: "move",
+    module: "connect",
     severity: "positive",
     label: "Yoga session completed with a wellness partner",
     scoreImpact: { recovery: 8, focus: 4 },
   },
   sports_completed: {
-    module: "move",
+    module: "connect",
     severity: "positive",
     label: "Sports session completed with a wellness partner",
     scoreImpact: { movement: 10, recovery: 3 },
   },
   hiking_completed: {
-    module: "move",
+    module: "connect",
     severity: "positive",
     label: "Hike completed with a wellness partner",
     scoreImpact: { movement: 12, circadian: 6 },
   },
   group_activity_completed: {
-    module: "move",
+    module: "connect",
     severity: "positive",
     label: "Group wellness activity completed",
     scoreImpact: { movement: 8, recovery: 4, focus: 2 },
@@ -153,10 +153,16 @@ const EVENT_CATALOG: Record<EventType, EventConfig> = {
     scoreImpact: { movement: 10, recovery: 4 },
   },
   trainer_session_completed: {
-    module: "move",
+    module: "connect",
     severity: "positive",
     label: "Trainer session completed",
     scoreImpact: { movement: 10, recovery: 5, focus: 3 },
+  },
+  rhythm_reset_completed: {
+    module: "urgesurfer",
+    severity: "positive",
+    label: "Rhythm reset completed",
+    scoreImpact: { recovery: 7, focus: 4 },
   },
 };
 
@@ -351,6 +357,7 @@ export const MODULE_LABELS: Record<ModuleKey, string> = {
   urgesurfer: "UrgeSurfer",
   circadian: "Circadian Arc",
   move: "Move & Coach",
+  connect: "Connect",
 };
 
 export const MODULE_ROUTES: Record<ModuleKey, string> = {
@@ -359,4 +366,5 @@ export const MODULE_ROUTES: Record<ModuleKey, string> = {
   urgesurfer: "/urgesurfer",
   circadian: "/circadian",
   move: "/move",
+  connect: "/connect",
 };

@@ -13,9 +13,18 @@ import {
   TimeOfDay,
 } from "@/lib/connect/types";
 import { MOCK_PARTNERS } from "@/lib/connect/mockPartners";
+import { TrainerSessionRequest, TrainerSessionStatus } from "@/lib/move/types";
 
 function makeId(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export interface TrainerChatMessage {
+  id: string;
+  conversationId: string;
+  sender: "me" | "trainer";
+  text: string;
+  timestamp: string;
 }
 
 interface WellnessProfile {
@@ -39,6 +48,16 @@ interface ConnectState {
   messages: ChatMessage[];
   plans: PlannedActivity[];
   profile: WellnessProfile;
+  trainerConnections: string[]; // trainer ids
+  trainerRequests: TrainerSessionRequest[];
+  trainerMessages: TrainerChatMessage[];
+
+  requestTrainerSession: (
+    trainerId: string,
+    request: Omit<TrainerSessionRequest, "id" | "createdAt" | "trainerId" | "status" | "conversationId">
+  ) => void;
+  respondTrainerRequest: (requestId: string, status: TrainerSessionStatus) => void;
+  sendTrainerMessage: (conversationId: string, text: string) => void;
 
   setCriteria: (patch: Partial<SearchCriteria>) => void;
   sendRequest: (partnerId: string, message?: string) => ConnectionRequest;
@@ -85,6 +104,67 @@ export const useConnectStore = create<ConnectState>()(
       messages: [],
       plans: [],
       profile: DEFAULT_PROFILE,
+      trainerConnections: [],
+      trainerRequests: [],
+      trainerMessages: [],
+
+      requestTrainerSession: (trainerId, request) => {
+        const id = makeId("trainerreq");
+        set((state) => ({
+          trainerRequests: [
+            {
+              id,
+              trainerId,
+              status: "requested",
+              conversationId: makeId("tconv"),
+              createdAt: new Date().toISOString(),
+              ...request,
+            },
+            ...state.trainerRequests,
+          ],
+        }));
+        setTimeout(() => {
+          const current = get().trainerRequests.find((r) => r.id === id);
+          if (current && current.status === "requested") get().respondTrainerRequest(id, "confirmed");
+        }, 1500);
+      },
+
+      respondTrainerRequest: (requestId, status) =>
+        set((state) => ({
+          trainerRequests: state.trainerRequests.map((r) => (r.id === requestId ? { ...r, status } : r)),
+          trainerConnections:
+            status === "confirmed"
+              ? Array.from(
+                  new Set([
+                    ...state.trainerConnections,
+                    state.trainerRequests.find((r) => r.id === requestId)?.trainerId ?? "",
+                  ])
+                ).filter(Boolean)
+              : state.trainerConnections,
+        })),
+
+      sendTrainerMessage: (conversationId, text) => {
+        set((state) => ({
+          trainerMessages: [
+            ...state.trainerMessages,
+            { id: makeId("tmsg"), conversationId, sender: "me", text, timestamp: new Date().toISOString() },
+          ],
+        }));
+        setTimeout(() => {
+          set((state) => ({
+            trainerMessages: [
+              ...state.trainerMessages,
+              {
+                id: makeId("tmsg"),
+                conversationId,
+                sender: "trainer",
+                text: "Sounds good — see you then. Let me know if anything changes.",
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          }));
+        }, 1200);
+      },
 
       setCriteria: (patch) => set((state) => ({ criteria: { ...state.criteria, ...patch } })),
 

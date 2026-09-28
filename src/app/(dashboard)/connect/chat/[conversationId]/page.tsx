@@ -70,13 +70,13 @@ export default function ChatPage() {
     const eventType = ACTIVITY_COMPLETION_EVENT[conversation!.activity];
     if (eventType) logEvent(eventType, { duration: 900 });
     if (plan) completeActivity(plan.id);
-    router.push("/move/activity");
+    router.push("/connect");
   }
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-2xl flex-col rounded-2xl border border-border bg-surface">
       <div className="flex items-center gap-3 border-b border-border p-4">
-        <button onClick={() => router.push("/move/activity")} className="text-muted hover:text-foreground">
+        <button onClick={() => router.push("/connect")} className="text-muted hover:text-foreground">
           ←
         </button>
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-lg">
@@ -101,7 +101,7 @@ export default function ChatPage() {
                 <button
                   onClick={() => {
                     leaveGroup(plan.id);
-                    router.push("/move/activity");
+                    router.push("/connect");
                   }}
                   className="block w-full rounded-lg px-3 py-2 text-left text-xs text-foreground hover:bg-surface-2"
                 >
@@ -109,7 +109,7 @@ export default function ChatPage() {
                 </button>
               )}
               <button
-                onClick={() => router.push("/move/activity")}
+                onClick={() => router.push("/connect")}
                 className="block w-full rounded-lg px-3 py-2 text-left text-xs text-foreground hover:bg-surface-2"
               >
                 Leave Conversation
@@ -117,7 +117,7 @@ export default function ChatPage() {
               <button
                 onClick={() => {
                   blockUser(partner.id);
-                  router.push("/move/activity");
+                  router.push("/connect");
                 }}
                 className="block w-full rounded-lg px-3 py-2 text-left text-xs text-danger hover:bg-danger/10"
               >

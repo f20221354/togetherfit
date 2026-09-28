@@ -67,7 +67,7 @@ export default function TrainersPage() {
         {filtered.map((trainer) => (
           <Link
             key={trainer.id}
-            href={`/move/trainers/${trainer.id}`}
+            href={`/connect/trainers/${trainer.id}`}
             className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5 hover:bg-surface-2"
           >
             <div className="flex items-center gap-3">

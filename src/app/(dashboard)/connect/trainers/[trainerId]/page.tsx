@@ -5,14 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { getTrainer } from "@/lib/move/trainers";
-import { useMoveStore } from "@/lib/store/moveStore";
+import { useConnectStore } from "@/lib/store/connectStore";
 
 export default function TrainerProfilePage() {
   const params = useParams<{ trainerId: string }>();
   const router = useRouter();
   const trainer = getTrainer(params.trainerId);
-  const requestTrainerSession = useMoveStore((s) => s.requestTrainerSession);
-  const trainerRequests = useMoveStore((s) => s.trainerRequests);
+  const requestTrainerSession = useConnectStore((s) => s.requestTrainerSession);
+  const trainerRequests = useConnectStore((s) => s.trainerRequests);
 
   const [showRequest, setShowRequest] = useState(false);
   const [date, setDate] = useState("Saturday");
@@ -84,7 +84,7 @@ export default function TrainerProfilePage() {
           </div>
           {existingRequest.status !== "requested" && (
             <button
-              onClick={() => router.push(`/move/trainers/session/${existingRequest.id}`)}
+              onClick={() => router.push(`/connect/trainers/session/${existingRequest.id}`)}
               className="mt-3 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
             >
               Message

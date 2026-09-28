@@ -52,7 +52,7 @@ export function CompletionScreen({
       )}
 
       <Link
-        href="/move/activity/walk"
+        href="/move/walk"
         className="rounded-full border border-accent/30 bg-accent/10 px-4 py-2 text-xs font-medium text-accent-foreground hover:bg-accent/20"
       >
         Ready for a short movement break?

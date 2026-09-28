@@ -82,7 +82,7 @@ export default function MicroStrollWalkPage() {
         >
           {running ? "Cancel Walk" : "Start Walk"}
         </button>
-        <Link href="/move/activity/discover?activity=walking" className="text-xs font-medium text-accent-foreground hover:underline">
+        <Link href="/connect/discover?activity=walking" className="text-xs font-medium text-accent-foreground hover:underline">
           Find Someone to Join
         </Link>
         <button
@@ -103,7 +103,7 @@ export default function MicroStrollWalkPage() {
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4">
           <div className="text-sm text-foreground">Nice walk! Want company next time?</div>
           <Link
-            href="/move/activity/discover?activity=walking"
+            href="/connect/discover?activity=walking"
             className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
           >
             Find a Walking Partner

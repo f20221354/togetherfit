@@ -5,7 +5,7 @@ import { useWellnessStore } from "@/lib/store/wellnessStore";
 
 const ACTIONS = [
   { label: "Start 90s Reset", type: "urge_reset_completed" as const, href: "/urgesurfer" },
-  { label: "Start Sunlight Walk", type: "walk_completed" as const, href: "/move/activity/walk" },
+  { label: "Start Sunlight Walk", type: "walk_completed" as const, href: "/move/walk" },
   { label: "Check Posture", type: "posture_corrected" as const, href: "/posture" },
   { label: "Log Hydration", type: "hydration_logged" as const, href: "/sanctuary" },
   { label: "View Circadian Plan", type: null, href: "/circadian" },

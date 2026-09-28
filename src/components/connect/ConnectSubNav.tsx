@@ -5,21 +5,19 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
 const TABS = [
-  { label: "Overview", href: "/move" },
-  { label: "Goals", href: "/move/goals" },
-  { label: "AI Coach", href: "/move/coach" },
-  { label: "Workout", href: "/move/workout" },
-  { label: "Exercises", href: "/move/exercises" },
-  { label: "Progress", href: "/move/progress" },
+  { label: "Find Partners", href: "/connect" },
+  { label: "Discover", href: "/connect/discover" },
+  { label: "Trainers", href: "/connect/trainers" },
+  { label: "My Profile", href: "/connect/my-profile" },
 ];
 
-export function MoveSubNav() {
+export function ConnectSubNav() {
   const pathname = usePathname();
 
   return (
     <nav className="-mx-4 mb-6 flex gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
       {TABS.map((tab) => {
-        const active = tab.href === "/move" ? pathname === "/move" : pathname.startsWith(tab.href);
+        const active = tab.href === "/connect" ? pathname === "/connect" : pathname.startsWith(tab.href);
         return (
           <Link
             key={tab.href}

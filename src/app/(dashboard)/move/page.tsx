@@ -41,6 +41,14 @@ export default function MoveOverviewPage() {
   const upcomingPlan = plans.find((p) => p.status === "upcoming");
   const partnerPreview = MOCK_PARTNERS.slice(0, 3);
 
+  const runningGoal = goals.find((g) => g.label.toLowerCase().includes("run"));
+  const gymGoal = goals.find((g) => /gym|strength/.test(g.label.toLowerCase()));
+  const partnerSuggestion = runningGoal
+    ? { label: "Find Running Partner", activity: "running" }
+    : gymGoal
+      ? { label: "Find Gym Partner", activity: "gym" }
+      : { label: "Find a Partner", activity: "running" };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -63,7 +71,7 @@ export default function MoveOverviewPage() {
           <span>{progressPct}%</span>
         </div>
         <Link
-          href="/move/activity"
+          href="/connect"
           className="mt-4 inline-block rounded-full bg-accent px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
         >
           Continue Activity
@@ -105,7 +113,7 @@ export default function MoveOverviewPage() {
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Activity Partners</h2>
           {upcomingPlan && (
-            <Link href={`/move/activity/plan/${upcomingPlan.id}`} className="text-xs font-medium text-accent-foreground hover:underline">
+            <Link href={`/connect/plan/${upcomingPlan.id}`} className="text-xs font-medium text-accent-foreground hover:underline">
               View upcoming →
             </Link>
           )}
@@ -114,7 +122,7 @@ export default function MoveOverviewPage() {
           {partnerPreview.map((p) => (
             <Link
               key={p.id}
-              href={`/move/activity/profile/${p.id}`}
+              href={`/connect/profile/${p.id}`}
               className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
             >
               <span>{p.avatar}</span>
@@ -122,10 +130,10 @@ export default function MoveOverviewPage() {
             </Link>
           ))}
           <Link
-            href="/move/activity/discover"
+            href={`/connect/discover?activity=${partnerSuggestion.activity}`}
             className="rounded-full bg-accent/15 px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent/25"
           >
-            Find a Partner
+            {partnerSuggestion.label}
           </Link>
         </div>
         {connections.length > 0 && (
@@ -138,7 +146,7 @@ export default function MoveOverviewPage() {
         <p className="text-sm text-foreground">Need expert guidance?</p>
         <p className="mb-3 text-xs text-muted">{TRAINERS.length} demo trainers available for strength, running, and mobility coaching.</p>
         <Link
-          href="/move/trainers"
+          href="/connect/trainers"
           className="inline-block rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
         >
           Find a Personal Trainer

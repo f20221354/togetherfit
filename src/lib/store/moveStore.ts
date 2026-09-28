@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Goal, GoalType, TrainerSessionRequest, TrainerSessionStatus, WorkoutExercise, WorkoutSession } from "@/lib/move/types";
+import { Goal, GoalType, WorkoutExercise, WorkoutSession } from "@/lib/move/types";
 import { getExerciseBySlug } from "@/lib/move/exercises";
 
 function makeId(prefix: string) {
@@ -17,21 +17,10 @@ export interface CoachChatMessage {
   workoutTemplateId?: string;
 }
 
-export interface TrainerChatMessage {
-  id: string;
-  conversationId: string;
-  sender: "me" | "trainer";
-  text: string;
-  timestamp: string;
-}
-
 interface MoveState {
   goals: Goal[];
   workoutHistory: WorkoutSession[];
   coachChat: CoachChatMessage[];
-  trainerConnections: string[]; // trainer ids
-  trainerRequests: TrainerSessionRequest[];
-  trainerMessages: TrainerChatMessage[];
   todayGoalMinutes: number; // "Today's Goal" target, e.g. 30
   todayMovedMinutes: number;
   customWorkoutDraft: WorkoutExercise[];
@@ -48,10 +37,6 @@ interface MoveState {
 
   sendCoachMessage: (text: string) => void;
   appendCoachReply: (text: string, workoutTemplateId?: string) => void;
-
-  requestTrainerSession: (trainerId: string, request: Omit<TrainerSessionRequest, "id" | "createdAt" | "trainerId" | "status" | "conversationId">) => void;
-  respondTrainerRequest: (requestId: string, status: TrainerSessionStatus) => void;
-  sendTrainerMessage: (conversationId: string, text: string) => void;
 
   addMovementMinutes: (minutes: number) => void;
   seedDemoWorkouts: () => void;
@@ -84,13 +69,10 @@ const DEFAULT_GOALS: Goal[] = [
 
 export const useMoveStore = create<MoveState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       goals: DEFAULT_GOALS,
       workoutHistory: [],
       coachChat: [],
-      trainerConnections: [],
-      trainerRequests: [],
-      trainerMessages: [],
       todayGoalMinutes: 30,
       todayMovedMinutes: 0,
       customWorkoutDraft: [],
@@ -152,77 +134,21 @@ export const useMoveStore = create<MoveState>()(
           ],
         })),
 
-      requestTrainerSession: (trainerId, request) => {
-        const id = makeId("trainerreq");
-        set((state) => ({
-          trainerRequests: [
-            {
-              id,
-              trainerId,
-              status: "requested",
-              conversationId: makeId("tconv"),
-              createdAt: new Date().toISOString(),
-              ...request,
-            },
-            ...state.trainerRequests,
-          ],
-        }));
-        setTimeout(() => {
-          const current = get().trainerRequests.find((r) => r.id === id);
-          if (current && current.status === "requested") get().respondTrainerRequest(id, "confirmed");
-        }, 1500);
-      },
-
-      respondTrainerRequest: (requestId, status) =>
-        set((state) => ({
-          trainerRequests: state.trainerRequests.map((r) => (r.id === requestId ? { ...r, status } : r)),
-          trainerConnections:
-            status === "confirmed"
-              ? Array.from(
-                  new Set([
-                    ...state.trainerConnections,
-                    state.trainerRequests.find((r) => r.id === requestId)?.trainerId ?? "",
-                  ])
-                ).filter(Boolean)
-              : state.trainerConnections,
-        })),
-
       addMovementMinutes: (minutes) =>
         set((state) => ({ todayMovedMinutes: state.todayMovedMinutes + minutes })),
 
       seedDemoWorkouts: () => {
-        if (get().workoutHistory.length > 0) return;
-        const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
-        set({
-          workoutHistory: [
-            { id: makeId("workout"), timestamp: daysAgo(0), templateId: "full-body-25", templateName: "Full Body", durationMinutes: 25, exerciseCount: 5, setCount: 13, completed: true },
-            { id: makeId("workout"), timestamp: daysAgo(2), templateId: "lower-body-20", templateName: "Lower Body", durationMinutes: 20, exerciseCount: 4, setCount: 12, completed: true },
-            { id: makeId("workout"), timestamp: daysAgo(4), templateId: "core-15", templateName: "Core Focus", durationMinutes: 15, exerciseCount: 3, setCount: 9, completed: true },
-          ],
-        });
-      },
-
-      sendTrainerMessage: (conversationId, text) => {
-        set((state) => ({
-          trainerMessages: [
-            ...state.trainerMessages,
-            { id: makeId("tmsg"), conversationId, sender: "me", text, timestamp: new Date().toISOString() },
-          ],
-        }));
-        setTimeout(() => {
-          set((state) => ({
-            trainerMessages: [
-              ...state.trainerMessages,
-              {
-                id: makeId("tmsg"),
-                conversationId,
-                sender: "trainer",
-                text: "Sounds good — see you then. Let me know if anything changes.",
-                timestamp: new Date().toISOString(),
-              },
+        set((state) => {
+          if (state.workoutHistory.length > 0) return state;
+          const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+          return {
+            workoutHistory: [
+              { id: makeId("workout"), timestamp: daysAgo(0), templateId: "full-body-25", templateName: "Full Body", durationMinutes: 25, exerciseCount: 5, setCount: 13, completed: true },
+              { id: makeId("workout"), timestamp: daysAgo(2), templateId: "lower-body-20", templateName: "Lower Body", durationMinutes: 20, exerciseCount: 4, setCount: 12, completed: true },
+              { id: makeId("workout"), timestamp: daysAgo(4), templateId: "core-15", templateName: "Core Focus", durationMinutes: 15, exerciseCount: 3, setCount: 9, completed: true },
             ],
-          }));
-        }, 1200);
+          };
+        });
       },
     }),
     { name: "vitaos-move-store" }

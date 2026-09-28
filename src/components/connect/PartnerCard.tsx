@@ -62,7 +62,7 @@ export function PartnerCard({
 
       <div className="flex items-center gap-2">
         <Link
-          href={`/move/activity/profile/${partner.id}`}
+          href={`/connect/profile/${partner.id}`}
           className="flex-1 rounded-full border border-border px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-surface-2"
         >
           View Profile

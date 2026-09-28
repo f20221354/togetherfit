@@ -1,4 +1,4 @@
-export type ModuleKey = "sanctuary" | "posture" | "urgesurfer" | "circadian" | "move";
+export type ModuleKey = "sanctuary" | "posture" | "urgesurfer" | "circadian" | "move" | "connect";
 
 export type ScoreKey = "posture" | "focus" | "movement" | "circadian" | "recovery";
 
@@ -26,7 +26,8 @@ export type EventType =
   | "hiking_completed"
   | "group_activity_completed"
   | "workout_completed"
-  | "trainer_session_completed";
+  | "trainer_session_completed"
+  | "rhythm_reset_completed";
 
 export type EventSeverity = "positive" | "info" | "warning";
 
