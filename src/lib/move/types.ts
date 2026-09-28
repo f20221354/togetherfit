@@ -48,6 +48,7 @@ export interface Exercise {
   defaultReps: string; // "12" or "30 sec"
   instructions: string[];
   formCues: string[];
+  commonMistakes: string[];
 }
 
 export interface WorkoutExercise {

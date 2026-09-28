@@ -25,11 +25,20 @@ export default function ExerciseDetailPage() {
     <div className="mx-auto flex max-w-lg flex-col gap-6">
       <PageHeader icon="🏋️" title={exercise.name} subtitle={`${exercise.defaultSets} × ${exercise.defaultReps}`} />
 
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-8">
-        <ExerciseAnimation motionType={exercise.motion} size={130} />
-        <div className="flex flex-wrap justify-center gap-2">
+      <div className="rounded-2xl border border-border bg-surface p-6">
+        <div className="mb-4 flex flex-wrap justify-center gap-2">
           <Badge>{exercise.difficulty}</Badge>
           <Badge>{exercise.category.replace(/([A-Z])/g, " $1")}</Badge>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col items-center gap-2">
+            <ExerciseAnimation motionType={exercise.motion} size={110} variant="correct" />
+            <span className="text-xs font-semibold text-success">DO</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <ExerciseAnimation motionType={exercise.motion} size={110} variant="incorrect" />
+            <span className="text-xs font-semibold text-danger">DON&apos;T</span>
+          </div>
         </div>
       </div>
 
@@ -56,13 +65,29 @@ export default function ExerciseDetailPage() {
         </ol>
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-5">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">Common Form Cues</h3>
-        <ul className="flex flex-col gap-1.5 text-sm text-foreground">
-          {exercise.formCues.map((cue) => (
-            <li key={cue}>✓ {cue}</li>
-          ))}
-        </ul>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-success/30 bg-success/5 p-5">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-success">Do</h3>
+          <ul className="flex flex-col gap-1.5 text-sm text-foreground">
+            {exercise.formCues.map((cue) => (
+              <li key={cue} className="flex gap-2">
+                <span className="text-success">✓</span>
+                {cue}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-2xl border border-danger/30 bg-danger/5 p-5">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-danger">Don&apos;t</h3>
+          <ul className="flex flex-col gap-1.5 text-sm text-foreground">
+            {exercise.commonMistakes.map((mistake) => (
+              <li key={mistake} className="flex gap-2">
+                <span className="text-danger">✕</span>
+                {mistake}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <button

@@ -22,6 +22,7 @@ export const EXERCISES: Exercise[] = [
       "Return to the starting position.",
     ],
     formCues: ["Controlled movement", "Stable posture", "Comfortable range of motion"],
+    commonMistakes: ["Letting your knees cave inward", "Rounding your lower back", "Lifting your heels off the ground"],
   },
   {
     slug: "push-up",
@@ -39,6 +40,7 @@ export const EXERCISES: Exercise[] = [
       "Push back up to the starting position.",
     ],
     formCues: ["Controlled descent", "Straight body line", "Comfortable range of motion"],
+    commonMistakes: ["Letting your hips sag toward the floor", "Flaring elbows out too wide", "Only lowering halfway"],
   },
   {
     slug: "lunge",
@@ -57,6 +59,7 @@ export const EXERCISES: Exercise[] = [
       "Alternate legs.",
     ],
     formCues: ["Controlled step", "Stable posture", "Comfortable depth"],
+    commonMistakes: ["Letting your front knee travel past your toes", "Leaning your torso too far forward", "Taking a step that's too short"],
   },
   {
     slug: "plank",
@@ -74,6 +77,7 @@ export const EXERCISES: Exercise[] = [
       "Hold the position while breathing steadily.",
     ],
     formCues: ["Neutral spine", "Steady breathing", "Comfortable hold duration"],
+    commonMistakes: ["Letting your hips pike up into an upside-down V", "Letting your hips sag toward the floor", "Holding your breath"],
   },
   {
     slug: "glute-bridge",
@@ -91,6 +95,7 @@ export const EXERCISES: Exercise[] = [
       "Lower back down with control.",
     ],
     formCues: ["Controlled lift", "Engage glutes", "Comfortable range of motion"],
+    commonMistakes: ["Barely lifting your hips off the ground", "Overarching your lower back at the top", "Pushing through your toes instead of your heels"],
   },
   {
     slug: "jumping-jacks",
@@ -108,6 +113,7 @@ export const EXERCISES: Exercise[] = [
       "Repeat at a steady pace.",
     ],
     formCues: ["Steady rhythm", "Soft landings", "Comfortable pace"],
+    commonMistakes: ["Not raising your arms fully overhead", "Landing stiff-legged instead of softly", "Rushing the pace until form breaks down"],
   },
   {
     slug: "mountain-climbers",
@@ -125,6 +131,7 @@ export const EXERCISES: Exercise[] = [
       "Keep your core engaged throughout.",
     ],
     formCues: ["Steady pace", "Stable hips", "Comfortable range of motion"],
+    commonMistakes: ["Letting your hips pike up as you speed up", "Bouncing your hips side to side", "Losing the straight-line plank position"],
   },
   {
     slug: "bicycle-crunch",
@@ -142,6 +149,7 @@ export const EXERCISES: Exercise[] = [
       "Keep the movement controlled.",
     ],
     formCues: ["Controlled rotation", "Steady breathing", "Comfortable pace"],
+    commonMistakes: ["Pulling on your neck with your hands", "Rushing through reps without rotating", "Letting your lower back arch off the floor"],
   },
   {
     slug: "cat-cow",
@@ -159,6 +167,7 @@ export const EXERCISES: Exercise[] = [
       "Move slowly between positions.",
     ],
     formCues: ["Slow transitions", "Follow your breath", "Comfortable range of motion"],
+    commonMistakes: ["Bouncing quickly between positions", "Holding your breath instead of moving with it", "Forcing a bigger arch than feels comfortable"],
   },
   {
     slug: "shoulder-stretch",
@@ -176,6 +185,7 @@ export const EXERCISES: Exercise[] = [
       "Switch sides.",
     ],
     formCues: ["Gentle hold", "Steady breathing", "Comfortable tension only"],
+    commonMistakes: ["Bouncing or jerking into the stretch", "Pulling hard enough to feel sharp pain", "Shrugging your shoulder up toward your ear"],
   },
   {
     slug: "arm-circles",
@@ -192,6 +202,7 @@ export const EXERCISES: Exercise[] = [
       "Reverse direction halfway through.",
     ],
     formCues: ["Controlled motion", "Relaxed shoulders", "Comfortable range"],
+    commonMistakes: ["Shrugging your shoulders up toward your ears", "Swinging too fast for control", "Starting with circles too large before warming up"],
   },
   {
     slug: "wall-sit",
@@ -209,6 +220,7 @@ export const EXERCISES: Exercise[] = [
       "Slide back up to finish.",
     ],
     formCues: ["Steady breathing", "Comfortable hold duration", "Even weight distribution"],
+    commonMistakes: ["Letting your knees cave inward", "Sliding your feet too close to the wall", "Holding your breath during the hold"],
   },
 ];
 
