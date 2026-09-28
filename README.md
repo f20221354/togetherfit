@@ -142,6 +142,12 @@ src/
   storage), intentionally structured so a real auth provider can replace
   it later.
 
+## Credits
+
+Exercise demonstration photos in the Exercise Library are sourced from
+[free-exercise-db](https://github.com/yuhonas/free-exercise-db)
+(public domain / Unlicense).
+
 ## Deployment
 
 Deployed on [Vercel](https://vercel.com). Any push to `master` can be

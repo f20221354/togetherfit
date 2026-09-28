@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { PageHeader } from "@/components/shell/PageHeader";
-import { ExerciseAnimation } from "@/components/move/ExerciseAnimation";
+import { ExerciseThumb } from "@/components/move/ExerciseThumb";
 import { EXERCISES } from "@/lib/move/exercises";
 import { ExerciseCategory } from "@/lib/move/types";
 
@@ -66,7 +66,7 @@ export default function ExerciseLibraryPage() {
             href={`/move/exercises/${exercise.slug}`}
             className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 text-center hover:bg-surface-2"
           >
-            <ExerciseAnimation motionType={exercise.motion} size={64} />
+            <ExerciseThumb slug={exercise.slug} alt={exercise.name} size={64} />
             <div className="text-sm font-medium text-foreground">{exercise.name}</div>
             <div className="text-xs capitalize text-muted">{exercise.category.replace(/([A-Z])/g, " $1")}</div>
             <div className="text-xs capitalize text-muted">{exercise.difficulty}</div>
@@ -78,6 +78,14 @@ export default function ExerciseLibraryPage() {
         ))}
         {filtered.length === 0 && <p className="col-span-full text-sm text-muted">No exercises match your search.</p>}
       </div>
+
+      <p className="text-center text-xs text-muted">
+        Exercise photos courtesy of{" "}
+        <a href="https://github.com/yuhonas/free-exercise-db" className="underline hover:text-foreground">
+          free-exercise-db
+        </a>{" "}
+        (public domain).
+      </p>
     </div>
   );
 }
