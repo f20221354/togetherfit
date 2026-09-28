@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
-import { NAV_ITEMS } from "./navItems";
+import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS, PROFILE_ITEM } from "./navItems";
 import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
 
 function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
   return (
     <Link
       href={href}
+      aria-current={active ? "page" : undefined}
       className={clsx(
         "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
         active ? "bg-accent/15 text-accent-foreground" : "text-muted hover:bg-surface-2 hover:text-foreground"
@@ -27,9 +28,6 @@ export function Sidebar() {
   const user = useCurrentUser();
   const logOut = useAuthStore((s) => s.logOut);
 
-  const actionModules = NAV_ITEMS.filter((item) => item.key === "connect" || item.key === "move");
-  const wellnessModules = NAV_ITEMS.filter((item) => item.key !== "connect" && item.key !== "move");
-
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-surface px-3 py-6 md:flex">
       <div className="mb-8 flex items-center gap-2 px-3">
@@ -37,22 +35,28 @@ export function Sidebar() {
         <span className="text-lg font-semibold tracking-tight text-foreground">स्वस्थ Bharat</span>
       </div>
       <nav className="flex flex-1 flex-col gap-1">
-        <NavLink href="/" icon="🏠" label="Overview" active={pathname === "/"} />
+        <NavLink href={OVERVIEW_ITEM.href} icon={OVERVIEW_ITEM.icon} label={OVERVIEW_ITEM.label} active={pathname === "/"} />
 
         <div className="my-2 border-t border-border" />
 
-        {actionModules.map((item) => (
+        {ACTION_ITEMS.map((item) => (
           <NavLink key={item.key} href={item.href} icon={item.icon} label={item.label} active={pathname.startsWith(item.href)} />
         ))}
 
         <div className="my-2 border-t border-border" />
 
-        {wellnessModules.map((item) => (
+        {WELLNESS_ITEMS.map((item) => (
           <NavLink key={item.key} href={item.href} icon={item.icon} label={item.label} active={pathname.startsWith(item.href)} />
         ))}
       </nav>
 
       <div className="flex flex-col gap-1 border-t border-border pt-3">
+        <NavLink
+          href={PROFILE_ITEM.href}
+          icon={PROFILE_ITEM.icon}
+          label={PROFILE_ITEM.label}
+          active={pathname.startsWith(PROFILE_ITEM.href)}
+        />
         <NavLink href="/settings" icon="⚙️" label="Settings" active={pathname === "/settings"} />
         {user && (
           <button

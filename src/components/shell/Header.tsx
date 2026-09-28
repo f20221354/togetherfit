@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useTheme } from "next-themes";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
@@ -10,6 +10,7 @@ import { pickNextDemoEvent } from "@/lib/demoEngine";
 import { Badge } from "@/components/ui/Badge";
 import { CameraPrivacyIndicator } from "@/components/camera/CameraPrivacyIndicator";
 import { useIsClient } from "@/lib/useIsClient";
+import { MobileDrawer } from "./MobileDrawer";
 
 const RANGES: { key: "today" | "7d" | "30d"; label: string }[] = [
   { key: "today", label: "Today" },
@@ -28,6 +29,8 @@ export function Header() {
   const { resolvedTheme, setTheme } = useTheme();
   const tickIndex = useRef(0);
   const mounted = useIsClient();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (demoMode) seedDemoWorkouts();
@@ -44,8 +47,19 @@ export function Header() {
   }, [demoMode, logEvent]);
 
   return (
+    <>
     <header className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 md:px-6">
       <div className="flex items-center gap-2 md:hidden">
+        <button
+          ref={hamburgerRef}
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Open menu"
+          aria-expanded={drawerOpen}
+          aria-controls="mobile-nav-drawer"
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-lg text-foreground hover:bg-surface-2"
+        >
+          ☰
+        </button>
         <span className="text-xl">◈</span>
         <span className="text-base font-semibold text-foreground">स्वस्थ Bharat</span>
       </div>
@@ -83,5 +97,7 @@ export function Header() {
         </button>
       </div>
     </header>
+    <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} triggerRef={hamburgerRef} />
+    </>
   );
 }

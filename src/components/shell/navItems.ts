@@ -1,7 +1,5 @@
-import { ModuleKey } from "@/lib/types";
-
 export interface NavItem {
-  key: ModuleKey;
+  key: string;
   label: string;
   shortLabel: string;
   href: string;
@@ -26,3 +24,9 @@ export const NAV_ITEMS: NavItem[] = [
 export const PERSONAL_NAV_ITEMS: NavItem[] = NAV_ITEMS.filter(
   (item) => item.key !== "connect" && item.key !== "move"
 );
+
+/** Single shared config — desktop Sidebar and the mobile drawer both render from these, never a second list. */
+export const OVERVIEW_ITEM: NavItem = { key: "overview", label: "Overview", shortLabel: "Home", href: "/", icon: "🏠" };
+export const PROFILE_ITEM: NavItem = { key: "profile", label: "My Profile", shortLabel: "Profile", href: "/connect/my-profile", icon: "🎯" };
+export const ACTION_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.key === "connect" || item.key === "move");
+export const WELLNESS_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.key !== "connect" && item.key !== "move");
