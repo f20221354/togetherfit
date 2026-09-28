@@ -23,7 +23,7 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
       { exerciseSlug: "squat", sets: 3, reps: "15" },
       { exerciseSlug: "lunge", sets: 3, reps: "12" },
       { exerciseSlug: "glute-bridge", sets: 3, reps: "15" },
-      { exerciseSlug: "wall-sit", sets: 3, reps: "30 sec" },
+      { exerciseSlug: "step-up-knee-raise", sets: 3, reps: "12 each side" },
     ],
   },
   {
@@ -55,7 +55,7 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     category: "Mobility",
     durationMinutes: 10,
     exercises: [
-      { exerciseSlug: "cat-cow", sets: 1, reps: "8" },
+      { exerciseSlug: "superman", sets: 3, reps: "12" },
       { exerciseSlug: "shoulder-stretch", sets: 1, reps: "30 sec each side" },
       { exerciseSlug: "arm-circles", sets: 1, reps: "20 sec each direction" },
     ],
