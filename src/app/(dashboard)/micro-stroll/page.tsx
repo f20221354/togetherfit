@@ -49,7 +49,7 @@ export default function MicroStrollPage() {
         subtitle="A 15-minute sunlight walk matched to your schedule. Completion boosts Movement and Sunlight scores, and updates Sanctuary and Circadian Arc."
       />
 
-      <div className="flex flex-col items-center gap-6 rounded-3xl border border-white/10 bg-white/[0.03] p-10">
+      <div className="flex flex-col items-center gap-6 rounded-3xl border border-border bg-surface p-10">
         <span className="text-6xl">🚶</span>
         <span className="text-4xl font-semibold tabular-nums">{formatTime(secondsLeft)}</span>
         <div className="w-full max-w-sm">
@@ -65,7 +65,7 @@ export default function MicroStrollPage() {
               setRunning(true);
             }
           }}
-          className="rounded-full bg-emerald-400/15 px-8 py-3 text-sm font-semibold text-emerald-300 hover:bg-emerald-400/25"
+          className="rounded-full bg-accent/15 px-8 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/25"
         >
           {running ? "Cancel Walk" : "Start Sunlight Walk"}
         </button>
@@ -75,11 +75,11 @@ export default function MicroStrollPage() {
             setSecondsLeft(DURATION);
             logEvent("walk_completed", { duration: DURATION });
           }}
-          className="text-xs text-white/40 hover:text-white/70"
+          className="text-xs text-muted hover:text-muted"
         >
           Mark as already completed
         </button>
-        <div className="text-xs text-white/40">{microStrollMinutesToday} minutes walked today</div>
+        <div className="text-xs text-muted">{microStrollMinutesToday} minutes walked today</div>
       </div>
 
       <ActivityExplorer />

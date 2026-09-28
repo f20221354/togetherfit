@@ -10,14 +10,14 @@ export function ProgressBar({
   className?: string;
 }) {
   const toneClass = {
-    default: "bg-emerald-400",
-    good: "bg-emerald-400",
-    warning: "bg-amber-400",
-    critical: "bg-rose-400",
+    default: "bg-success",
+    good: "bg-success",
+    warning: "bg-warning",
+    critical: "bg-danger",
   }[tone];
 
   return (
-    <div className={clsx("h-2 w-full rounded-full bg-white/10", className)}>
+    <div className={clsx("h-2 w-full rounded-full bg-surface-2", className)}>
       <div
         className={clsx("h-2 rounded-full transition-all duration-500", toneClass)}
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}

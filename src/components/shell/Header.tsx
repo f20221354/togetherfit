@@ -2,9 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import clsx from "clsx";
+import { useTheme } from "next-themes";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
+import { useCameraStore } from "@/lib/store/cameraStore";
 import { pickNextDemoEvent } from "@/lib/demoEngine";
 import { Badge } from "@/components/ui/Badge";
+import { CameraPrivacyIndicator } from "@/components/camera/CameraPrivacyIndicator";
+import { useIsClient } from "@/lib/useIsClient";
 
 const RANGES: { key: "today" | "7d" | "30d"; label: string }[] = [
   { key: "today", label: "Today" },
@@ -15,12 +19,13 @@ const RANGES: { key: "today" | "7d" | "30d"; label: string }[] = [
 export function Header() {
   const demoMode = useWellnessStore((s) => s.demoMode);
   const dateRange = useWellnessStore((s) => s.dateRange);
-  const theme = useWellnessStore((s) => s.theme);
   const toggleDemoMode = useWellnessStore((s) => s.toggleDemoMode);
   const setDateRange = useWellnessStore((s) => s.setDateRange);
-  const setTheme = useWellnessStore((s) => s.setTheme);
   const logEvent = useWellnessStore((s) => s.logEvent);
+  const monitoring = useCameraStore((s) => s.monitoring);
+  const { resolvedTheme, setTheme } = useTheme();
   const tickIndex = useRef(0);
+  const mounted = useIsClient();
 
   useEffect(() => {
     if (!demoMode) return;
@@ -32,25 +37,21 @@ export function Header() {
     return () => clearInterval(interval);
   }, [demoMode, logEvent]);
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
-
   return (
-    <header className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/20 px-4 py-3 md:px-6">
+    <header className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 md:px-6">
       <div className="flex items-center gap-2 md:hidden">
         <span className="text-xl">◈</span>
-        <span className="text-base font-semibold">VitaOS</span>
+        <span className="text-base font-semibold text-foreground">VitaOS</span>
       </div>
 
-      <div className="hidden items-center gap-1 rounded-full bg-white/5 p-1 md:flex">
+      <div className="hidden items-center gap-1 rounded-full bg-surface-2 p-1 md:flex">
         {RANGES.map((r) => (
           <button
             key={r.key}
             onClick={() => setDateRange(r.key)}
             className={clsx(
               "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-              dateRange === r.key ? "bg-white/15 text-white" : "text-white/50 hover:text-white/80"
+              dateRange === r.key ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground"
             )}
           >
             {r.label}
@@ -59,19 +60,20 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
+        <CameraPrivacyIndicator active={monitoring} />
         <Badge tone={demoMode ? "neutral" : "live"}>
-          <span className={clsx("h-1.5 w-1.5 rounded-full", demoMode ? "bg-white/30" : "bg-emerald-400")} />
+          <span className={clsx("h-1.5 w-1.5 rounded-full", demoMode ? "bg-muted" : "bg-success")} />
           LIVE
         </Badge>
         <button onClick={toggleDemoMode}>
           <Badge tone={demoMode ? "demo" : "neutral"}>⚡ DEMO {demoMode ? "ON" : "OFF"}</Badge>
         </button>
         <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="rounded-full bg-white/5 p-2 text-sm hover:bg-white/10"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="rounded-full bg-surface-2 p-2 text-sm text-foreground hover:bg-border"
           aria-label="Toggle theme"
         >
-          {theme === "dark" ? "☾" : "☀"}
+          {mounted ? (resolvedTheme === "dark" ? "☾" : "☀") : "◐"}
         </button>
       </div>
     </header>

@@ -8,11 +8,11 @@ export function Badge({
   tone?: "neutral" | "positive" | "warning" | "live" | "demo";
 }) {
   const toneClass = {
-    neutral: "bg-white/10 text-white/70",
-    positive: "bg-emerald-400/15 text-emerald-300",
-    warning: "bg-amber-400/15 text-amber-300",
-    live: "bg-emerald-400/15 text-emerald-300",
-    demo: "bg-violet-400/15 text-violet-300",
+    neutral: "bg-surface-2 text-muted",
+    positive: "bg-success/15 text-success",
+    warning: "bg-warning/15 text-warning",
+    live: "bg-success/15 text-success",
+    demo: "bg-accent/15 text-accent-foreground",
   }[tone];
 
   return (

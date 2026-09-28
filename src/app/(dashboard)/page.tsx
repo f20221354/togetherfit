@@ -12,21 +12,21 @@ export default function HomePage() {
       <GlobalScoreCard />
 
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">
           Module Overview
         </h2>
         <ModuleOverview />
       </section>
 
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">
           Quick Actions
         </h2>
         <QuickActions />
       </section>
 
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">
           Recommended For You
         </h2>
         <Recommendations />

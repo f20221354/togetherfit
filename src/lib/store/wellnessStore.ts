@@ -2,14 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import {
-  EventType,
-  Habits,
-  ModuleKey,
-  ScoreKey,
-  ThemeMode,
-  WellnessEvent,
-} from "../types";
+import { EventType, Habits, ModuleKey, ScoreKey, WellnessEvent } from "../types";
 import { applyScoreDelta, computeGlobalScore } from "../scoring";
 
 interface EventConfig {
@@ -99,7 +92,28 @@ const EVENT_CATALOG: Record<EventType, EventConfig> = {
     label: "Evening dim-down recommended",
     scoreImpact: {},
   },
+  eye_level_warning: {
+    module: "posture",
+    severity: "warning",
+    label: "Screen angle appears low",
+    scoreImpact: { posture: -4, focus: -2 },
+  },
+  posture_alignment_restored: {
+    module: "posture",
+    severity: "positive",
+    label: "Alignment restored",
+    scoreImpact: { posture: 4 },
+  },
 };
+
+export type EnvironmentalLight = "low" | "moderate" | "bright" | "optimal";
+
+export function getEnvironmentalLight(roomBrightness: number): EnvironmentalLight {
+  if (roomBrightness < 40) return "low";
+  if (roomBrightness < 65) return "moderate";
+  if (roomBrightness < 85) return "bright";
+  return "optimal";
+}
 
 interface WellnessState {
   scores: Record<ScoreKey, number>;
@@ -109,10 +123,10 @@ interface WellnessState {
   habits: Habits;
   demoMode: boolean;
   dateRange: "today" | "7d" | "30d";
-  theme: ThemeMode;
 
   roomBrightness: number; // 0-100, driven by wellness score
   plantGrowth: number; // 0-100, driven by movement/circadian
+  sunlightExposureMinutes: number; // today's total sunlight/light exposure
 
   minutesSincePostureCorrection: number;
   eveningLightHigh: boolean;
@@ -125,7 +139,6 @@ interface WellnessState {
   logEvent: (type: EventType, extra?: { duration?: number }) => void;
   toggleDemoMode: () => void;
   setDateRange: (range: "today" | "7d" | "30d") => void;
-  setTheme: (theme: ThemeMode) => void;
   toggleHabit: (habit: keyof Habits) => void;
   tickPostureClock: () => void;
   resetAll: () => void;
@@ -160,10 +173,10 @@ export const useWellnessStore = create<WellnessState>()(
       habits: INITIAL_HABITS,
       demoMode: false,
       dateRange: "today",
-      theme: "dark",
 
       roomBrightness: 70,
       plantGrowth: 55,
+      sunlightExposureMinutes: 15,
 
       minutesSincePostureCorrection: 6,
       eveningLightHigh: false,
@@ -202,9 +215,12 @@ export const useWellnessStore = create<WellnessState>()(
             ),
           };
 
-          if (type === "posture_corrected") patch.minutesSincePostureCorrection = 0;
+          if (type === "posture_corrected" || type === "posture_alignment_restored") {
+            patch.minutesSincePostureCorrection = 0;
+          }
           if (type === "slouch_detected") patch.prolongedGaze = true;
           if (type === "doomscroll_detected") patch.prolongedGaze = true;
+          if (type === "eye_level_warning") patch.prolongedGaze = true;
           if (type === "urge_reset_completed" || type === "breathing_completed") {
             patch.urgeSurferResetsToday = state.urgeSurferResetsToday + 1;
             patch.lastResetMinutesAgo = 0;
@@ -212,11 +228,14 @@ export const useWellnessStore = create<WellnessState>()(
             patch.minutesSincePostureCorrection = 0;
           }
           if (type === "walk_completed") {
-            patch.microStrollMinutesToday = state.microStrollMinutesToday + 15;
+            const minutes = Math.round((extra?.duration ?? 900) / 60);
+            patch.microStrollMinutesToday = state.microStrollMinutesToday + minutes;
+            patch.sunlightExposureMinutes = state.sunlightExposureMinutes + minutes;
             patch.habits = { ...state.habits, sunlightWalk: true };
           }
           if (type === "morning_light_completed" || type === "sunlight_completed") {
             patch.circadianMorningLightDone = true;
+            patch.sunlightExposureMinutes = state.sunlightExposureMinutes + 15;
           }
           if (type === "evening_dim_recommended") {
             patch.eveningLightHigh = true;
@@ -228,7 +247,6 @@ export const useWellnessStore = create<WellnessState>()(
 
       toggleDemoMode: () => set((state) => ({ demoMode: !state.demoMode })),
       setDateRange: (range) => set({ dateRange: range }),
-      setTheme: (theme) => set({ theme }),
       toggleHabit: (habit) =>
         set((state) => ({ habits: { ...state.habits, [habit]: !state.habits[habit] } })),
 
@@ -247,6 +265,7 @@ export const useWellnessStore = create<WellnessState>()(
           habits: INITIAL_HABITS,
           roomBrightness: 70,
           plantGrowth: 55,
+          sunlightExposureMinutes: 0,
           minutesSincePostureCorrection: 6,
           eveningLightHigh: false,
           prolongedGaze: false,
@@ -259,11 +278,10 @@ export const useWellnessStore = create<WellnessState>()(
     {
       name: "vitaos-wellness-store",
       partialize: (state) => {
-        const { logEvent, toggleDemoMode, setDateRange, setTheme, toggleHabit, tickPostureClock, resetAll, ...rest } = state;
+        const { logEvent, toggleDemoMode, setDateRange, toggleHabit, tickPostureClock, resetAll, ...rest } = state;
         void logEvent;
         void toggleDemoMode;
         void setDateRange;
-        void setTheme;
         void toggleHabit;
         void tickPostureClock;
         void resetAll;

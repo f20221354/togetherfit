@@ -20,7 +20,9 @@ export type EventType =
   | "sleep_window_completed"
   | "urge_reset_completed"
   | "morning_light_completed"
-  | "evening_dim_recommended";
+  | "evening_dim_recommended"
+  | "eye_level_warning"
+  | "posture_alignment_restored";
 
 export type EventSeverity = "positive" | "info" | "warning";
 

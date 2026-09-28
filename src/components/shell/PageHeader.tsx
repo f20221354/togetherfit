@@ -13,7 +13,7 @@ export function PageHeader({
         <span>{icon}</span>
         {title}
       </div>
-      <p className="mt-1 text-sm text-white/50">{subtitle}</p>
+      <p className="mt-1 text-sm text-muted">{subtitle}</p>
     </div>
   );
 }

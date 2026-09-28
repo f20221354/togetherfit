@@ -9,7 +9,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/10 bg-black/80 backdrop-blur md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-surface/95 backdrop-blur md:hidden">
       {NAV_ITEMS.map((item) => {
         const active = pathname === item.href;
         return (
@@ -18,12 +18,12 @@ export function MobileNav() {
             href={item.href}
             className={clsx(
               "flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium",
-              active ? "text-emerald-300" : "text-white/50"
+              active ? "text-accent-foreground" : "text-muted"
             )}
           >
             <span className="text-lg">{item.icon}</span>
             {item.shortLabel}
-            {active && <span className="mt-0.5 h-1 w-1 rounded-full bg-emerald-300" />}
+            {active && <span className="mt-0.5 h-1 w-1 rounded-full bg-accent" />}
           </Link>
         );
       })}

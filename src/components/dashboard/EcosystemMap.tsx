@@ -30,8 +30,8 @@ export function EcosystemMap() {
   const nodeByKey = Object.fromEntries(NODES.map((n) => [n.key, n]));
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <h3 className="mb-4 text-sm font-semibold text-white/80">Wellness Ecosystem</h3>
+    <div className="rounded-2xl border border-border bg-surface p-5">
+      <h3 className="mb-4 text-sm font-semibold text-foreground">Wellness Ecosystem</h3>
       <div className="relative h-80 w-full">
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           {NODES.map((n) => (
@@ -41,7 +41,7 @@ export function EcosystemMap() {
               y1={CORE.y}
               x2={n.x}
               y2={n.y}
-              stroke={active === n.key ? "#34d399" : "rgba(255,255,255,0.12)"}
+              stroke={active === n.key ? "var(--accent)" : "var(--border)"}
               strokeWidth={active === n.key ? 0.6 : 0.3}
             />
           ))}
@@ -56,7 +56,7 @@ export function EcosystemMap() {
                 y1={na.y}
                 x2={nb.x}
                 y2={nb.y}
-                stroke={highlighted ? "#34d399" : "rgba(255,255,255,0.08)"}
+                stroke={highlighted ? "var(--accent)" : "var(--border)"}
                 strokeWidth={highlighted ? 0.5 : 0.25}
                 strokeDasharray="1.5 1.5"
               />
@@ -65,7 +65,7 @@ export function EcosystemMap() {
         </svg>
 
         <div
-          className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-full bg-emerald-400/15 px-3 py-3 text-center text-xs font-semibold text-emerald-300"
+          className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-full bg-accent/15 px-3 py-3 text-center text-xs font-semibold text-accent-foreground"
           style={{ left: `${CORE.x}%`, top: `${CORE.y}%` }}
         >
           <span>◈</span>
@@ -81,8 +81,8 @@ export function EcosystemMap() {
             className={clsx(
               "absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-xl border px-3 py-2 text-center text-xs font-medium transition-colors",
               active === n.key
-                ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300"
-                : "border-white/10 bg-white/[0.04] text-white/70"
+                ? "border-accent/50 bg-accent/10 text-accent-foreground"
+                : "border-border bg-surface text-muted"
             )}
             style={{ left: `${n.x}%`, top: `${n.y}%` }}
           >
