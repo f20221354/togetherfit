@@ -8,10 +8,9 @@ import { useCameraStore } from "@/lib/store/cameraStore";
 const CAPABILITIES = [
   { icon: "🤝", label: "Connect", detail: "Find real people for running, gym, and walking" },
   { icon: "🏋️", label: "Move & Coach", detail: "Goals, workouts, and AI-guided training" },
-  { icon: "🌿", label: "Sanctuary", detail: "A bio-room that reflects your wellness state" },
+  { icon: "🌿", label: "Sanctuary", detail: "A bio-room, plus light and sleep rhythm guidance" },
   { icon: "👁", label: "Posture & Gaze Guard", detail: "Camera-based posture and eye-level monitoring" },
   { icon: "🫁", label: "UrgeSurfer", detail: "Breathe, Rhythm, or Ground — fast recovery resets" },
-  { icon: "☀️", label: "Circadian Arc", detail: "Light and sleep timing guidance" },
 ];
 
 type CameraStepResult = "granted" | "denied" | "skipped" | null;

@@ -27,7 +27,8 @@ export type EventType =
   | "group_activity_completed"
   | "workout_completed"
   | "trainer_session_completed"
-  | "rhythm_reset_completed";
+  | "rhythm_reset_completed"
+  | "stretch_logged";
 
 export type EventSeverity = "positive" | "info" | "warning";
 
@@ -43,8 +44,6 @@ export interface WellnessEvent {
 }
 
 export interface Habits {
-  hydrated: boolean;
-  stretched: boolean;
   sunlightWalk: boolean;
   noDoomscroll: boolean;
 }

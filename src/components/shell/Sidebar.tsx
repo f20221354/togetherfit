@@ -66,7 +66,7 @@ export function Sidebar() {
             Log Out
           </button>
         )}
-        <div className="px-3 pt-2 text-xs text-muted">One wellness core. Six ways in.</div>
+        <div className="px-3 pt-2 text-xs text-muted">One wellness core. Five ways in.</div>
       </div>
     </aside>
   );

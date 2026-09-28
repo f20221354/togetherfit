@@ -8,7 +8,7 @@ const ACTIONS = [
   { label: "Start Sunlight Walk", type: "walk_completed" as const, href: "/move/walk" },
   { label: "Check Posture", type: "posture_corrected" as const, href: "/posture" },
   { label: "Log Hydration", type: "hydration_logged" as const, href: "/sanctuary" },
-  { label: "View Circadian Plan", type: null, href: "/circadian" },
+  { label: "View Circadian Plan", type: null, href: "/sanctuary/circadian" },
 ];
 
 export function QuickActions() {

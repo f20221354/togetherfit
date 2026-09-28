@@ -7,23 +7,21 @@ import { ModuleKey } from "@/lib/types";
 import { MODULE_ROUTES } from "@/lib/store/wellnessStore";
 
 const NODES: { key: ModuleKey; label: string; x: number; y: number; icon: string }[] = [
-  { key: "circadian", label: "Circadian Arc", x: 50, y: 6, icon: "☀️" },
-  { key: "posture", label: "Posture & Gaze", x: 10, y: 30, icon: "👁" },
-  { key: "move", label: "Move & Coach", x: 90, y: 30, icon: "🏋️" },
-  { key: "urgesurfer", label: "UrgeSurfer", x: 10, y: 62, icon: "🫁" },
-  { key: "connect", label: "Connect", x: 90, y: 62, icon: "🤝" },
-  { key: "sanctuary", label: "Sanctuary", x: 50, y: 92, icon: "🌿" },
+  { key: "sanctuary", label: "Sanctuary", x: 50, y: 6, icon: "🌿" },
+  { key: "posture", label: "Posture & Gaze", x: 10, y: 35, icon: "👁" },
+  { key: "move", label: "Move & Coach", x: 90, y: 35, icon: "🏋️" },
+  { key: "urgesurfer", label: "UrgeSurfer", x: 20, y: 88, icon: "🫁" },
+  { key: "connect", label: "Connect", x: 80, y: 88, icon: "🤝" },
 ];
 
 const CORE = { x: 50, y: 45 };
 
 const CONNECTIONS: [ModuleKey, ModuleKey][] = [
-  ["circadian", "posture"],
-  ["circadian", "move"],
+  ["sanctuary", "posture"],
+  ["sanctuary", "move"],
   ["posture", "urgesurfer"],
   ["move", "connect"],
-  ["urgesurfer", "sanctuary"],
-  ["connect", "sanctuary"],
+  ["urgesurfer", "connect"],
 ];
 
 export function EcosystemMap() {

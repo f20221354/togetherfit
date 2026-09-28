@@ -5,12 +5,11 @@ import Link from "next/link";
 import { getEnvironmentalLight, useWellnessStore } from "@/lib/store/wellnessStore";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { ManualCounter } from "@/components/ui/ManualCounter";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
 import { Habits } from "@/lib/types";
 
-const HABIT_META: { key: keyof Habits; label: string; icon: string }[] = [
-  { key: "hydrated", label: "Hydrated", icon: "💧" },
-  { key: "stretched", label: "Stretched", icon: "🧘" },
+const TOGGLE_HABIT_META: { key: keyof Habits; label: string; icon: string }[] = [
   { key: "sunlightWalk", label: "Sunlight Walk", icon: "🚶" },
   { key: "noDoomscroll", label: "0 Doomscrolling", icon: "📵" },
 ];
@@ -28,9 +27,14 @@ export default function SanctuaryPage() {
   const globalScore = useWellnessStore((s) => s.globalScore);
   const habits = useWellnessStore((s) => s.habits);
   const toggleHabit = useWellnessStore((s) => s.toggleHabit);
-  const logEvent = useWellnessStore((s) => s.logEvent);
   const sunlightExposureMinutes = useWellnessStore((s) => s.sunlightExposureMinutes);
   const prolongedGaze = useWellnessStore((s) => s.prolongedGaze);
+  const hydrationGlasses = useWellnessStore((s) => s.hydrationGlasses);
+  const hydrationTarget = useWellnessStore((s) => s.hydrationTarget);
+  const stretchMinutes = useWellnessStore((s) => s.stretchMinutes);
+  const stretchTarget = useWellnessStore((s) => s.stretchTarget);
+  const setHydrationGlasses = useWellnessStore((s) => s.setHydrationGlasses);
+  const setStretchMinutes = useWellnessStore((s) => s.setStretchMinutes);
 
   const light = getEnvironmentalLight(roomBrightness);
   const lightMeta = LIGHT_META[light];
@@ -113,13 +117,27 @@ export default function SanctuaryPage() {
       <section>
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">Daily Habits</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {HABIT_META.map((h) => (
+          <ManualCounter
+            icon="💧"
+            label="Hydration"
+            value={hydrationGlasses}
+            target={hydrationTarget}
+            unit="glasses"
+            onChange={setHydrationGlasses}
+          />
+          <ManualCounter
+            icon="🧘"
+            label="Stretched"
+            value={stretchMinutes}
+            target={stretchTarget}
+            unit="min"
+            step={5}
+            onChange={setStretchMinutes}
+          />
+          {TOGGLE_HABIT_META.map((h) => (
             <button
               key={h.key}
-              onClick={() => {
-                toggleHabit(h.key);
-                if (h.key === "hydrated" && !habits.hydrated) logEvent("hydration_logged");
-              }}
+              onClick={() => toggleHabit(h.key)}
               className={clsx(
                 "flex flex-col items-center gap-2 rounded-2xl border p-4 text-sm font-medium transition-colors",
                 habits[h.key]

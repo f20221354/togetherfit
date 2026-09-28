@@ -44,6 +44,12 @@ const EVENT_CATALOG: Record<EventType, EventConfig> = {
     label: "Hydration logged",
     scoreImpact: { recovery: 3 },
   },
+  stretch_logged: {
+    module: "sanctuary",
+    severity: "positive",
+    label: "Stretch logged",
+    scoreImpact: { recovery: 3, posture: 2 },
+  },
   posture_corrected: {
     module: "posture",
     severity: "positive",
@@ -196,10 +202,17 @@ interface WellnessState {
   circadianMorningLightDone: boolean;
   microStrollMinutesToday: number;
 
+  hydrationGlasses: number;
+  hydrationTarget: number;
+  stretchMinutes: number;
+  stretchTarget: number;
+
   logEvent: (type: EventType, extra?: { duration?: number }) => void;
   toggleDemoMode: () => void;
   setDateRange: (range: "today" | "7d" | "30d") => void;
   toggleHabit: (habit: keyof Habits) => void;
+  setHydrationGlasses: (glasses: number) => void;
+  setStretchMinutes: (minutes: number) => void;
   tickPostureClock: () => void;
   resetAll: () => void;
 }
@@ -213,8 +226,6 @@ const INITIAL_SCORES: Record<ScoreKey, number> = {
 };
 
 const INITIAL_HABITS: Habits = {
-  hydrated: false,
-  stretched: false,
   sunlightWalk: false,
   noDoomscroll: true,
 };
@@ -245,6 +256,11 @@ export const useWellnessStore = create<WellnessState>()(
       lastResetMinutesAgo: 14,
       circadianMorningLightDone: true,
       microStrollMinutesToday: 15,
+
+      hydrationGlasses: 0,
+      hydrationTarget: 8,
+      stretchMinutes: 0,
+      stretchTarget: 10,
 
       logEvent: (type, extra) => {
         const config = EVENT_CATALOG[type];
@@ -310,6 +326,20 @@ export const useWellnessStore = create<WellnessState>()(
       toggleHabit: (habit) =>
         set((state) => ({ habits: { ...state.habits, [habit]: !state.habits[habit] } })),
 
+      setHydrationGlasses: (glasses) => {
+        const clamped = Math.max(0, Math.min(20, Math.round(glasses)));
+        const increased = clamped > get().hydrationGlasses;
+        set({ hydrationGlasses: clamped });
+        if (increased) get().logEvent("hydration_logged");
+      },
+
+      setStretchMinutes: (minutes) => {
+        const clamped = Math.max(0, Math.min(120, Math.round(minutes)));
+        const increased = clamped > get().stretchMinutes;
+        set({ stretchMinutes: clamped });
+        if (increased) get().logEvent("stretch_logged");
+      },
+
       tickPostureClock: () =>
         set((state) => ({
           minutesSincePostureCorrection: state.minutesSincePostureCorrection + 1,
@@ -333,16 +363,30 @@ export const useWellnessStore = create<WellnessState>()(
           lastResetMinutesAgo: 0,
           circadianMorningLightDone: false,
           microStrollMinutesToday: 0,
+          hydrationGlasses: 0,
+          stretchMinutes: 0,
         }),
     }),
     {
       name: "vitaos-wellness-store",
       partialize: (state) => {
-        const { logEvent, toggleDemoMode, setDateRange, toggleHabit, tickPostureClock, resetAll, ...rest } = state;
+        const {
+          logEvent,
+          toggleDemoMode,
+          setDateRange,
+          toggleHabit,
+          setHydrationGlasses,
+          setStretchMinutes,
+          tickPostureClock,
+          resetAll,
+          ...rest
+        } = state;
         void logEvent;
         void toggleDemoMode;
         void setDateRange;
         void toggleHabit;
+        void setHydrationGlasses;
+        void setStretchMinutes;
         void tickPostureClock;
         void resetAll;
         return rest;
@@ -364,7 +408,7 @@ export const MODULE_ROUTES: Record<ModuleKey, string> = {
   sanctuary: "/sanctuary",
   posture: "/posture",
   urgesurfer: "/urgesurfer",
-  circadian: "/circadian",
+  circadian: "/sanctuary/circadian",
   move: "/move",
   connect: "/connect",
 };

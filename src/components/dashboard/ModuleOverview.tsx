@@ -23,7 +23,7 @@ export function ModuleOverview() {
   ).length;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       <ModuleStatusCard
         icon="🤝"
         title="Connect"
@@ -45,7 +45,11 @@ export function ModuleOverview() {
         title="Sanctuary"
         metricLabel="Room Health"
         metricValue={`${roomBrightness}%`}
-        detail={roomBrightness > 70 ? "Optimal" : "Needs attention"}
+        detail={
+          circadianMorningLightDone
+            ? `Circadian ${scores.circadian} · Morning light ✓`
+            : `Circadian ${scores.circadian} · Morning light pending`
+        }
         progress={roomBrightness}
         href="/sanctuary"
       />
@@ -65,15 +69,6 @@ export function ModuleOverview() {
         metricValue={urgeSurferResetsToday}
         detail={`Last reset ${lastResetMinutesAgo}m ago`}
         href="/urgesurfer"
-      />
-      <ModuleStatusCard
-        icon="☀️"
-        title="Circadian Arc"
-        metricLabel="Circadian Score"
-        metricValue={scores.circadian}
-        detail={circadianMorningLightDone ? "Morning light ✓" : "Morning light pending"}
-        progress={scores.circadian}
-        href="/circadian"
       />
     </div>
   );

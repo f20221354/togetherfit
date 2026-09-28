@@ -3,10 +3,9 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { PERSONAL_NAV_ITEMS } from "@/components/shell/navItems";
 
 const DESCRIPTIONS: Record<string, string> = {
-  sanctuary: "Your environment and wellness space.",
+  sanctuary: "Your environment, plus light, sleep, and daily rhythm.",
   posture: "Camera-based posture and gaze monitoring.",
   urgesurfer: "Fast recovery, breathing, and grounding resets.",
-  circadian: "Light, sleep, and daily rhythm.",
 };
 
 export default function PersonalPage() {
