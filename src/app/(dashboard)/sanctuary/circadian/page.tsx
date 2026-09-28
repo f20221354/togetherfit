@@ -27,7 +27,7 @@ export default function CircadianPage() {
       <PageHeader
         icon="☀️"
         title="Circadian Arc"
-        subtitle="Your light and sleep architecture. Sunlight exposure logged anywhere in VitaOS updates this timeline."
+        subtitle="Your light and sleep architecture. Sunlight exposure logged anywhere in स्वस्थ Bharat updates this timeline."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

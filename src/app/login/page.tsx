@@ -77,7 +77,7 @@ export default function LoginPage() {
         )}
         {success && (
           <div className="rounded-lg bg-success/10 px-3 py-2 text-xs text-success">
-            Signed in — taking you to VitaOS…
+            Signed in — taking you to स्वस्थ Bharat…
           </div>
         )}
 
@@ -96,7 +96,7 @@ export default function LoginPage() {
         </button>
 
         <p className="text-center text-xs text-muted">
-          New to VitaOS?{" "}
+          New to स्वस्थ Bharat?{" "}
           <Link href="/signup" className="font-medium text-accent-foreground hover:underline">
             Create Account
           </Link>

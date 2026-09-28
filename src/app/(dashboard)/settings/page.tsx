@@ -111,7 +111,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="rounded-xl bg-surface-2 p-3 text-xs text-muted">
-          To revoke camera access, VitaOS cannot do this from JavaScript alone — use your browser&apos;s
+          To revoke camera access, स्वस्थ Bharat cannot do this from JavaScript alone — use your browser&apos;s
           site settings: click the lock/camera icon in the address bar (Chrome/Edge) or open
           Settings → Privacy → Camera (Firefox/Safari) and remove access for this site.
         </div>

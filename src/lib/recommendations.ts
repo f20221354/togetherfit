@@ -8,7 +8,7 @@ interface RecommendationInputs {
 }
 
 /**
- * VitaOS recommends the module most likely to move the metric that is
+ * स्वस्थ Bharat recommends the module most likely to move the metric that is
  * currently dragging the Global Wellness Score down.
  */
 export function getRecommendations(inputs: RecommendationInputs): RecommendationCard[] {

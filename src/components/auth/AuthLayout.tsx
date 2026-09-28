@@ -6,7 +6,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/15 text-2xl text-accent-foreground">
             ◈
           </span>
-          <h1 className="text-2xl font-semibold text-foreground">Welcome to VitaOS</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Welcome to स्वस्थ Bharat</h1>
           <p className="max-w-xs text-sm text-muted">
             Your personal wellness operating system for posture, focus, movement and recovery.
           </p>

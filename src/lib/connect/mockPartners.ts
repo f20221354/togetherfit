@@ -1,7 +1,7 @@
 import { PartnerProfile } from "./types";
 
 /**
- * DEMO DATA — clearly fictional wellness partners for prototyping VitaOS
+ * DEMO DATA — clearly fictional wellness partners for prototyping स्वस्थ Bharat
  * Connect. None of these represent real people. When a real backend is
  * wired up, this module is replaced by an API/database query and nothing
  * else in the Connect feature needs to change shape.

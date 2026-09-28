@@ -21,7 +21,7 @@ export function Recommendations() {
   if (cards.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-surface p-5 text-sm text-muted">
-        Everything looks balanced right now. VitaOS will recommend a module here when a score needs attention.
+        Everything looks balanced right now. स्वस्थ Bharat will recommend a module here when a score needs attention.
       </div>
     );
   }

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VitaOS",
+  title: "स्वस्थ Bharat",
   description: "One wellness operating system, five interconnected modules.",
 };
 

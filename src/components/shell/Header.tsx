@@ -47,7 +47,7 @@ export function Header() {
     <header className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 md:px-6">
       <div className="flex items-center gap-2 md:hidden">
         <span className="text-xl">◈</span>
-        <span className="text-base font-semibold text-foreground">VitaOS</span>
+        <span className="text-base font-semibold text-foreground">स्वस्थ Bharat</span>
       </div>
 
       <div className="hidden items-center gap-1 rounded-full bg-surface-2 p-1 md:flex">

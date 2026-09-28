@@ -86,7 +86,7 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div className="flex flex-col gap-5 text-center">
             <h2 className="text-xl font-semibold text-foreground">
-              Welcome to VitaOS{user ? `, ${user.name.split(" ")[0]}` : ""}.
+              Welcome to स्वस्थ Bharat{user ? `, ${user.name.split(" ")[0]}` : ""}.
             </h2>
             <p className="text-sm text-muted">
               One wellness operating system with five interconnected capabilities.
@@ -116,10 +116,10 @@ export default function OnboardingPage() {
             <span className="text-3xl">👁</span>
             <h2 className="text-xl font-semibold text-foreground">Posture & Gaze Guard</h2>
             <p className="text-sm text-muted">
-              VitaOS can use your camera to estimate posture and eye/head alignment.
+              स्वस्थ Bharat can use your camera to estimate posture and eye/head alignment.
             </p>
             <div className="rounded-xl bg-surface-2 p-3 text-left text-xs text-muted">
-              Your camera feed is processed locally in your browser. VitaOS does not record,
+              Your camera feed is processed locally in your browser. स्वस्थ Bharat does not record,
               upload, or store camera video.
             </div>
 
@@ -130,7 +130,7 @@ export default function OnboardingPage() {
             )}
             {cameraResult === "denied" && (
               <div className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
-                Camera access wasn&apos;t granted. You can still use VitaOS — enable it later from
+                Camera access wasn&apos;t granted. You can still use स्वस्थ Bharat — enable it later from
                 Settings.
               </div>
             )}
@@ -173,7 +173,7 @@ export default function OnboardingPage() {
             <div className="text-center">
               <span className="text-3xl">⚙️</span>
               <h2 className="mt-2 text-xl font-semibold text-foreground">Wellness Setup</h2>
-              <p className="text-sm text-muted">Optional — helps VitaOS tailor recommendations.</p>
+              <p className="text-sm text-muted">Optional — helps स्वस्थ Bharat tailor recommendations.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1 text-xs text-muted">
@@ -244,13 +244,13 @@ export default function OnboardingPage() {
             <span className="text-4xl">✓</span>
             <h2 className="text-xl font-semibold text-foreground">You&apos;re ready.</h2>
             <p className="text-sm text-muted">
-              VitaOS is set up. Your Global Wellness Score and all five modules are ready to go.
+              स्वस्थ Bharat is set up. Your Global Wellness Score and all five modules are ready to go.
             </p>
             <button
               onClick={finish}
               className="rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-black hover:opacity-90"
             >
-              Enter VitaOS
+              Enter स्वस्थ Bharat
             </button>
           </div>
         )}

@@ -24,7 +24,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!hydrated || !currentUserEmail || !onboardingComplete[currentUserEmail]) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-muted">
-        Loading VitaOS…
+        Loading स्वस्थ Bharat…
       </div>
     );
   }

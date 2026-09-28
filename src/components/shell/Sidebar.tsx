@@ -34,7 +34,7 @@ export function Sidebar() {
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-surface px-3 py-6 md:flex">
       <div className="mb-8 flex items-center gap-2 px-3">
         <span className="text-xl">◈</span>
-        <span className="text-lg font-semibold tracking-tight text-foreground">VitaOS</span>
+        <span className="text-lg font-semibold tracking-tight text-foreground">स्वस्थ Bharat</span>
       </div>
       <nav className="flex flex-1 flex-col gap-1">
         <NavLink href="/" icon="🏠" label="Overview" active={pathname === "/"} />

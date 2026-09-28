@@ -1,8 +1,8 @@
-# VitaOS
+# स्वस्थ Bharat
 
 **One wellness operating system, five interconnected modules.**
 
-VitaOS is a unified consumer wellness dashboard — not five disconnected
+स्वस्थ Bharat is a unified consumer wellness dashboard — not five disconnected
 mini-apps, but one product where every action feeds a single **Global
 Wellness Score** and ripples across the rest of the system. Complete a
 workout, and Sanctuary's room gets brighter. Finish a breathing reset, and
@@ -19,7 +19,7 @@ in Connect, log the run, and your Move & Coach progress updates.
 
 ## The modules
 
-VitaOS is organized around one **Overview** ("My Day") dashboard plus five
+स्वस्थ Bharat is organized around one **Overview** ("My Day") dashboard plus five
 tabs, split into two groups:
 
 **Action / social**

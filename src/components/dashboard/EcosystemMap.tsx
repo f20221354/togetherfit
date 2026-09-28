@@ -69,7 +69,7 @@ export function EcosystemMap() {
           style={{ left: `${CORE.x}%`, top: `${CORE.y}%` }}
         >
           <span>◈</span>
-          VitaOS Core
+          स्वस्थ Bharat Core
         </div>
 
         {NODES.map((n) => (

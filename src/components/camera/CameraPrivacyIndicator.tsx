@@ -32,7 +32,7 @@ export function CameraPrivacyIndicator({ active }: { active: boolean }) {
         <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-border bg-surface p-3 text-xs text-muted shadow-lg">
           {active ? (
             <>
-              VitaOS is analyzing your camera feed locally in your browser. No video is being
+              स्वस्थ Bharat is analyzing your camera feed locally in your browser. No video is being
               recorded or uploaded.
             </>
           ) : (
