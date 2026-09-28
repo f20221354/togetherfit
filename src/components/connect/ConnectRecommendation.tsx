@@ -39,7 +39,7 @@ export function ConnectRecommendation() {
         <div className="text-xs text-muted">{suggestion.cta}</div>
       </div>
       <button
-        onClick={() => router.push(`/connect/discover?activity=${suggestion!.activity}`)}
+        onClick={() => router.push(`/move/activity/discover?activity=${suggestion!.activity}`)}
         className="shrink-0 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/25"
       >
         🤝 Find Partner

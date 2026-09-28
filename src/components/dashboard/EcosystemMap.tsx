@@ -9,7 +9,7 @@ import { MODULE_ROUTES } from "@/lib/store/wellnessStore";
 const NODES: { key: ModuleKey; label: string; x: number; y: number; icon: string }[] = [
   { key: "circadian", label: "Circadian Arc", x: 50, y: 8, icon: "☀️" },
   { key: "posture", label: "Posture & Gaze", x: 12, y: 45, icon: "👁" },
-  { key: "microStroll", label: "Micro-Stroll", x: 88, y: 45, icon: "🚶" },
+  { key: "move", label: "Move & Coach", x: 88, y: 45, icon: "🏃" },
   { key: "urgesurfer", label: "UrgeSurfer", x: 50, y: 62, icon: "🫁" },
   { key: "sanctuary", label: "Sanctuary", x: 50, y: 92, icon: "🌿" },
 ];
@@ -18,9 +18,9 @@ const CORE = { x: 50, y: 45 };
 
 const CONNECTIONS: [ModuleKey, ModuleKey][] = [
   ["circadian", "posture"],
-  ["circadian", "microStroll"],
+  ["circadian", "move"],
   ["posture", "urgesurfer"],
-  ["microStroll", "urgesurfer"],
+  ["move", "urgesurfer"],
   ["urgesurfer", "sanctuary"],
 ];
 

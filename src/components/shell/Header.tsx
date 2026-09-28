@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { useTheme } from "next-themes";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { useCameraStore } from "@/lib/store/cameraStore";
+import { useMoveStore } from "@/lib/store/moveStore";
 import { pickNextDemoEvent } from "@/lib/demoEngine";
 import { Badge } from "@/components/ui/Badge";
 import { CameraPrivacyIndicator } from "@/components/camera/CameraPrivacyIndicator";
@@ -23,9 +24,14 @@ export function Header() {
   const setDateRange = useWellnessStore((s) => s.setDateRange);
   const logEvent = useWellnessStore((s) => s.logEvent);
   const monitoring = useCameraStore((s) => s.monitoring);
+  const seedDemoWorkouts = useMoveStore((s) => s.seedDemoWorkouts);
   const { resolvedTheme, setTheme } = useTheme();
   const tickIndex = useRef(0);
   const mounted = useIsClient();
+
+  useEffect(() => {
+    if (demoMode) seedDemoWorkouts();
+  }, [demoMode, seedDemoWorkouts]);
 
   useEffect(() => {
     if (!demoMode) return;

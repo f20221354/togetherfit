@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import clsx from "clsx";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { useCameraStore } from "@/lib/store/cameraStore";
@@ -172,8 +173,14 @@ export default function PosturePage() {
       </div>
 
       {prolongedGaze && (
-        <div className="rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
-          Your screen angle appears low, or posture has been lowered for a while. Consider a UrgeSurfer reset.
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
+          <span>You&apos;ve been sitting with low screen angle for a while. Consider a UrgeSurfer reset, or a short walk.</span>
+          <Link
+            href="/move/activity/walk"
+            className="shrink-0 rounded-full bg-warning/20 px-3 py-1.5 text-xs font-semibold text-warning hover:bg-warning/30"
+          >
+            Take a 15-minute walk?
+          </Link>
         </div>
       )}
 

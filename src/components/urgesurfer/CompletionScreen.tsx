@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { BreathingPattern, formatPattern } from "@/lib/breathing/types";
 
 export function CompletionScreen({
@@ -49,6 +50,13 @@ export function CompletionScreen({
           </span>
         </div>
       )}
+
+      <Link
+        href="/move/activity/walk"
+        className="rounded-full border border-accent/30 bg-accent/10 px-4 py-2 text-xs font-medium text-accent-foreground hover:bg-accent/20"
+      >
+        Ready for a short movement break?
+      </Link>
 
       <div className="mt-2 flex flex-wrap justify-center gap-2">
         <button

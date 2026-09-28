@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { getEnvironmentalLight, useWellnessStore } from "@/lib/store/wellnessStore";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -50,6 +51,18 @@ export default function CircadianPage() {
       {eveningLightHigh && (
         <div className="rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
           Evening light exposure is high — dim your environment to protect tonight&apos;s sleep window.
+        </div>
+      )}
+
+      {!circadianMorningLightDone && (environmentalLight === "bright" || environmentalLight === "optimal") && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4 text-sm">
+          <span className="text-foreground">Good time for a sunlight walk.</span>
+          <Link
+            href="/move/activity/walk"
+            className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
+          >
+            Start Sunlight Walk
+          </Link>
         </div>
       )}
 

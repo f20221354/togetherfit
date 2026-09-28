@@ -21,7 +21,7 @@ export function ModuleOverview() {
   ).length;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       <ModuleStatusCard
         icon="🌿"
         title="Sanctuary"
@@ -58,20 +58,17 @@ export function ModuleOverview() {
         href="/circadian"
       />
       <ModuleStatusCard
-        icon="🚶"
-        title="Micro-Stroll"
-        metricLabel="Walk Today"
-        metricValue={`${microStrollMinutesToday}m`}
-        detail={microStrollMinutesToday >= 15 ? "Sunlight ✓" : "Sunlight pending"}
-        href="/micro-stroll"
-      />
-      <ModuleStatusCard
-        icon="🤝"
-        title="Connect"
-        metricLabel="Connections"
-        metricValue={connections.length}
-        detail={upcomingPlans > 0 ? `${upcomingPlans} upcoming` : "Find a partner"}
-        href="/connect"
+        icon="🏃"
+        title="Move & Coach"
+        metricLabel="Movement Score"
+        metricValue={scores.movement}
+        detail={
+          upcomingPlans > 0
+            ? `${upcomingPlans} upcoming · ${microStrollMinutesToday}m today`
+            : `${connections.length} connections · ${microStrollMinutesToday}m today`
+        }
+        progress={scores.movement}
+        href="/move"
       />
     </div>
   );

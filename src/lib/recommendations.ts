@@ -31,9 +31,9 @@ export function getRecommendations(inputs: RecommendationInputs): Recommendation
       id: "rec_sunlight",
       reason: "You haven't reached your morning sunlight target.",
       metric: `Movement score: ${scores.movement}`,
-      action: "Try a 15-minute Micro-Stroll to raise your sunlight and movement scores together.",
+      action: "Try a 15-minute walk from Move & Coach to raise your sunlight and movement scores together.",
       ctaLabel: "Start Sunlight Walk",
-      destination: "microStroll",
+      destination: "move",
     });
   }
 
@@ -53,7 +53,7 @@ export function getRecommendations(inputs: RecommendationInputs): Recommendation
       id: "rec_gaze",
       reason: "Prolonged screen gaze detected without a break.",
       metric: `Focus score: ${scores.focus}`,
-      action: "Take a Micro-Stroll or start a 90-second reset to break the doomscroll loop.",
+      action: "Take a short walk from Move & Coach or start a 90-second reset to break the doomscroll loop.",
       ctaLabel: "Check Posture",
       destination: "posture",
     });

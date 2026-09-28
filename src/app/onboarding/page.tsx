@@ -10,7 +10,7 @@ const CAPABILITIES = [
   { icon: "👁", label: "Posture & Gaze Guard", detail: "Camera-based posture and eye-level monitoring" },
   { icon: "🫁", label: "UrgeSurfer", detail: "90-second resets for stress and tension" },
   { icon: "☀️", label: "Circadian Arc", detail: "Light and sleep timing guidance" },
-  { icon: "🚶", label: "Micro-Stroll", detail: "15-minute sunlight walks" },
+  { icon: "🏃", label: "Move & Coach", detail: "Goals, workouts, activity partners and trainers" },
 ];
 
 type CameraStepResult = "granted" | "denied" | "skipped" | null;

@@ -236,7 +236,7 @@ function DiscoverFlow() {
           onSend={(message) => {
             sendRequest(requestTarget.id, message);
             setRequestTarget(null);
-            router.push("/connect");
+            router.push("/move/activity");
           }}
         />
       )}

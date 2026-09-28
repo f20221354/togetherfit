@@ -85,7 +85,7 @@ export default function ActivityPlanPage() {
 
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={() => router.push(`/connect/chat/${plan.conversationId}`)}
+          onClick={() => router.push(`/move/activity/chat/${plan.conversationId}`)}
           className="flex-1 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
         >
           Open Chat
@@ -108,7 +108,7 @@ export default function ActivityPlanPage() {
           <button
             onClick={() => {
               leaveGroup(plan.id);
-              router.push("/connect");
+              router.push("/move/activity");
             }}
             className="rounded-full border border-border px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10"
           >
