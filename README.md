@@ -71,6 +71,26 @@ npm run start   # serve the production build
 npm run lint    # ESLint
 ```
 
+### AI Coach backend
+
+The Move & Coach chat (`/move/coach`) calls a server route at
+`/api/coach` with a resilient 3-tier fallback, so it always responds:
+
+1. **Groq (free tier)** — if `GROQ_API_KEY` is set as an environment
+   variable, responses come from Groq's hosted `llama-3.1-8b-instant`
+   model. This is the only tier that works on a deployed site, since
+   Vercel's servers can't reach a local machine. Get a free key at
+   [console.groq.com/keys](https://console.groq.com/keys) and add it
+   under your Vercel project's Environment Variables.
+2. **Local Ollama** — if no Groq key is set, the route tries
+   `http://127.0.0.1:11434` (a local [Ollama](https://ollama.com)
+   install running `llama3.2:1b`). This only works when running the
+   app on the same machine as Ollama (`npm run dev`), never on the
+   deployed site.
+3. **Rule-based fallback** — if neither responds, the original
+   deterministic keyword-matched responder (`src/lib/move/aiCoach.ts`)
+   answers instead, so the feature never breaks.
+
 ### Demo Mode
 
 Toggle **⚡ DEMO** in the header to simulate realistic events across every

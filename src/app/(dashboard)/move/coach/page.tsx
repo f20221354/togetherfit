@@ -26,6 +26,7 @@ export default function AiCoachPage() {
   const appendCoachReply = useMoveStore((s) => s.appendCoachReply);
 
   const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   const suggestions = useMemo(
@@ -37,12 +38,26 @@ export default function AiCoachPage() {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [coachChat.length]);
 
-  function handleSend(text: string) {
-    if (!text.trim()) return;
+  async function handleSend(text: string) {
+    if (!text.trim() || sending) return;
     sendCoachMessage(text.trim());
     setDraft("");
-    const reply = respondToCoachPrompt(text);
-    setTimeout(() => appendCoachReply(reply.text, reply.workoutTemplateId), 500);
+    setSending(true);
+    try {
+      const res = await fetch("/api/coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: text }),
+      });
+      if (!res.ok) throw new Error("coach api error");
+      const data = await res.json();
+      appendCoachReply(data.text, data.workoutTemplateId);
+    } catch {
+      const reply = respondToCoachPrompt(text);
+      appendCoachReply(reply.text, reply.workoutTemplateId);
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -97,6 +112,11 @@ export default function AiCoachPage() {
               )}
             </div>
           ))}
+          {sending && (
+            <div className="flex flex-col items-start">
+              <div className="max-w-[80%] rounded-2xl bg-surface-2 px-3.5 py-2 text-sm text-muted">Thinking…</div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-1.5 border-t border-border p-2">
@@ -104,7 +124,8 @@ export default function AiCoachPage() {
             <button
               key={p}
               onClick={() => handleSend(p)}
-              className="rounded-full border border-border px-3 py-1.5 text-xs text-muted hover:bg-surface-2"
+              disabled={sending}
+              className="rounded-full border border-border px-3 py-1.5 text-xs text-muted hover:bg-surface-2 disabled:opacity-60"
             >
               {p}
             </button>
@@ -122,9 +143,14 @@ export default function AiCoachPage() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Ask your coach…"
-            className="flex-1 rounded-full border border-border bg-surface-2 px-4 py-2 text-sm text-foreground outline-none focus:border-accent"
+            disabled={sending}
+            className="flex-1 rounded-full border border-border bg-surface-2 px-4 py-2 text-sm text-foreground outline-none focus:border-accent disabled:opacity-60"
           />
-          <button type="submit" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-black hover:opacity-90">
+          <button
+            type="submit"
+            disabled={sending}
+            className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
+          >
             Send
           </button>
         </form>
