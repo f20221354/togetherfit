@@ -3,7 +3,8 @@ export type ModuleKey =
   | "posture"
   | "urgesurfer"
   | "circadian"
-  | "microStroll";
+  | "microStroll"
+  | "connect";
 
 export type ScoreKey = "posture" | "focus" | "movement" | "circadian" | "recovery";
 
@@ -22,7 +23,14 @@ export type EventType =
   | "morning_light_completed"
   | "evening_dim_recommended"
   | "eye_level_warning"
-  | "posture_alignment_restored";
+  | "posture_alignment_restored"
+  | "run_completed"
+  | "gym_session_completed"
+  | "cycling_completed"
+  | "yoga_completed"
+  | "sports_completed"
+  | "hiking_completed"
+  | "group_activity_completed";
 
 export type EventSeverity = "positive" | "info" | "warning";
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -19,6 +20,7 @@ export default function MicroStrollPage() {
   const microStrollMinutesToday = useWellnessStore((s) => s.microStrollMinutesToday);
   const [running, setRunning] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(DURATION);
+  const [justCompleted, setJustCompleted] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export default function MicroStrollPage() {
         if (prev <= 1) {
           clearInterval(intervalRef.current!);
           setRunning(false);
+          setJustCompleted(true);
           logEvent("walk_completed", { duration: DURATION });
           return DURATION;
         }
@@ -73,14 +76,27 @@ export default function MicroStrollPage() {
           onClick={() => {
             setRunning(false);
             setSecondsLeft(DURATION);
+            setJustCompleted(true);
             logEvent("walk_completed", { duration: DURATION });
           }}
-          className="text-xs text-muted hover:text-muted"
+          className="text-xs text-muted hover:text-foreground"
         >
           Mark as already completed
         </button>
         <div className="text-xs text-muted">{microStrollMinutesToday} minutes walked today</div>
       </div>
+
+      {justCompleted && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4">
+          <div className="text-sm text-foreground">Nice walk! Want company next time?</div>
+          <Link
+            href="/connect/discover?activity=walking"
+            className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
+          >
+            Find a Walking Partner
+          </Link>
+        </div>
+      )}
 
       <ActivityExplorer />
     </div>

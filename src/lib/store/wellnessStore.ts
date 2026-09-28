@@ -104,6 +104,48 @@ const EVENT_CATALOG: Record<EventType, EventConfig> = {
     label: "Alignment restored",
     scoreImpact: { posture: 4 },
   },
+  run_completed: {
+    module: "connect",
+    severity: "positive",
+    label: "Run completed with a wellness partner",
+    scoreImpact: { movement: 12, recovery: 3 },
+  },
+  gym_session_completed: {
+    module: "connect",
+    severity: "positive",
+    label: "Gym session completed with a wellness partner",
+    scoreImpact: { movement: 10, recovery: 4 },
+  },
+  cycling_completed: {
+    module: "connect",
+    severity: "positive",
+    label: "Cycling session completed with a wellness partner",
+    scoreImpact: { movement: 10, circadian: 3 },
+  },
+  yoga_completed: {
+    module: "connect",
+    severity: "positive",
+    label: "Yoga session completed with a wellness partner",
+    scoreImpact: { recovery: 8, focus: 4 },
+  },
+  sports_completed: {
+    module: "connect",
+    severity: "positive",
+    label: "Sports session completed with a wellness partner",
+    scoreImpact: { movement: 10, recovery: 3 },
+  },
+  hiking_completed: {
+    module: "connect",
+    severity: "positive",
+    label: "Hike completed with a wellness partner",
+    scoreImpact: { movement: 12, circadian: 6 },
+  },
+  group_activity_completed: {
+    module: "connect",
+    severity: "positive",
+    label: "Group wellness activity completed",
+    scoreImpact: { movement: 8, recovery: 4, focus: 2 },
+  },
 };
 
 export type EnvironmentalLight = "low" | "moderate" | "bright" | "optimal";
@@ -297,6 +339,7 @@ export const MODULE_LABELS: Record<ModuleKey, string> = {
   urgesurfer: "UrgeSurfer",
   circadian: "Circadian Arc",
   microStroll: "Micro-Stroll",
+  connect: "Connect",
 };
 
 export const MODULE_ROUTES: Record<ModuleKey, string> = {
@@ -305,4 +348,5 @@ export const MODULE_ROUTES: Record<ModuleKey, string> = {
   urgesurfer: "/urgesurfer",
   circadian: "/circadian",
   microStroll: "/micro-stroll",
+  connect: "/connect",
 };

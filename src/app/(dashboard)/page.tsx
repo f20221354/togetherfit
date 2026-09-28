@@ -5,6 +5,7 @@ import { Recommendations } from "@/components/dashboard/Recommendations";
 import { WellnessTrendChart } from "@/components/dashboard/WellnessTrendChart";
 import { EcosystemMap } from "@/components/dashboard/EcosystemMap";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
+import { ConnectRecommendation } from "@/components/connect/ConnectRecommendation";
 
 export default function HomePage() {
   return (
@@ -31,6 +32,8 @@ export default function HomePage() {
         </h2>
         <Recommendations />
       </section>
+
+      <ConnectRecommendation />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <WellnessTrendChart />
