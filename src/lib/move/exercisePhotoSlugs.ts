@@ -24,6 +24,7 @@ export const EXERCISE_PHOTO_SLUGS = new Set<string>([
   "toe-touchers",
   "standing-hip-circles",
   "step-up-knee-raise",
+  "pull-up",
 ]);
 
 export function hasExercisePhotos(slug: string): boolean {

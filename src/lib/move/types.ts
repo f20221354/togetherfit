@@ -49,6 +49,7 @@ export interface Exercise {
   instructions: string[];
   formCues: string[];
   commonMistakes: string[];
+  youtubeUrl: string;
 }
 
 export interface WorkoutExercise {

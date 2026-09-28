@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Badge } from "@/components/ui/Badge";
-import { ExerciseAnimation } from "@/components/move/ExerciseAnimation";
+import { ExerciseThumb } from "@/components/move/ExerciseThumb";
 import { getExerciseBySlug } from "@/lib/move/exercises";
 import { useMoveStore } from "@/lib/store/moveStore";
 
@@ -30,15 +30,22 @@ export default function ExerciseDetailPage() {
           <Badge>{exercise.difficulty}</Badge>
           <Badge>{exercise.category.replace(/([A-Z])/g, " $1")}</Badge>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col items-center gap-2">
-            <ExerciseAnimation motionType={exercise.motion} size={110} variant="correct" />
-            <span className="text-xs font-semibold text-success">DO</span>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <ExerciseAnimation motionType={exercise.motion} size={110} variant="incorrect" />
-            <span className="text-xs font-semibold text-danger">DON&apos;T</span>
-          </div>
+        <div className="flex flex-col items-center gap-4">
+          <ExerciseThumb slug={exercise.slug} alt={exercise.name} size={140} />
+          <p className="text-center text-sm text-muted">
+            Good form for {exercise.name.toLowerCase()} means moving with control through a comfortable range of
+            motion, keeping your core braced, and breathing steadily — never rushing reps or forcing a range that
+            causes pain. The Do and Don&apos;t lists below, and the video underneath, cover the specific cues and
+            mistakes for this exercise.
+          </p>
+          <a
+            href={exercise.youtubeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-full bg-danger px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+          >
+            <span aria-hidden="true">▶</span> Watch form tutorial on YouTube
+          </a>
         </div>
       </div>
 

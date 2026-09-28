@@ -23,6 +23,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled movement", "Stable posture", "Comfortable range of motion"],
     commonMistakes: ["Letting your knees cave inward", "Rounding your lower back", "Lifting your heels off the ground"],
+    youtubeUrl: "https://www.youtube.com/watch?v=VK8srrv3CvA",
   },
   {
     slug: "push-up",
@@ -41,6 +42,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled descent", "Straight body line", "Comfortable range of motion"],
     commonMistakes: ["Letting your hips sag toward the floor", "Flaring elbows out too wide", "Only lowering halfway"],
+    youtubeUrl: "https://www.youtube.com/watch?v=AHM-RGnPTug",
   },
   {
     slug: "lunge",
@@ -60,6 +62,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled step", "Stable posture", "Comfortable depth"],
     commonMistakes: ["Letting your front knee travel past your toes", "Leaning your torso too far forward", "Taking a step that's too short"],
+    youtubeUrl: "https://www.youtube.com/watch?v=tRalDvBwZqg",
   },
   {
     slug: "plank",
@@ -78,6 +81,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Neutral spine", "Steady breathing", "Comfortable hold duration"],
     commonMistakes: ["Letting your hips pike up into an upside-down V", "Letting your hips sag toward the floor", "Holding your breath"],
+    youtubeUrl: "https://www.youtube.com/watch?v=rzHRA7S96_E",
   },
   {
     slug: "glute-bridge",
@@ -96,6 +100,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled lift", "Engage glutes", "Comfortable range of motion"],
     commonMistakes: ["Barely lifting your hips off the ground", "Overarching your lower back at the top", "Pushing through your toes instead of your heels"],
+    youtubeUrl: "https://www.youtube.com/watch?v=EEtd0uY-bMw",
   },
   {
     slug: "jumping-jacks",
@@ -114,6 +119,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Steady rhythm", "Soft landings", "Comfortable pace"],
     commonMistakes: ["Not raising your arms fully overhead", "Landing stiff-legged instead of softly", "Rushing the pace until form breaks down"],
+    youtubeUrl: "https://www.youtube.com/watch?v=uLVt6u15L98",
   },
   {
     slug: "mountain-climbers",
@@ -132,6 +138,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Steady pace", "Stable hips", "Comfortable range of motion"],
     commonMistakes: ["Letting your hips pike up as you speed up", "Bouncing your hips side to side", "Losing the straight-line plank position"],
+    youtubeUrl: "https://www.youtube.com/watch?v=OR1eel_5oAY",
   },
   {
     slug: "bicycle-crunch",
@@ -150,6 +157,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled rotation", "Steady breathing", "Comfortable pace"],
     commonMistakes: ["Pulling on your neck with your hands", "Rushing through reps without rotating", "Letting your lower back arch off the floor"],
+    youtubeUrl: "https://www.youtube.com/watch?v=tCSEga7I1l8",
   },
   {
     slug: "superman",
@@ -168,6 +176,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled lift", "Steady breathing", "Comfortable range of motion"],
     commonMistakes: ["Yanking upward using momentum", "Holding your breath", "Lifting only your arms and not your chest"],
+    youtubeUrl: "https://www.youtube.com/watch?v=hd3m4Ueiiuo",
   },
   {
     slug: "dead-bug",
@@ -186,6 +195,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Lower back stays flat", "Controlled tempo", "Comfortable range of motion"],
     commonMistakes: ["Letting your lower back arch off the floor", "Moving too fast to stay controlled", "Letting the moving leg and arm rush ahead of each other"],
+    youtubeUrl: "https://www.youtube.com/watch?v=lqnuY3wiBzA",
   },
   {
     slug: "flutter-kicks",
@@ -204,6 +214,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Small controlled kicks", "Lower back stays flat", "Steady breathing"],
     commonMistakes: ["Letting your lower back arch off the floor", "Kicking with legs too high to control", "Holding your breath"],
+    youtubeUrl: "https://www.youtube.com/watch?v=vHxbqt9ApdM",
   },
   {
     slug: "toe-touchers",
@@ -222,6 +233,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled reach", "Steady breathing", "Comfortable range of motion"],
     commonMistakes: ["Using momentum to jerk upward", "Only lifting your arms and not your shoulders", "Rushing through reps"],
+    youtubeUrl: "https://www.youtube.com/watch?v=rHEzFsLf4-o",
   },
   {
     slug: "standing-hip-circles",
@@ -240,6 +252,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Slow controlled circles", "Relaxed upper body", "Comfortable range"],
     commonMistakes: ["Rushing through circles before warming up", "Locking your knees", "Moving your shoulders instead of your hips"],
+    youtubeUrl: "https://www.youtube.com/watch?v=JYqLwajOGjI",
   },
   {
     slug: "shoulder-stretch",
@@ -258,6 +271,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Gentle hold", "Steady breathing", "Comfortable tension only"],
     commonMistakes: ["Bouncing or jerking into the stretch", "Pulling hard enough to feel sharp pain", "Shrugging your shoulder up toward your ear"],
+    youtubeUrl: "https://www.youtube.com/watch?v=swvXpKN832E",
   },
   {
     slug: "arm-circles",
@@ -275,6 +289,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled motion", "Relaxed shoulders", "Comfortable range"],
     commonMistakes: ["Shrugging your shoulders up toward your ears", "Swinging too fast for control", "Starting with circles too large before warming up"],
+    youtubeUrl: "https://www.youtube.com/watch?v=hne3nHGXPRM",
   },
   {
     slug: "abdominal-crunches",
@@ -293,6 +308,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled curl", "Steady breathing", "Comfortable range of motion"],
     commonMistakes: ["Pulling on your neck with your hands", "Using momentum instead of your core", "Only lifting your head, not your shoulders"],
+    youtubeUrl: "https://www.youtube.com/watch?v=IqjXkf3uBQ0",
   },
   {
     slug: "russian-twist",
@@ -311,6 +327,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled rotation", "Engaged core", "Comfortable pace"],
     commonMistakes: ["Rotating only your arms instead of your torso", "Rounding your back", "Moving too fast to stay controlled"],
+    youtubeUrl: "https://www.youtube.com/watch?v=nhFynCkYtD4",
   },
   {
     slug: "heel-touch",
@@ -329,6 +346,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Small controlled lift", "Steady breathing", "Comfortable range of motion"],
     commonMistakes: ["Lifting your whole torso instead of just crunching sideways", "Rushing through reps", "Letting your lower back arch off the floor"],
+    youtubeUrl: "https://www.youtube.com/watch?v=Q-e4A0UpYdc",
   },
   {
     slug: "leg-raises",
@@ -347,6 +365,7 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled lift", "Lower back stays flat", "Comfortable range of motion"],
     commonMistakes: ["Letting your lower back arch off the floor", "Using momentum to swing your legs up", "Only lowering halfway with control"],
+    youtubeUrl: "https://www.youtube.com/watch?v=zJukDl0Lv4U",
   },
   {
     slug: "step-up-knee-raise",
@@ -365,6 +384,26 @@ export const EXERCISES: Exercise[] = [
     ],
     formCues: ["Controlled step", "Stable posture", "Comfortable pace"],
     commonMistakes: ["Pushing off the trailing leg instead of the stepping leg", "Letting your knee cave inward", "Rushing the pace until form breaks down"],
+    youtubeUrl: "https://www.youtube.com/watch?v=wGoKb6mPJzU",
+  },
+  {
+    slug: "pull-up",
+    name: "Pull-Up",
+    category: "strength",
+    difficulty: "advanced",
+    equipment: "Pull-up bar",
+    motion: "pushup",
+    defaultSets: 3,
+    defaultReps: "8",
+    instructions: [
+      "Hang from a pull-up bar with an overhand grip, hands slightly wider than shoulders.",
+      "Pull your chest up toward the bar, driving your elbows down.",
+      "Pause briefly at the top.",
+      "Lower back down with control until your arms are fully extended.",
+    ],
+    formCues: ["Full range of motion", "Controlled descent", "Engaged shoulders and core"],
+    commonMistakes: ["Using momentum to swing or kip", "Only doing half reps", "Letting your shoulders shrug up toward your ears"],
+    youtubeUrl: "https://www.youtube.com/watch?v=epCWPz0By50",
   },
 ];
 
