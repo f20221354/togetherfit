@@ -8,6 +8,7 @@ export const EXERCISE_PHOTO_SLUGS = new Set<string>([
   "push-up",
   "lunge",
   "plank",
+  "jumping-jacks",
   "glute-bridge",
   "mountain-climbers",
   "bicycle-crunch",
