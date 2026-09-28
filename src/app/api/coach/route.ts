@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { respondToCoachPrompt } from "@/lib/move/aiCoach";
 
+export const maxDuration = 30;
+
 const SYSTEM_PROMPT =
   "You are a supportive, encouraging fitness coach inside a wellness app called Swasth Bharat. " +
   "Answer in 1-3 short sentences, plain language, no medical claims. " +
@@ -20,7 +22,7 @@ async function askGroq(prompt: string, apiKey: string): Promise<string | null> {
         max_tokens: 200,
         temperature: 0.6,
       }),
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -41,7 +43,7 @@ async function askOllama(prompt: string): Promise<string | null> {
         prompt: `${SYSTEM_PROMPT}\n\nUser: ${prompt}\nCoach:`,
         stream: false,
       }),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(30000),
     });
     if (!res.ok) return null;
     const data = await res.json();
