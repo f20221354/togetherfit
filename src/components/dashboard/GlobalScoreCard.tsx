@@ -7,7 +7,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 const SCORE_META: { key: ScoreKey; label: string }[] = [
   { key: "posture", label: "Posture" },
   { key: "focus", label: "Focus" },
-  { key: "movement", label: "Sunlight" },
+  { key: "movement", label: "Movement" },
   { key: "circadian", label: "Circadian" },
   { key: "recovery", label: "Recovery" },
 ];

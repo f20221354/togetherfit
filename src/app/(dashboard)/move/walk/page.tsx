@@ -49,7 +49,7 @@ export default function MicroStrollWalkPage() {
       <PageHeader
         icon="🚶"
         title="15-Minute Micro-Stroll"
-        subtitle="A short sunlight walk matched to your schedule — boosts Movement and Sunlight scores."
+        subtitle="A short sunlight walk matched to your schedule — boosts Movement and Circadian scores."
       />
 
       <div className="flex flex-col items-center gap-5 rounded-3xl border border-border bg-surface p-10">
