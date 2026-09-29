@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/authStore";
 
 interface NetworkUser {
@@ -11,7 +13,7 @@ interface NetworkUser {
 
 interface FriendsListResponse {
   ok: boolean;
-  friends: NetworkUser[];
+  friends: (NetworkUser & { connectionId: string })[];
   incoming: { id: string; from: NetworkUser; createdAt: string }[];
   outgoing: { id: string; to: NetworkUser; createdAt: string }[];
 }
@@ -24,6 +26,7 @@ interface FriendsListResponse {
  */
 export function RealFriendNetwork() {
   const user = useCurrentUser();
+  const router = useRouter();
   const [code, setCode] = useState<string | null>(null);
   const [list, setList] = useState<FriendsListResponse | null>(null);
   const [codeInput, setCodeInput] = useState("");
@@ -97,6 +100,10 @@ export function RealFriendNetwork() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ requestId, respondingEmail: user.email, status: decision }),
     });
+    if (decision === "accepted") {
+      router.push(`/connect/messages/${requestId}`); // open the chat automatically, connections.id === the request's id
+      return;
+    }
     await refresh(user.email);
   }
 
@@ -200,9 +207,13 @@ export function RealFriendNetwork() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {list.friends.map((f) => (
-              <span key={f.email} className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground">
-                {f.name}
-              </span>
+              <Link
+                key={f.email}
+                href={`/connect/messages/${f.connectionId}`}
+                className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
+              >
+                {f.name} <span aria-hidden="true">💬</span>
+              </Link>
             ))}
           </div>
         )}

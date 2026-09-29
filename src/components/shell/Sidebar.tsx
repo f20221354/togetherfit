@@ -5,8 +5,21 @@ import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS, PROFILE_ITEM } from "./navItems";
 import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
+import { useUnreadConnectionsCount } from "@/lib/network/useUnreadCount";
 
-function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
+function NavLink({
+  href,
+  icon,
+  label,
+  active,
+  badge,
+}: {
+  href: string;
+  icon: string;
+  label: string;
+  active: boolean;
+  badge?: number;
+}) {
   return (
     <Link
       href={href}
@@ -18,6 +31,11 @@ function NavLink({ href, icon, label, active }: { href: string; icon: string; la
     >
       <span className="text-base">{icon}</span>
       {label}
+      {!!badge && (
+        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold text-black">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -27,6 +45,7 @@ export function Sidebar() {
   const router = useRouter();
   const user = useCurrentUser();
   const logOut = useAuthStore((s) => s.logOut);
+  const unreadCount = useUnreadConnectionsCount();
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-surface px-3 py-6 md:flex">
@@ -40,7 +59,14 @@ export function Sidebar() {
         <div className="my-2 border-t border-border" />
 
         {ACTION_ITEMS.map((item) => (
-          <NavLink key={item.key} href={item.href} icon={item.icon} label={item.label} active={pathname.startsWith(item.href)} />
+          <NavLink
+            key={item.key}
+            href={item.href}
+            icon={item.icon}
+            label={item.label}
+            active={pathname.startsWith(item.href)}
+            badge={item.key === "connect" ? unreadCount : undefined}
+          />
         ))}
 
         <div className="my-2 border-t border-border" />

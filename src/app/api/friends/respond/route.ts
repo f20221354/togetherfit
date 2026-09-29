@@ -6,10 +6,10 @@ export async function POST(req: NextRequest) {
   if (
     typeof requestId !== "string" ||
     typeof respondingEmail !== "string" ||
-    (status !== "accepted" && status !== "declined")
+    (status !== "accepted" && status !== "declined" && status !== "blocked")
   ) {
     return NextResponse.json(
-      { ok: false, error: 'requestId, respondingEmail and status ("accepted" | "declined") are required' },
+      { ok: false, error: 'requestId, respondingEmail and status ("accepted" | "declined" | "blocked") are required' },
       { status: 400 }
     );
   }

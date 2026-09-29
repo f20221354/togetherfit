@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/authStore";
 
 interface IncomingRequest {
@@ -40,6 +41,7 @@ function saveSeen(email: string, ids: Set<string>) {
  */
 export function FriendRequestNotifier() {
   const user = useCurrentUser();
+  const router = useRouter();
   const [visible, setVisible] = useState<IncomingRequest[]>([]);
   const seenRef = useRef<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -89,6 +91,7 @@ export function FriendRequestNotifier() {
     } finally {
       setBusyId(null);
       dismiss(requestId);
+      if (status === "accepted") router.push(`/connect/messages/${requestId}`); // open the chat automatically
     }
   }
 
