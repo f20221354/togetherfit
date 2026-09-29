@@ -9,6 +9,8 @@ import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { WORKOUT_TEMPLATES } from "@/lib/move/workoutTemplates";
 import { getExerciseBySlug } from "@/lib/move/exercises";
 import { WorkoutTemplate } from "@/lib/move/types";
+import { useCurrentUser } from "@/lib/auth/authStore";
+import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
 
 type Stage = "select" | "player" | "complete";
 
@@ -76,6 +78,7 @@ export default function WorkoutPage() {
   const removeExerciseFromDraft = useMoveStore((s) => s.removeExerciseFromDraft);
   const reorderDraft = useMoveStore((s) => s.reorderDraft);
   const logWellnessEvent = useWellnessStore((s) => s.logEvent);
+  const user = useCurrentUser();
 
   const [stage, setStage] = useState<Stage>("select");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -107,6 +110,8 @@ export default function WorkoutPage() {
       completed: true,
     });
     logWellnessEvent("workout_completed", { duration: durationMinutes * 60 });
+    // Counts toward Connect milestones (first activity, streaks); a milestone pops the celebration screen.
+    if (user) void logActivityAndCelebrate(user, { sport: "gym" });
     setStage("complete");
   }
 

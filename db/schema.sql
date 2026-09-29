@@ -144,3 +144,36 @@ begin
       add constraint connections_activity_fk foreign key (activity_id) references activity_intents(id) on delete set null;
   end if;
 end $$;
+
+-- ============================================================
+-- Milestone 3: Milestone celebrations
+-- ============================================================
+
+-- One row per completed activity (a workout, or a session logged from a
+-- 1:1 or group chat). Milestones are computed from these.
+create table if not exists activity_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references app_users(id) on delete cascade,
+  sport text not null,
+  connection_id uuid references connections(id) on delete set null,
+  group_id uuid references groups(id) on delete set null,
+  completed_at timestamptz not null default now()
+);
+
+create index if not exists activity_sessions_user_idx on activity_sessions(user_id, completed_at);
+
+-- Milestones a user has hit. `ref` scopes per-connection milestones
+-- (e.g. 10 sessions with one friend); it's '' for everything else.
+create table if not exists milestones (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references app_users(id) on delete cascade,
+  key text not null,
+  ref text not null default '',
+  sport text,
+  achieved_at timestamptz not null default now(),
+  unique (user_id, key, ref)
+);
+
+-- Celebration cards are ephemeral (24h) and the receiver can react once.
+alter table messages add column if not exists expires_at timestamptz;
+alter table messages add column if not exists reaction text;

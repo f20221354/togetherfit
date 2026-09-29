@@ -86,3 +86,51 @@ body {
     animation: none;
   }
 }
+
+/* Milestone celebrations */
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--drift, 0), 105vh, 0) rotate(720deg);
+    opacity: 0.9;
+  }
+}
+
+@keyframes celebration-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confetti-fall 3.2s cubic-bezier(0.25, 0.6, 0.5, 1) forwards;
+}
+
+.celebration-pop {
+  animation: celebration-pop 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece {
+    display: none;
+  }
+  .celebration-pop {
+    animation: none;
+  }
+}

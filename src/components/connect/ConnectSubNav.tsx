@@ -8,6 +8,7 @@ const TABS = [
   { label: "Find Partners", href: "/connect" },
   { label: "Friends", href: "/connect/friends" },
   { label: "Messages", href: "/connect/messages" },
+  { label: "Milestones", href: "/connect/milestones" },
   { label: "Discover", href: "/connect/discover" },
   { label: "Trainers", href: "/connect/trainers" },
   { label: "My Profile", href: "/connect/my-profile" },

@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { sportMeta } from "@/lib/connect/sports";
 import { timeSlotLabel } from "@/lib/connect/timeSlot";
+import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
 
 interface GroupChatResponse {
   ok: boolean;
@@ -30,6 +31,7 @@ export default function GroupChatPage() {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,6 +81,12 @@ export default function GroupChatPage() {
     }
   }
 
+  async function logSession() {
+    if (!user || !chat) return;
+    const result = await logActivityAndCelebrate(user, { sport: chat.group.sport, groupId });
+    setNotice(result.ok ? "Group session logged ✅" : (result.error ?? "Couldn't log the session."));
+  }
+
   const group = chat?.group;
   const meta = group ? sportMeta(group.sport) : null;
 
@@ -95,7 +103,18 @@ export default function GroupChatPage() {
         />
       </div>
 
-      {group && <p className="text-xs text-muted">Members: {group.members.join(", ")}</p>}
+      {group && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted">Members: {group.members.join(", ")}</p>
+          <button
+            onClick={logSession}
+            className="rounded-full border border-accent/40 px-4 py-1.5 text-xs font-medium text-foreground hover:bg-accent/10"
+          >
+            ✅ We did it — log this session
+          </button>
+        </div>
+      )}
+      {notice && <p className="text-xs text-muted">{notice}</p>}
       {error && <p className="text-sm text-danger">{error}</p>}
 
       <div ref={listRef} className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-4">

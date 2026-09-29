@@ -273,6 +273,9 @@ export interface ChatMessage {
   body: string;
   createdAt: string;
   mine: boolean;
+  /** Celebration cards disappear after 24h; the receiver can react once. */
+  expiresAt?: string | null;
+  reaction?: string | null;
 }
 
 export interface ConversationSummary {
@@ -295,10 +298,16 @@ async function assertParticipant(connectionId: string, email: string): Promise<U
   return result.rows.length > 0 ? me : null;
 }
 
+/** Celebration cards are ephemeral: once expired they're deleted, not just hidden. */
+async function deleteExpiredMessages(): Promise<void> {
+  await getPool().query("delete from messages where expires_at is not null and expires_at <= now()");
+}
+
 export async function listConversations(email: string): Promise<ConversationSummary[]> {
   const pool = getPool();
   const me = await getUserRowByEmail(email);
   if (!me) return [];
+  await deleteExpiredMessages();
 
   const result = await pool.query<{
     connection_id: string;
@@ -312,13 +321,13 @@ export async function listConversations(email: string): Promise<ConversationSumm
     `select
        c.id as connection_id,
        u.email, u.name, u.code,
-       lm.body as last_message,
+       case when lm.type = 'celebration' then '🎉 Sent a celebration' else lm.body end as last_message,
        lm.created_at as last_message_at,
        (select count(*) from messages um where um.connection_id = c.id and um.sender_id != $1 and um.read_at is null) as unread_count
      from connections c
      join app_users u on u.id = (case when c.requester_id = $1 then c.receiver_id else c.requester_id end)
      left join lateral (
-       select body, created_at from messages m where m.connection_id = c.id order by m.created_at desc limit 1
+       select type, body, created_at from messages m where m.connection_id = c.id order by m.created_at desc limit 1
      ) lm on true
      where c.status = 'accepted' and (c.requester_id = $1 or c.receiver_id = $1)
      order by coalesce(lm.created_at, c.created_at) desc`,
@@ -340,6 +349,7 @@ export async function getMessages(connectionId: string, email: string): Promise<
   const pool = getPool();
   const me = await assertParticipant(connectionId, email);
   if (!me) return { ok: false, reason: "not_a_participant" };
+  await deleteExpiredMessages();
 
   // Viewing a thread marks the other person's messages as read.
   await pool.query(
@@ -347,8 +357,16 @@ export async function getMessages(connectionId: string, email: string): Promise<
     [connectionId, me.id]
   );
 
-  const result = await pool.query<{ id: string; email: string; type: "text" | "celebration"; body: string; created_at: string }>(
-    `select m.id, u.email, m.type, m.body, m.created_at from messages m
+  const result = await pool.query<{
+    id: string;
+    email: string;
+    type: "text" | "celebration";
+    body: string;
+    created_at: string;
+    expires_at: string | null;
+    reaction: string | null;
+  }>(
+    `select m.id, u.email, m.type, m.body, m.created_at, m.expires_at, m.reaction from messages m
      join app_users u on u.id = m.sender_id
      where m.connection_id = $1
      order by m.created_at asc`,
@@ -364,6 +382,8 @@ export async function getMessages(connectionId: string, email: string): Promise<
       body: r.body,
       createdAt: r.created_at,
       mine: r.email === email,
+      expiresAt: r.expires_at,
+      reaction: r.reaction,
     })),
   };
 }

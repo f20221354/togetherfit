@@ -21,12 +21,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { email, body, type } = await req.json();
+  const { email, body } = await req.json();
   if (typeof email !== "string" || typeof body !== "string") {
     return NextResponse.json({ ok: false, error: "email and body are required" }, { status: 400 });
   }
   try {
-    const result = await sendMessage(id, email.trim().toLowerCase(), body, type === "celebration" ? "celebration" : "text");
+    // Celebration cards go through /api/milestones/[id]/send, which checks you own the milestone.
+    const result = await sendMessage(id, email.trim().toLowerCase(), body, "text");
     if (!result.ok) {
       const status = result.reason === "not_a_participant" ? 403 : 400;
       const error = result.reason === "not_a_participant" ? "Not a participant in this connection, or it isn't accepted yet" : "Message cannot be empty";

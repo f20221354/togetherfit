@@ -3,6 +3,7 @@
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { FriendRequestNotifier } from "@/components/connect/FriendRequestNotifier";
+import { CelebrationOverlay } from "@/components/connect/CelebrationOverlay";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto px-4 pb-6 pt-6 md:px-8 md:pb-8">{children}</main>
       </div>
       <FriendRequestNotifier />
+      <CelebrationOverlay />
     </div>
   );
 }
