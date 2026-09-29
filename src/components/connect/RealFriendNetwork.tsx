@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/authStore";
+import { IncomingRequestActions, IncomingRequestView } from "./IncomingRequestActions";
 
 interface NetworkUser {
   email: string;
@@ -14,7 +15,7 @@ interface NetworkUser {
 interface FriendsListResponse {
   ok: boolean;
   friends: (NetworkUser & { connectionId: string })[];
-  incoming: { id: string; from: NetworkUser; createdAt: string }[];
+  incoming: (IncomingRequestView & { createdAt: string })[];
   outgoing: { id: string; to: NetworkUser; createdAt: string }[];
 }
 
@@ -93,20 +94,6 @@ export function RealFriendNetwork() {
     }
   }
 
-  async function respond(requestId: string, decision: "accepted" | "declined") {
-    if (!user) return;
-    await fetch("/api/friends/respond", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId, respondingEmail: user.email, status: decision }),
-    });
-    if (decision === "accepted") {
-      router.push(`/connect/messages/${requestId}`); // open the chat automatically, connections.id === the request's id
-      return;
-    }
-    await refresh(user.email);
-  }
-
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-accent/30 bg-accent/5 p-5">
       <div>
@@ -163,20 +150,16 @@ export function RealFriendNetwork() {
           </h3>
           <div className="flex flex-col gap-2">
             {list.incoming.map((req) => (
-              <div key={req.id} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
-                <div className="flex-1 text-sm font-medium text-foreground">{req.from.name}</div>
-                <button
-                  onClick={() => respond(req.id, "accepted")}
-                  className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() => respond(req.id, "declined")}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-2"
-                >
-                  Decline
-                </button>
+              <div key={req.id} className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3">
+                <div className="text-sm font-medium text-foreground">{req.from.name}</div>
+                <IncomingRequestActions
+                  request={req}
+                  email={user.email}
+                  onDone={(outcome) => {
+                    if (outcome === "accepted") router.push(`/connect/messages/${req.id}?new=1`); // open the chat automatically
+                    else refresh(user.email);
+                  }}
+                />
               </div>
             ))}
           </div>

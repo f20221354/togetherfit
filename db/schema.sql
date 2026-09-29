@@ -68,3 +68,79 @@ create table if not exists messages (
 );
 
 create index if not exists messages_connection_idx on messages(connection_id, created_at);
+
+-- ============================================================
+-- Milestone 2: Find a Friend (activity-based matching)
+-- ============================================================
+
+-- One row per "I want to do <sport> in <area> at <time>". Location is
+-- stored coarse only (lat/lng rounded to ~500 m + a geohash), never exact.
+create table if not exists activity_intents (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references app_users(id) on delete cascade,
+  sport text not null,
+  area_geohash text not null,
+  area_lat double precision not null,
+  area_lng double precision not null,
+  area_label text,
+  radius_km double precision not null default 5,
+  mode text not null check (mode in ('now', 'scheduled')),
+  start_time timestamptz not null,
+  status text not null default 'active' check (status in ('active', 'cancelled', 'expired')),
+  hidden boolean not null default false,
+  last_heartbeat timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists activity_intents_active_idx on activity_intents(sport, status);
+create index if not exists activity_intents_user_idx on activity_intents(user_id, status);
+
+create table if not exists groups (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  sport text not null,
+  area_geohash text not null,
+  area_lat double precision not null,
+  area_lng double precision not null,
+  mode text not null check (mode in ('now', 'scheduled')),
+  start_time timestamptz not null,
+  created_by uuid not null references app_users(id) on delete cascade,
+  status text not null default 'active' check (status in ('active', 'expired')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists groups_active_idx on groups(sport, status);
+
+create table if not exists group_members (
+  group_id uuid not null references groups(id) on delete cascade,
+  user_id uuid not null references app_users(id) on delete cascade,
+  joined_at timestamptz not null default now(),
+  primary key (group_id, user_id)
+);
+
+create table if not exists reports (
+  id uuid primary key default gen_random_uuid(),
+  reporter_id uuid not null references app_users(id) on delete cascade,
+  reported_id uuid not null references app_users(id) on delete cascade,
+  reason text not null,
+  created_at timestamptz not null default now()
+);
+
+-- Group chat reuses `messages`: a message belongs to exactly one of a
+-- connection (1:1) or a group.
+alter table messages alter column connection_id drop not null;
+alter table messages add column if not exists group_id uuid references groups(id) on delete cascade;
+alter table messages drop constraint if exists messages_target_check;
+alter table messages add constraint messages_target_check check ((connection_id is null) <> (group_id is null));
+create index if not exists messages_group_idx on messages(group_id, created_at);
+
+-- A Find a Friend request carries the requester's intent, and the
+-- receiver can counter with another time.
+alter table connections add column if not exists proposed_time timestamptz;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'connections_activity_fk') then
+    alter table connections
+      add constraint connections_activity_fk foreign key (activity_id) references activity_intents(id) on delete set null;
+  end if;
+end $$;

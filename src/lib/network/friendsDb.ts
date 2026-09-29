@@ -6,8 +6,14 @@ export interface NetworkUser {
   code: string;
 }
 
-interface UserRow extends NetworkUser {
+export interface UserRow extends NetworkUser {
   id: string;
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_RE.test(value);
 }
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars: no I, O, 0, 1
@@ -18,9 +24,16 @@ function generateCode(): string {
   return `SB-${code}`;
 }
 
-async function getUserRowByEmail(email: string): Promise<UserRow | null> {
+export async function getUserRowByEmail(email: string): Promise<UserRow | null> {
   const pool = getPool();
   const result = await pool.query<UserRow>("select id, email, name, code from app_users where email = $1", [email]);
+  return result.rows[0] ?? null;
+}
+
+export async function getUserRowById(id: string): Promise<UserRow | null> {
+  if (!isUuid(id)) return null;
+  const pool = getPool();
+  const result = await pool.query<UserRow>("select id, email, name, code from app_users where id = $1", [id]);
   return result.rows[0] ?? null;
 }
 
@@ -64,8 +77,50 @@ export async function lookupByCode(code: string): Promise<NetworkUser | null> {
 export type ConnectionSource = "search" | "find_a_friend";
 
 export type SendRequestResult =
-  | { ok: true }
+  | { ok: true; connectionId: string }
   | { ok: false; reason: "self" | "not_found" | "already_friends" | "already_pending" };
+
+/** Shared by Add-by-code and Find a Friend: there is one connection row per pair of users. */
+export async function createConnectionRequest(
+  requester: UserRow,
+  receiver: UserRow,
+  options?: { source?: ConnectionSource; activityId?: string | null }
+): Promise<SendRequestResult> {
+  if (receiver.id === requester.id) return { ok: false, reason: "self" };
+  const pool = getPool();
+
+  const existing = await pool.query<{ id: string; status: string }>(
+    `select id, status from connections
+     where (requester_id = $1 and receiver_id = $2) or (requester_id = $2 and receiver_id = $1)`,
+    [requester.id, receiver.id]
+  );
+  const current = existing.rows[0];
+  if (current?.status === "accepted") return { ok: false, reason: "already_friends" };
+  if (current?.status === "pending") return { ok: false, reason: "already_pending" };
+  // A block hides the two people from each other, so it reads as "not found" rather than revealing the block.
+  if (current?.status === "blocked") return { ok: false, reason: "not_found" };
+
+  const source = options?.source ?? "search";
+  const activityId = options?.activityId ?? null;
+
+  if (current) {
+    // Declined earlier: a fresh request is allowed.
+    await pool.query(
+      `update connections
+       set status = 'pending', created_at = now(), requester_id = $1, receiver_id = $2,
+           source = $3, activity_id = $4, proposed_time = null
+       where id = $5`,
+      [requester.id, receiver.id, source, activityId, current.id]
+    );
+    return { ok: true, connectionId: current.id };
+  }
+
+  const inserted = await pool.query<{ id: string }>(
+    "insert into connections (requester_id, receiver_id, source, activity_id) values ($1, $2, $3, $4) returning id",
+    [requester.id, receiver.id, source, activityId]
+  );
+  return { ok: true, connectionId: inserted.rows[0].id };
+}
 
 export async function sendFriendRequest(
   fromEmail: string,
@@ -73,53 +128,42 @@ export async function sendFriendRequest(
   toCode: string,
   options?: { source?: ConnectionSource; activityId?: string | null }
 ): Promise<SendRequestResult> {
-  const pool = getPool();
   await getOrCreateIdentity(fromEmail, fromName); // ensure the sender has a row too
-
   const requester = await getUserRowByEmail(fromEmail);
-  const receiver = await lookupByCode(toCode);
-  if (!receiver || !requester) return { ok: false, reason: "not_found" };
-  if (receiver.email === fromEmail) return { ok: false, reason: "self" };
-
-  const receiverRow = await getUserRowByEmail(receiver.email);
-  if (!receiverRow) return { ok: false, reason: "not_found" };
-
-  const existing = await pool.query<{ status: string }>(
-    `select status from connections
-     where (requester_id = $1 and receiver_id = $2) or (requester_id = $2 and receiver_id = $1)`,
-    [requester.id, receiverRow.id]
-  );
-  const current = existing.rows[0]?.status;
-  if (current === "accepted") return { ok: false, reason: "already_friends" };
-  if (current === "pending") return { ok: false, reason: "already_pending" };
-
-  const source = options?.source ?? "search";
-  const activityId = options?.activityId ?? null;
-
-  if (current === "declined" || current === "blocked") {
-    await pool.query(
-      `update connections
-       set status = 'pending', created_at = now(), requester_id = $1, receiver_id = $2, source = $3, activity_id = $4
-       where (requester_id = $1 and receiver_id = $2) or (requester_id = $2 and receiver_id = $1)`,
-      [requester.id, receiverRow.id, source, activityId]
-    );
-  } else {
-    await pool.query(
-      "insert into connections (requester_id, receiver_id, source, activity_id) values ($1, $2, $3, $4)",
-      [requester.id, receiverRow.id, source, activityId]
-    );
-  }
-  return { ok: true };
+  const receiverUser = await lookupByCode(toCode);
+  if (!requester || !receiverUser) return { ok: false, reason: "not_found" };
+  const receiver = await getUserRowByEmail(receiverUser.email);
+  if (!receiver) return { ok: false, reason: "not_found" };
+  return createConnectionRequest(requester, receiver, options);
 }
+
+export type RespondAction = "accepted" | "declined" | "blocked" | "join_their_time" | "suggest";
 
 export async function respondToRequest(
   requestId: string,
   respondingEmail: string,
-  status: "accepted" | "declined" | "blocked"
+  action: RespondAction,
+  proposedTime?: string
 ): Promise<{ ok: boolean }> {
+  if (!isUuid(requestId)) return { ok: false };
   const pool = getPool();
   const responder = await getUserRowByEmail(respondingEmail);
   if (!responder) return { ok: false };
+
+  if (action === "suggest") {
+    const time = proposedTime ? new Date(proposedTime) : null;
+    if (!time || Number.isNaN(time.getTime()) || time.getTime() < Date.now() - 5 * 60_000) return { ok: false };
+    // Hand the request back to the original requester, now carrying the new time.
+    const result = await pool.query(
+      `update connections
+       set requester_id = receiver_id, receiver_id = requester_id, proposed_time = $1, created_at = now()
+       where id = $2 and receiver_id = $3 and status = 'pending'`,
+      [time.toISOString(), requestId, responder.id]
+    );
+    return { ok: (result.rowCount ?? 0) > 0 };
+  }
+
+  const status = action === "join_their_time" ? "accepted" : action;
   const result = await pool.query(
     "update connections set status = $1 where id = $2 and receiver_id = $3 and status = 'pending'",
     [status, requestId, responder.id]
@@ -127,9 +171,20 @@ export async function respondToRequest(
   return { ok: (result.rowCount ?? 0) > 0 };
 }
 
+export interface IncomingRequest {
+  id: string;
+  from: NetworkUser;
+  createdAt: string;
+  source: ConnectionSource;
+  activity: { sport: string; mode: "now" | "scheduled"; startTime: string; areaLabel: string | null } | null;
+  proposedTime: string | null;
+  /** The receiver already has a live plan for this sport, so a plain Accept/Decline is enough. */
+  hasMatchingSchedule: boolean;
+}
+
 export interface FriendsList {
   friends: (NetworkUser & { connectionId: string })[];
-  incoming: { id: string; from: NetworkUser; createdAt: string }[];
+  incoming: IncomingRequest[];
   outgoing: { id: string; to: NetworkUser; createdAt: string }[];
   totalUnread: number;
 }
@@ -146,10 +201,33 @@ export async function listFriends(email: string): Promise<FriendsList> {
     [me.id]
   );
 
-  const incoming = await pool.query<{ id: string; email: string; name: string; code: string; created_at: string }>(
-    `select c.id, u.email, u.name, u.code, c.created_at from connections c
+  const incoming = await pool.query<{
+    id: string;
+    email: string;
+    name: string;
+    code: string;
+    created_at: string;
+    source: ConnectionSource;
+    proposed_time: string | null;
+    sport: string | null;
+    mode: "now" | "scheduled" | null;
+    start_time: string | null;
+    area_label: string | null;
+    has_matching_schedule: boolean;
+  }>(
+    `select c.id, u.email, u.name, u.code, c.created_at, c.source, c.proposed_time,
+            ai.sport, ai.mode, ai.start_time, ai.area_label,
+            exists (
+              select 1 from activity_intents mine
+              where mine.user_id = $1 and mine.status = 'active' and mine.sport = ai.sport
+                and ((mine.mode = 'now' and mine.last_heartbeat > now() - interval '90 seconds')
+                  or (mine.mode = 'scheduled' and mine.start_time > now() - interval '60 minutes'))
+            ) as has_matching_schedule
+     from connections c
      join app_users u on u.id = c.requester_id
-     where c.receiver_id = $1 and c.status = 'pending'`,
+     left join activity_intents ai on ai.id = c.activity_id
+     where c.receiver_id = $1 and c.status = 'pending'
+     order by c.created_at desc`,
     [me.id]
   );
 
@@ -169,7 +247,18 @@ export async function listFriends(email: string): Promise<FriendsList> {
 
   return {
     friends: friends.rows.map((r) => ({ email: r.email, name: r.name, code: r.code, connectionId: r.connection_id })),
-    incoming: incoming.rows.map((r) => ({ id: r.id, from: { email: r.email, name: r.name, code: r.code }, createdAt: r.created_at })),
+    incoming: incoming.rows.map((r) => ({
+      id: r.id,
+      from: { email: r.email, name: r.name, code: r.code },
+      createdAt: r.created_at,
+      source: r.source,
+      activity:
+        r.sport && r.mode && r.start_time
+          ? { sport: r.sport, mode: r.mode, startTime: r.start_time, areaLabel: r.area_label }
+          : null,
+      proposedTime: r.proposed_time,
+      hasMatchingSchedule: r.has_matching_schedule,
+    })),
     outgoing: outgoing.rows.map((r) => ({ id: r.id, to: { email: r.email, name: r.name, code: r.code }, createdAt: r.created_at })),
     totalUnread: Number(unread.rows[0]?.count ?? 0),
   };
@@ -195,6 +284,7 @@ export interface ConversationSummary {
 }
 
 async function assertParticipant(connectionId: string, email: string): Promise<UserRow | null> {
+  if (!isUuid(connectionId)) return null;
   const pool = getPool();
   const me = await getUserRowByEmail(email);
   if (!me) return null;

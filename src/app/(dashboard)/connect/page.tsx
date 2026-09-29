@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Badge } from "@/components/ui/Badge";
-import { FindFriendModal } from "@/components/connect/FindFriendModal";
 import { AddFriendModal } from "@/components/connect/AddFriendModal";
 import { useConnectStore } from "@/lib/store/connectStore";
 import { MOCK_PARTNERS } from "@/lib/connect/mockPartners";
@@ -25,7 +24,6 @@ export default function ConnectDashboardPage() {
   const criteria = useConnectStore((s) => s.criteria);
   const plans = useConnectStore((s) => s.plans);
   const blockedIds = useConnectStore((s) => s.blockedIds);
-  const [findFriendOpen, setFindFriendOpen] = useState(false);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
 
   const user = useCurrentUser();
@@ -63,12 +61,12 @@ export default function ConnectDashboardPage() {
       <div className="flex items-start justify-between gap-3">
         <PageHeader icon="🤝" title="Activity" subtitle="Find an activity, and people who fit your wellness routine." />
         <div className="mt-1 flex shrink-0 items-center gap-3">
-          <button
-            onClick={() => setFindFriendOpen(true)}
+          <Link
+            href="/connect/find"
             className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-black hover:opacity-90"
           >
             🔎 Find a Friend
-          </button>
+          </Link>
           <button
             onClick={() => setAddFriendOpen(true)}
             className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-2"
@@ -81,7 +79,6 @@ export default function ConnectDashboardPage() {
         </div>
       </div>
 
-      {findFriendOpen && <FindFriendModal onClose={() => setFindFriendOpen(false)} />}
       {addFriendOpen && <AddFriendModal onClose={() => setAddFriendOpen(false)} />}
 
       <section>
