@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Badge } from "@/components/ui/Badge";
@@ -10,16 +10,44 @@ import { useConnectStore } from "@/lib/store/connectStore";
 import { MOCK_PARTNERS } from "@/lib/connect/mockPartners";
 import { computeCompatibility } from "@/lib/connect/compatibility";
 import { ACTIVITY_META, ActivityType } from "@/lib/connect/types";
+import { useCurrentUser } from "@/lib/auth/authStore";
 
 const QUICK_ACTIVITIES: ActivityType[] = ["walking", "running", "gym", "cycling", "yoga", "hiking"];
+
+interface RealFriend {
+  email: string;
+  name: string;
+  code: string;
+  connectionId: string;
+}
 
 export default function ConnectDashboardPage() {
   const criteria = useConnectStore((s) => s.criteria);
   const plans = useConnectStore((s) => s.plans);
-  const connections = useConnectStore((s) => s.connections);
   const blockedIds = useConnectStore((s) => s.blockedIds);
   const [findFriendOpen, setFindFriendOpen] = useState(false);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
+
+  const user = useCurrentUser();
+  const [friends, setFriends] = useState<RealFriend[] | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch(`/api/friends/list?email=${encodeURIComponent(user!.email)}`);
+        const data = await res.json();
+        if (!cancelled && data.ok) setFriends(data.friends);
+      } catch {
+        // Friend network unreachable — section just shows the empty state.
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const upcomingPlans = plans.filter((p) => p.status === "upcoming");
   const groupPlans = upcomingPlans.filter((p) => p.groupSize > 2);
@@ -125,25 +153,33 @@ export default function ConnectDashboardPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">Your Connections</h2>
-        {connections.length === 0 ? (
-          <p className="text-sm text-muted">No connections yet — find a partner to get started.</p>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+            Your Friends {friends && friends.length > 0 && `(${friends.length})`}
+          </h2>
+          <Link href="/connect/friends" className="text-xs font-medium text-accent-foreground hover:underline">
+            Manage →
+          </Link>
+        </div>
+        {!friends || friends.length === 0 ? (
+          <p className="text-sm text-muted">
+            No friends yet — share your code on the{" "}
+            <Link href="/connect/friends" className="text-accent-foreground hover:underline">
+              Friends
+            </Link>{" "}
+            tab, or tap Find/Add a Friend above.
+          </p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {connections.map((id) => {
-              const partner = MOCK_PARTNERS.find((p) => p.id === id);
-              if (!partner) return null;
-              return (
-                <Link
-                  key={id}
-                  href={`/connect/profile/${id}`}
-                  className="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
-                >
-                  <span>{partner.avatar}</span>
-                  {partner.name}
-                </Link>
-              );
-            })}
+            {friends.map((f) => (
+              <Link
+                key={f.email}
+                href={`/connect/messages/${f.connectionId}`}
+                className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
+              >
+                {f.name} <span aria-hidden="true">💬</span>
+              </Link>
+            ))}
           </div>
         )}
       </section>
