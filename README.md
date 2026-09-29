@@ -71,6 +71,35 @@ npm run start   # serve the production build
 npm run lint    # ESLint
 ```
 
+### Real Friends (the one real backend in this app)
+
+Every other feature in this app — including Connect's demo-partner
+matchmaking and connection requests — is Zustand + localStorage, with
+no server and no persistence beyond one browser. **Real Friends**
+(`/connect/friends`) is the exception: a genuine, cross-device friend
+system backed by a real Postgres database, so two different people on
+two different devices can actually find each other and become friends.
+
+**Setup (one-time):**
+
+1. Provision a free Postgres database. Easiest: Vercel dashboard →
+   your project → **Storage** → **Marketplace Database Providers** →
+   **Neon** (or Supabase, or any Postgres provider — this app only
+   needs a standard `DATABASE_URL` connection string).
+2. Add `DATABASE_URL` to `.env.local` (for local dev) and to your
+   Vercel project's Environment Variables (for the deployed site).
+3. Run the migration once: `node db/migrate.mjs` — this creates the
+   `app_users` and `friend_requests` tables (`db/schema.sql`).
+
+**How it works:** opening `/connect/friends` mints a permanent,
+shareable code for your account (`SB-XXXXXX`, keyed by your account
+email) via `POST /api/friends/identity`. Share that code with a real
+friend; they enter it to send a request (`POST /api/friends/request`,
+guards against self/duplicate/already-friends), and either person can
+accept or decline (`POST /api/friends/respond`). `GET /api/friends/list`
+returns your real friends and pending requests. All four routes and
+the query logic live in `src/lib/network/friendsDb.ts`.
+
 ### AI Coach backend
 
 The Move & Coach chat (`/move/coach`) calls a server route at

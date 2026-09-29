@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { RealFriendNetwork } from "@/components/connect/RealFriendNetwork";
 import { useConnectStore } from "@/lib/store/connectStore";
 import { MOCK_PARTNERS, searchPartners } from "@/lib/connect/mockPartners";
 
@@ -19,6 +20,17 @@ export default function ConnectFriendsPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <PageHeader icon="👥" title="Friends" subtitle="Search by name and send a friend request." />
+
+      <RealFriendNetwork />
+
+      <hr className="border-border" />
+
+      <div>
+        <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted">Demo Partners</h2>
+        <p className="mb-3 text-xs text-muted">
+          Search the wellness-partner directory below — this section stays local to this device.
+        </p>
+      </div>
 
       <section>
         <input
@@ -118,8 +130,8 @@ export default function ConnectFriendsPage() {
       </section>
 
       <p className="text-xs text-muted">
-        Friend requests here auto-resolve after a short delay, simulating the other person&apos;s response, since
-        there&apos;s no real backend yet.
+        Demo Partner requests above auto-resolve after a short delay, simulating the other person&apos;s response —
+        the Real Friends section further up is the one that works across actual devices.
       </p>
     </div>
   );
