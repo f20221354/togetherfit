@@ -8,6 +8,8 @@ import {
   ConnectionRequest,
   Conversation,
   ExperienceLevel,
+  FriendRequest,
+  FriendRequestStatus,
   PlannedActivity,
   SearchCriteria,
   TimeOfDay,
@@ -44,6 +46,8 @@ interface ConnectState {
   requests: ConnectionRequest[];
   connections: string[]; // accepted partner ids
   blockedIds: string[];
+  friends: string[]; // accepted friend partner ids (identity-based, not activity-scoped)
+  friendRequests: FriendRequest[];
   conversations: Conversation[];
   messages: ChatMessage[];
   plans: PlannedActivity[];
@@ -71,6 +75,9 @@ interface ConnectState {
   blockUser: (partnerId: string) => void;
   removeConnection: (partnerId: string) => void;
   leaveGroup: (planId: string) => void;
+
+  sendFriendRequest: (partnerId: string) => FriendRequest | null;
+  respondFriendRequest: (requestId: string, status: Exclude<FriendRequestStatus, "pending">) => void;
 }
 
 const DEFAULT_CRITERIA: SearchCriteria = {
@@ -100,6 +107,8 @@ export const useConnectStore = create<ConnectState>()(
       requests: [],
       connections: [],
       blockedIds: [],
+      friends: [],
+      friendRequests: [],
       conversations: [],
       messages: [],
       plans: [],
@@ -309,6 +318,47 @@ export const useConnectStore = create<ConnectState>()(
 
       leaveGroup: (planId) =>
         set((state) => ({ plans: state.plans.filter((p) => p.id !== planId) })),
+
+      sendFriendRequest: (partnerId) => {
+        if (partnerId === "me") return null;
+        const { friends, friendRequests } = get();
+        if (friends.includes(partnerId)) return null;
+        if (friendRequests.some((r) => r.partnerId === partnerId && r.status === "pending")) return null;
+
+        const request: FriendRequest = {
+          id: makeId("freq"),
+          partnerId,
+          status: "pending",
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({ friendRequests: [request, ...state.friendRequests] }));
+
+        // No real backend exists yet, so there's no second user to click Accept.
+        // A demo partner auto-responds after a delay, standing in for that —
+        // the same simulation pattern sendRequest() above already uses. Swap
+        // this setTimeout for a real notification/response once a backend exists.
+        setTimeout(() => {
+          const still = get().friendRequests.find((r) => r.id === request.id);
+          if (still && still.status === "pending") {
+            get().respondFriendRequest(request.id, Math.random() < 0.8 ? "accepted" : "declined");
+          }
+        }, 2000 + Math.random() * 2000);
+
+        return request;
+      },
+
+      respondFriendRequest: (requestId, status) =>
+        set((state) => {
+          const request = state.friendRequests.find((r) => r.id === requestId);
+          if (!request || request.status !== "pending") return state;
+          return {
+            friendRequests: state.friendRequests.map((r) => (r.id === requestId ? { ...r, status } : r)),
+            friends:
+              status === "accepted" && !state.friends.includes(request.partnerId)
+                ? [...state.friends, request.partnerId]
+                : state.friends,
+          };
+        }),
     }),
     { name: "vitaos-connect-store" }
   )

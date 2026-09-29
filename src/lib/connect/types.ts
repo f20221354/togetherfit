@@ -105,3 +105,12 @@ export interface Conversation {
   participantIds: string[]; // partner ids, excludes "me"
   isGroup: boolean;
 }
+
+export type FriendRequestStatus = "pending" | "accepted" | "declined";
+
+export interface FriendRequest {
+  id: string;
+  partnerId: string;
+  status: FriendRequestStatus;
+  createdAt: string;
+}

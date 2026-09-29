@@ -101,3 +101,10 @@ export const MOCK_PARTNERS: PartnerProfile[] = [
     isDemo: true,
   },
 ];
+
+/** Case-insensitive name search, standing in for a real partner-directory lookup. */
+export function searchPartners(query: string): PartnerProfile[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return MOCK_PARTNERS.filter((p) => p.name.toLowerCase().includes(q));
+}

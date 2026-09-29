@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Badge } from "@/components/ui/Badge";
+import { FindFriendModal } from "@/components/connect/FindFriendModal";
 import { useConnectStore } from "@/lib/store/connectStore";
 import { MOCK_PARTNERS } from "@/lib/connect/mockPartners";
 import { computeCompatibility } from "@/lib/connect/compatibility";
@@ -15,6 +17,7 @@ export default function ConnectDashboardPage() {
   const plans = useConnectStore((s) => s.plans);
   const connections = useConnectStore((s) => s.connections);
   const blockedIds = useConnectStore((s) => s.blockedIds);
+  const [findFriendOpen, setFindFriendOpen] = useState(false);
 
   const upcomingPlans = plans.filter((p) => p.status === "upcoming");
   const groupPlans = upcomingPlans.filter((p) => p.groupSize > 2);
@@ -29,10 +32,20 @@ export default function ConnectDashboardPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <div className="flex items-start justify-between gap-3">
         <PageHeader icon="🤝" title="Activity" subtitle="Find an activity, and people who fit your wellness routine." />
-        <Link href="/connect/my-profile" className="mt-1 shrink-0 text-xs font-medium text-accent-foreground hover:underline">
-          My Profile →
-        </Link>
+        <div className="mt-1 flex shrink-0 items-center gap-3">
+          <button
+            onClick={() => setFindFriendOpen(true)}
+            className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-black hover:opacity-90"
+          >
+            🔎 Find a Friend
+          </button>
+          <Link href="/connect/my-profile" className="text-xs font-medium text-accent-foreground hover:underline">
+            My Profile →
+          </Link>
+        </div>
       </div>
+
+      {findFriendOpen && <FindFriendModal onClose={() => setFindFriendOpen(false)} />}
 
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">What do you want to do?</h2>
