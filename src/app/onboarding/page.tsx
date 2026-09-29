@@ -89,7 +89,7 @@ export default function OnboardingPage() {
               Welcome to स्वस्थ Bharat{user ? `, ${user.name.split(" ")[0]}` : ""}.
             </h2>
             <p className="text-sm text-muted">
-              One wellness operating system with five interconnected capabilities.
+              Five connected capabilities, working together for you.
             </p>
             <div className="flex flex-col gap-2 text-left">
               {CAPABILITIES.map((c) => (

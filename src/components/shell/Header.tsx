@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { CameraPrivacyIndicator } from "@/components/camera/CameraPrivacyIndicator";
 import { useIsClient } from "@/lib/useIsClient";
 import { MobileDrawer } from "./MobileDrawer";
+import { SwasthBharatLogo } from "@/components/brand/SwasthBharatLogo";
 
 const RANGES: { key: "today" | "7d" | "30d"; label: string }[] = [
   { key: "today", label: "Today" },
@@ -60,8 +61,7 @@ export function Header() {
         >
           ☰
         </button>
-        <span className="text-xl">◈</span>
-        <span className="text-base font-semibold text-foreground">स्वस्थ Bharat</span>
+        <SwasthBharatLogo layout="inline" size={32} />
       </div>
 
       <div className="hidden items-center gap-1 rounded-full bg-surface-2 p-1 md:flex">

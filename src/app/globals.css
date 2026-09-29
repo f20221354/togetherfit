@@ -54,6 +54,12 @@ body {
   border-color: var(--border);
 }
 
+/* Brand logo: both theme treatments render; the theme hides the other one. */
+:root[data-theme="dark"] .sb-only-light,
+:root:not([data-theme="dark"]) .sb-only-dark {
+  display: none;
+}
+
 /* Find a Friend radar */
 @keyframes radar-sweep {
   to {
