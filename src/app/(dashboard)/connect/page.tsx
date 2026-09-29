@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { FindFriendModal } from "@/components/connect/FindFriendModal";
+import { AddFriendModal } from "@/components/connect/AddFriendModal";
 import { useConnectStore } from "@/lib/store/connectStore";
 import { MOCK_PARTNERS } from "@/lib/connect/mockPartners";
 import { computeCompatibility } from "@/lib/connect/compatibility";
@@ -18,6 +19,7 @@ export default function ConnectDashboardPage() {
   const connections = useConnectStore((s) => s.connections);
   const blockedIds = useConnectStore((s) => s.blockedIds);
   const [findFriendOpen, setFindFriendOpen] = useState(false);
+  const [addFriendOpen, setAddFriendOpen] = useState(false);
 
   const upcomingPlans = plans.filter((p) => p.status === "upcoming");
   const groupPlans = upcomingPlans.filter((p) => p.groupSize > 2);
@@ -39,6 +41,12 @@ export default function ConnectDashboardPage() {
           >
             🔎 Find a Friend
           </button>
+          <button
+            onClick={() => setAddFriendOpen(true)}
+            className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-2"
+          >
+            ➕ Add Friend
+          </button>
           <Link href="/connect/my-profile" className="text-xs font-medium text-accent-foreground hover:underline">
             My Profile →
           </Link>
@@ -46,6 +54,7 @@ export default function ConnectDashboardPage() {
       </div>
 
       {findFriendOpen && <FindFriendModal onClose={() => setFindFriendOpen(false)} />}
+      {addFriendOpen && <AddFriendModal onClose={() => setAddFriendOpen(false)} />}
 
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">What do you want to do?</h2>
