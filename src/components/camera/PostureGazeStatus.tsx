@@ -5,7 +5,14 @@ import Link from "next/link";
 import clsx from "clsx";
 import { useCameraStore } from "@/lib/store/cameraStore";
 import { NudgeState } from "@/lib/camera/postureNudges";
-import { requestSystemNotifications, systemNotificationsSupported } from "@/lib/camera/nudgeDelivery";
+import { requestSystemNotifications, sendTestNotification, systemNotificationsSupported } from "@/lib/camera/nudgeDelivery";
+
+const TEST_RESULT: Record<ReturnType<typeof sendTestNotification>, string> = {
+  sent: "Sent. No pop-up? In Windows open Settings → System → Notifications, turn on Google Chrome, and turn off Do not disturb.",
+  blocked: "Notifications are blocked for this site. Allow them from the lock icon in the address bar.",
+  unsupported: "This browser can't show system notifications. In-app nudges still work.",
+  failed: "This browser refused to show a notification. In-app nudges still work.",
+};
 
 const LABELS: Record<"posture" | "gaze", Record<NudgeState, string>> = {
   posture: { optimal: "Good", warning: "Adjust posture", recovering: "Nice, settling back…", "no-detection": "Not detected" },
@@ -57,6 +64,7 @@ export function PostureGazeStatus() {
   const setSystemNotifications = useCameraStore((s) => s.setSystemNotifications);
   const permission = usePermission();
   const [asking, setAsking] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   async function enableSystemNotifications() {
     setAsking(true);
@@ -94,10 +102,21 @@ export function PostureGazeStatus() {
         </div>
       )}
       {nudgesOn && permission === "granted" && (
-        <label className="flex items-center gap-2 text-xs text-muted">
-          <input type="checkbox" checked={systemNotifications} onChange={(e) => setSystemNotifications(e.target.checked)} />
-          Also notify me when this window isn&apos;t focused
-        </label>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 text-xs text-muted">
+              <input type="checkbox" checked={systemNotifications} onChange={(e) => setSystemNotifications(e.target.checked)} />
+              Also notify me when this window isn&apos;t focused
+            </label>
+            <button
+              onClick={() => setTestResult(TEST_RESULT[sendTestNotification()])}
+              className="rounded-full border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-2"
+            >
+              Send test notification
+            </button>
+          </div>
+          {testResult && <div className="text-xs text-muted">{testResult}</div>}
+        </div>
       )}
       {nudgesOn && permission === "denied" && (
         <div className="text-xs text-muted">Browser notifications are blocked. In-app nudges still work.</div>

@@ -34,6 +34,26 @@ export function deliverNudge(kind: NudgeKind) {
   }
 }
 
+/** Fires one notification right away so the user can check their OS actually shows them. */
+export function sendTestNotification(): "sent" | "blocked" | "unsupported" | "failed" {
+  if (!systemNotificationsSupported()) return "unsupported";
+  if (Notification.permission !== "granted") return "blocked";
+  try {
+    const notification = new Notification("togetherfit test ✅", {
+      body: "If you can see this, posture reminders can reach you while you use other apps.",
+      tag: "togetherfit-test",
+      icon: "/brand/icon-light-192.png",
+    });
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+    return "sent";
+  } catch {
+    return "failed";
+  }
+}
+
 export function systemNotificationsSupported(): boolean {
   return typeof window !== "undefined" && "Notification" in window;
 }

@@ -73,15 +73,21 @@ class SignalTracker {
   private badSince: number | null = null;
   private goodSince: number | null = null;
   private lastNotifiedAt: number | null = null;
+  private lostSince: number | null = null;
 
   update(now: number, detected: boolean, bad: boolean, warnMs: number, cooldownMs: number, enabled: boolean, kind: NudgeKind): NudgeEvent | null {
     if (!detected) {
-      // Leaving the frame or an unreliable detection is not bad posture: pause, don't accumulate.
-      this.state = "no-detection";
-      this.badSince = null;
-      this.goodSince = null;
+      // Leaving the frame is not bad posture, but a single dropped detection shouldn't
+      // wipe a building warning either: only pause after the face is gone for a moment.
+      if (this.lostSince === null) this.lostSince = now;
+      if (now - this.lostSince >= NUDGE_CONFIG.RECOVERY_DURATION_MS) {
+        this.state = "no-detection";
+        this.badSince = null;
+        this.goodSince = null;
+      }
       return null;
     }
+    this.lostSince = null;
     if (this.state === "no-detection") this.state = "optimal";
 
     if (bad) {
@@ -104,7 +110,16 @@ class SignalTracker {
       return { kind, type: "warning", notify, sustainedMs };
     }
 
-    if (this.state !== "recovering" && this.state !== "warning") this.badSince = null;
+    if (this.state === "optimal" && this.badSince !== null) {
+      // Readings near a threshold flicker (e.g. 74° / 76° around the 75° line). Only a
+      // sustained good stretch clears a building slouch timer, not one good frame.
+      if (this.goodSince === null) this.goodSince = now;
+      if (now - this.goodSince >= NUDGE_CONFIG.RECOVERY_DURATION_MS) {
+        this.badSince = null;
+        this.goodSince = null;
+      }
+      return null;
+    }
     if (this.state === "warning") {
       this.state = "recovering";
       this.goodSince = now;
@@ -124,6 +139,7 @@ class SignalTracker {
     this.state = "no-detection";
     this.badSince = null;
     this.goodSince = null;
+    this.lostSince = null;
   }
 }
 
