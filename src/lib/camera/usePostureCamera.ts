@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef } from "react";
 import { useCameraStore } from "@/lib/store/cameraStore";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { readingFromTransformMatrix } from "./postureAnalysis";
+import { NudgeEvent, NudgeTracker } from "./postureNudges";
+import { deliverNudge } from "./nudgeDelivery";
 
 const MEDIAPIPE_VERSION = "1.0.1";
 const WASM_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
@@ -11,7 +13,7 @@ const MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 
 const DETECTION_INTERVAL_MS = 400; // ~2.5 inferences/sec — throttled on purpose
-const SUSTAINED_WARNING_MS = 12_000; // spec: >10-15s of downward posture before alerting
+// Persistence, recovery and cooldown rules live in postureNudges.ts (NUDGE_CONFIG).
 
 // Module-scoped so the (large, cached) model is only downloaded once per tab.
 let landmarkerPromise: Promise<import("@mediapipe/tasks-vision").FaceLandmarker> | null = null;
@@ -27,6 +29,10 @@ async function getLandmarker() {
         outputFaceBlendshapes: false,
         runningMode: "VIDEO",
         numFaces: 1,
+        // Slightly stricter than the 0.5 defaults so shaky detections read as "no face", not bad posture.
+        minFaceDetectionConfidence: 0.6,
+        minFacePresenceConfidence: 0.6,
+        minTrackingConfidence: 0.6,
       });
     })().catch((err) => {
       landmarkerPromise = null;
@@ -40,17 +46,14 @@ export function usePostureCamera(videoRef: React.RefObject<HTMLVideoElement | nu
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastDetectAtRef = useRef(0);
-  const badSinceRef = useRef<number | null>(null);
-  const goodSinceRef = useRef<number | null>(null);
-  const wasBadRef = useRef(false);
+  const trackerRef = useRef(new NudgeTracker());
 
   const setPermission = useCameraStore((s) => s.setPermission);
   const setMonitoring = useCameraStore((s) => s.setMonitoring);
   const updateMetrics = useCameraStore((s) => s.updateMetrics);
   const registerSlouchEvent = useCameraStore((s) => s.registerSlouchEvent);
-  const alertsEnabled = useCameraStore((s) => s.alertsEnabled);
-  const canFireAlert = useCameraStore((s) => s.canFireAlert);
   const markAlertFired = useCameraStore((s) => s.markAlertFired);
+  const setNudgeStates = useCameraStore((s) => s.setNudgeStates);
   const logEvent = useWellnessStore((s) => s.logEvent);
 
   const loopRef = useRef<() => void>(() => {});
@@ -61,11 +64,26 @@ export function usePostureCamera(videoRef: React.RefObject<HTMLVideoElement | nu
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
-    badSinceRef.current = null;
-    goodSinceRef.current = null;
+    trackerRef.current.pause();
+    setNudgeStates("no-detection", "no-detection");
     setMonitoring(false);
-    updateMetrics({ eyeLevelAngle: null, headTilt: null, postureStatus: null });
-  }, [setMonitoring, updateMetrics, videoRef]);
+    updateMetrics({ eyeLevelAngle: null, headTilt: null, headTurn: null, postureStatus: null });
+  }, [setMonitoring, setNudgeStates, updateMetrics, videoRef]);
+
+  const handleEvent = useCallback(
+    (event: NudgeEvent) => {
+      if (event.kind === "posture" && event.type === "warning") {
+        registerSlouchEvent();
+        logEvent("slouch_detected", { duration: Math.round(event.sustainedMs / 1000) });
+      }
+      if (event.kind === "posture" && event.type === "recovered") logEvent("posture_alignment_restored");
+      if (event.type === "warning" && event.notify) {
+        markAlertFired();
+        deliverNudge(event.kind);
+      }
+    },
+    [logEvent, markAlertFired, registerSlouchEvent]
+  );
 
   const loop = useCallback(async () => {
     const video = videoRef.current;
@@ -78,44 +96,32 @@ export function usePostureCamera(videoRef: React.RefObject<HTMLVideoElement | nu
         const landmarker = await getLandmarker();
         const result = landmarker.detectForVideo(video, now);
         const matrix = result.facialTransformationMatrixes?.[0]?.data;
+        const reading = matrix ? readingFromTransformMatrix(matrix) : null;
+        updateMetrics({
+          eyeLevelAngle: reading?.eyeLevelAngle ?? null,
+          headTilt: reading?.headTilt ?? null,
+          headTurn: reading?.headTurn ?? null,
+          postureStatus: reading?.postureStatus ?? null,
+        });
 
-        if (matrix) {
-          const reading = readingFromTransformMatrix(matrix);
-          updateMetrics({
-            eyeLevelAngle: reading.eyeLevelAngle,
-            headTilt: reading.headTilt,
-            postureStatus: reading.postureStatus,
-          });
-
-          const isBad = reading.postureStatus === "elevated-risk";
-          if (isBad) {
-            goodSinceRef.current = null;
-            if (badSinceRef.current === null) badSinceRef.current = now;
-            const sustained = now - badSinceRef.current;
-            if (sustained >= SUSTAINED_WARNING_MS && !wasBadRef.current) {
-              wasBadRef.current = true;
-              registerSlouchEvent();
-              logEvent("slouch_detected", { duration: Math.round(sustained / 1000) });
-              if (alertsEnabled && canFireAlert()) markAlertFired();
-            }
-          } else {
-            badSinceRef.current = null;
-            if (goodSinceRef.current === null) goodSinceRef.current = now;
-            if (wasBadRef.current && now - goodSinceRef.current >= 2000) {
-              wasBadRef.current = false;
-              logEvent("posture_alignment_restored");
-            }
-          }
-        } else {
-          updateMetrics({ eyeLevelAngle: null, headTilt: null, postureStatus: null });
-        }
+        // Settings are read fresh each tick so changes apply without restarting the camera.
+        const { alertsEnabled, gazeAlertsEnabled, alertSensitivity, alertCooldownMinutes } = useCameraStore.getState();
+        const events = trackerRef.current.update(now, reading, {
+          sensitivity: alertSensitivity,
+          cooldownMs: alertCooldownMinutes * 60_000,
+          postureEnabled: alertsEnabled,
+          gazeEnabled: gazeAlertsEnabled,
+        });
+        const states = trackerRef.current.states;
+        setNudgeStates(states.posture, states.gaze);
+        events.forEach(handleEvent);
       } catch {
         // A transient inference failure shouldn't crash monitoring; next tick retries.
       }
     }
 
     rafRef.current = requestAnimationFrame(() => loopRef.current());
-  }, [alertsEnabled, canFireAlert, logEvent, markAlertFired, registerSlouchEvent, updateMetrics, videoRef]);
+  }, [handleEvent, setNudgeStates, updateMetrics, videoRef]);
 
   useEffect(() => {
     loopRef.current = loop;
@@ -148,9 +154,7 @@ export function usePostureCamera(videoRef: React.RefObject<HTMLVideoElement | nu
 
       setMonitoring(true);
       lastDetectAtRef.current = 0;
-      badSinceRef.current = null;
-      goodSinceRef.current = null;
-      wasBadRef.current = false;
+      trackerRef.current = new NudgeTracker();
       rafRef.current = requestAnimationFrame(() => loopRef.current());
     } catch (err) {
       const name = err instanceof DOMException ? err.name : "";
@@ -160,6 +164,19 @@ export function usePostureCamera(videoRef: React.RefObject<HTMLVideoElement | nu
       else setPermission("unavailable");
     }
   }, [setMonitoring, setPermission, videoRef]);
+
+  // requestAnimationFrame already stops while the tab is hidden; also clear the timers so
+  // time spent in another tab never counts towards a warning.
+  useEffect(() => {
+    function onVisibility() {
+      if (document.visibilityState === "hidden") {
+        trackerRef.current.pause();
+        setNudgeStates("no-detection", "no-detection");
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [setNudgeStates]);
 
   useEffect(() => stop, [stop]);
 

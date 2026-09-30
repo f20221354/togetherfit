@@ -13,16 +13,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Rounded Devanagari + Latin face for the स्वस्थ Bharat wordmark.
+// Rounded face for the togetherfit wordmark.
 const brandFont = Baloo_2({
   variable: "--font-brand",
-  subsets: ["devanagari", "latin"],
+  subsets: ["latin"],
   weight: ["700", "800"],
 });
 
+const DESCRIPTION = "Posture, urges, sleep, movement and accountability — your wellness, together in one app.";
+
 export const metadata: Metadata = {
-  title: "स्वस्थ Bharat",
-  description: "Posture, urges, sleep, movement and accountability — your wellness, together in one app.",
+  title: "togetherfit",
+  applicationName: "togetherfit",
+  description: DESCRIPTION,
+  openGraph: {
+    title: "togetherfit",
+    description: DESCRIPTION,
+    siteName: "togetherfit",
+    images: [{ url: "/brand/togetherfit-logo-light.png", width: 520, height: 506, alt: "togetherfit logo" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

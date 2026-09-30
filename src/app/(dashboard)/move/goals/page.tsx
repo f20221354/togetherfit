@@ -58,7 +58,7 @@ export default function GoalsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader icon="🎯" title="My Goals" subtitle="Set personal fitness goals स्वस्थ Bharat can help you reach." />
+      <PageHeader icon="🎯" title="My Goals" subtitle="Set personal fitness goals togetherfit can help you reach." />
 
       <div className="flex flex-wrap gap-2">
         {GOAL_SUGGESTIONS.map((s) => (

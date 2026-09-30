@@ -36,7 +36,7 @@ export default function PartnerProfilePage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="👤" title="Wellness Profile" subtitle="Demo profile — स्वस्थ Bharat Connect prototype." />
+      <PageHeader icon="👤" title="Wellness Profile" subtitle="Demo profile — togetherfit Connect prototype." />
 
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-8 text-center">
         <span className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-2 text-5xl">

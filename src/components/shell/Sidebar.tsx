@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS, PROFILE_ITEM } from "./navItems";
 import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
 import { useUnreadConnectionsCount } from "@/lib/network/useUnreadCount";
-import { SwasthBharatLogo } from "@/components/brand/SwasthBharatLogo";
+import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 
 function NavLink({
   href,
@@ -51,7 +51,7 @@ export function Sidebar() {
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-surface px-3 py-6 md:flex">
       <div className="mb-8 flex items-center gap-2 px-3">
-        <SwasthBharatLogo layout="inline" size={40} />
+        <TogetherfitLogo layout="inline" size={40} />
       </div>
       <nav className="flex flex-1 flex-col gap-1">
         <NavLink href={OVERVIEW_ITEM.href} icon={OVERVIEW_ITEM.icon} label={OVERVIEW_ITEM.label} active={pathname === "/"} />

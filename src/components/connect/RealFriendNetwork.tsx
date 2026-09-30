@@ -101,7 +101,7 @@ export function RealFriendNetwork() {
           Real Friends (share your code)
         </h2>
         <p className="text-xs text-muted">
-          Works across real devices — give this code to a friend who&apos;s also using स्वस्थ Bharat.
+          Works across real devices — give this code to a friend who&apos;s also using togetherfit.
         </p>
       </div>
 

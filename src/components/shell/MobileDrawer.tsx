@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS, PROFILE_ITEM } from "./navItems";
-import { SwasthBharatLogo } from "@/components/brand/SwasthBharatLogo";
+import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 
 const DRAWER_ID = "mobile-nav-drawer";
 
@@ -85,7 +85,7 @@ export function MobileDrawer({
         className="absolute inset-y-0 left-0 flex w-72 flex-col border-r border-border bg-surface px-3 py-6 outline-none"
       >
         <div className="mb-8 flex items-center gap-2 px-3">
-          <SwasthBharatLogo layout="inline" size={40} />
+          <TogetherfitLogo layout="inline" size={40} />
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">

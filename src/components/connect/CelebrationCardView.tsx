@@ -27,7 +27,7 @@ export function CelebrationCardView({ card, compact = false }: { card: Celebrati
       <div className="mt-2 text-xs text-slate-400">
         {card.userName} · {formatDate(card.achievedAt)}
       </div>
-      {!compact && <div className="mt-2 text-xs font-semibold text-emerald-400">स्वस्थ Bharat</div>}
+      {!compact && <div className="mt-2 text-xs font-semibold text-emerald-400">togetherfit</div>}
     </div>
   );
 }

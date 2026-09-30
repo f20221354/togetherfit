@@ -58,7 +58,7 @@ export function renderCelebrationImage(card: CelebrationCard): Promise<Blob> {
 
   ctx.fillStyle = "#34d399";
   ctx.font = "bold 46px system-ui, sans-serif";
-  ctx.fillText("स्वस्थ Bharat", W / 2, 1270);
+  ctx.fillText("togetherfit", W / 2, 1270);
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Couldn't render the card"))), "image/png")
@@ -68,7 +68,7 @@ export function renderCelebrationImage(card: CelebrationCard): Promise<Blob> {
 /** Opens the device share sheet with the card image, or downloads it where sharing files isn't supported. */
 export async function shareCelebrationImage(card: CelebrationCard): Promise<"shared" | "downloaded" | "cancelled"> {
   const blob = await renderCelebrationImage(card);
-  const file = new File([blob], `swasth-bharat-${card.key}.png`, { type: "image/png" });
+  const file = new File([blob], `togetherfit-${card.key}.png`, { type: "image/png" });
   if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: card.title, text: `${card.icon} ${card.title} — ${card.description}` });

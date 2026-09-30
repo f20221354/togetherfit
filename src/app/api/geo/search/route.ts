@@ -9,7 +9,7 @@ import { bad } from "@/lib/network/apiHelpers";
  * results, and search on submit only (Nominatim forbids type-ahead
  * autocomplete). Proxied server-side because browsers can't set User-Agent.
  */
-const USER_AGENT = "SwasthBharat/1.0 (+https://vitaos-jd8j.vercel.app; wellness-app place search)";
+const USER_AGENT = "togetherfit/1.0 (+https://vitaos-jd8j.vercel.app; wellness-app place search)";
 const MIN_INTERVAL_MS = 1100;
 const CACHE_LIMIT = 300;
 

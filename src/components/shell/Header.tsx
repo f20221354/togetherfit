@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { CameraPrivacyIndicator } from "@/components/camera/CameraPrivacyIndicator";
 import { useIsClient } from "@/lib/useIsClient";
 import { MobileDrawer } from "./MobileDrawer";
-import { SwasthBharatLogo } from "@/components/brand/SwasthBharatLogo";
+import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 
 const RANGES: { key: "today" | "7d" | "30d"; label: string }[] = [
   { key: "today", label: "Today" },
@@ -49,8 +49,8 @@ export function Header() {
 
   return (
     <>
-    <header className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 md:px-6">
-      <div className="flex items-center gap-2 md:hidden">
+    <header className="flex items-center justify-between gap-2 border-b border-border bg-surface px-4 py-3 md:px-6">
+      <div className="flex min-w-0 items-center gap-1 md:hidden">
         <button
           ref={hamburgerRef}
           onClick={() => setDrawerOpen(true)}
@@ -61,7 +61,7 @@ export function Header() {
         >
           ☰
         </button>
-        <SwasthBharatLogo layout="inline" size={32} />
+        <TogetherfitLogo layout="inline" size={28} />
       </div>
 
       <div className="hidden items-center gap-1 rounded-full bg-surface-2 p-1 md:flex">
@@ -79,12 +79,14 @@ export function Header() {
         ))}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <CameraPrivacyIndicator active={monitoring} />
-        <Badge tone={demoMode ? "neutral" : "live"}>
-          <span className={clsx("h-1.5 w-1.5 rounded-full", demoMode ? "bg-muted" : "bg-success")} />
-          LIVE
-        </Badge>
+        <span className="hidden sm:inline-flex">
+          <Badge tone={demoMode ? "neutral" : "live"}>
+            <span className={clsx("h-1.5 w-1.5 rounded-full", demoMode ? "bg-muted" : "bg-success")} />
+            LIVE
+          </Badge>
+        </span>
         <button onClick={toggleDemoMode}>
           <Badge tone={demoMode ? "demo" : "neutral"}>⚡ DEMO {demoMode ? "ON" : "OFF"}</Badge>
         </button>

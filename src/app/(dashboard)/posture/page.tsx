@@ -10,6 +10,8 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CameraUnavailablePanel } from "@/components/camera/CameraUnavailablePanel";
 import { DemoSliders } from "@/components/camera/DemoSliders";
+import { PostureGazeStatus } from "@/components/camera/PostureGazeStatus";
+import { PostureNudgeToast } from "@/components/camera/PostureNudgeToast";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
 
 function formatDuration(startedAt: number | null): string {
@@ -84,6 +86,7 @@ export default function PosturePage() {
         </div>
 
         <div className="flex flex-col gap-3">
+          <PostureGazeStatus />
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-border bg-surface p-3">
               <div className="text-xs text-muted">Camera Status</div>
@@ -204,6 +207,7 @@ export default function PosturePage() {
       </div>
 
       <ActivityExplorer />
+      <PostureNudgeToast />
     </div>
   );
 }

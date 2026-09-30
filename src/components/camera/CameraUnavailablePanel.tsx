@@ -21,7 +21,7 @@ export function CameraUnavailablePanel({
       <span className="text-2xl">📷</span>
       <h3 className="text-sm font-semibold text-foreground">Camera unavailable</h3>
       <p className="max-w-sm text-xs text-muted">{MESSAGES[permission]}</p>
-      <p className="text-xs text-muted">You can still use स्वस्थ Bharat without camera monitoring.</p>
+      <p className="text-xs text-muted">You can still use togetherfit without camera monitoring.</p>
       <div className="mt-1 flex gap-2">
         <button
           onClick={onRetry}

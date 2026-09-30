@@ -5,7 +5,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { ModuleKey } from "@/lib/types";
 import { MODULE_ROUTES } from "@/lib/store/wellnessStore";
-import { SwasthBharatIcon } from "@/components/brand/SwasthBharatIcon";
+import { TogetherfitIcon } from "@/components/brand/TogetherfitIcon";
 
 const NODES: { key: ModuleKey; label: string; x: number; y: number; icon: string }[] = [
   { key: "sanctuary", label: "Sanctuary", x: 50, y: 6, icon: "🌿" },
@@ -69,8 +69,8 @@ export function EcosystemMap() {
           className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-full bg-accent/15 px-3 py-3 text-center text-xs font-semibold text-accent-foreground"
           style={{ left: `${CORE.x}%`, top: `${CORE.y}%` }}
         >
-          <SwasthBharatIcon size={28} />
-          स्वस्थ Bharat Core
+          <TogetherfitIcon size={28} />
+          togetherfit Core
         </div>
 
         {NODES.map((n) => (

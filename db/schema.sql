@@ -1,4 +1,4 @@
--- Real, cross-device backend for स्वस्थ Bharat Connect.
+-- Real, cross-device backend for togetherfit Connect.
 -- Everything else in this app is local-only (Zustand + localStorage); this
 -- is the one real, shared backend, keyed by app_users.email (the same
 -- identity key the existing local auth already uses).

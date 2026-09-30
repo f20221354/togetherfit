@@ -55,8 +55,8 @@ body {
 }
 
 /* Brand logo: both theme treatments render; the theme hides the other one. */
-:root[data-theme="dark"] .sb-only-light,
-:root:not([data-theme="dark"]) .sb-only-dark {
+:root[data-theme="dark"] .brand-only-light,
+:root:not([data-theme="dark"]) .brand-only-dark {
   display: none;
 }
 

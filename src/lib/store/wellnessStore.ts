@@ -12,7 +12,7 @@ interface EventConfig {
   scoreImpact: Partial<Record<ScoreKey, number>>;
 }
 
-/** Every wellness action स्वस्थ Bharat understands, and exactly how it ripples across modules. */
+/** Every wellness action togetherfit understands, and exactly how it ripples across modules. */
 const EVENT_CATALOG: Record<EventType, EventConfig> = {
   sunlight_completed: {
     module: "circadian",

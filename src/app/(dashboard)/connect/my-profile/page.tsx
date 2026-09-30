@@ -16,7 +16,7 @@ export default function MyProfilePage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="🎯" title="Wellness Profile" subtitle="What स्वस्थ Bharat Connect shows other members." />
+      <PageHeader icon="🎯" title="Wellness Profile" subtitle="What togetherfit Connect shows other members." />
 
       <div className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-8 text-center">
         <span className="flex h-20 w-20 items-center justify-center rounded-full bg-surface-2 text-4xl">🙂</span>
