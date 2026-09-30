@@ -156,7 +156,7 @@ export default function SanctuaryPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4 text-sm">
           <span className="text-foreground">Take a sunlight walk.</span>
           <Link
-            href="/connect/discover?activity=walking"
+            href="/connect/find"
             className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
           >
             Find Someone to Walk With
