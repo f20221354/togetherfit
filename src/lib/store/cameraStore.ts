@@ -91,7 +91,7 @@ export const useCameraStore = create<CameraState>()(
       alertsEnabled: true,
       gazeAlertsEnabled: true,
       alertSensitivity: "medium",
-      alertCooldownMinutes: 3,
+      alertCooldownMinutes: 1, // "Remind again every" — also spaces separate episodes
       lastAlertAt: null,
 
       setPermission: (permission) => set({ permission }),
@@ -135,6 +135,13 @@ export const useCameraStore = create<CameraState>()(
     }),
     {
       name: "vitaos-camera-store",
+      version: 1,
+      // v0 used a 3-minute one-off cooldown; reminders now repeat, so move the old default to 1 minute.
+      migrate: (persisted, version) => {
+        const state = persisted as Partial<CameraState>;
+        if (version < 1 && state.alertCooldownMinutes === 3) state.alertCooldownMinutes = 1;
+        return state as CameraState;
+      },
       partialize: (state) => ({
         alertsEnabled: state.alertsEnabled,
         gazeAlertsEnabled: state.gazeAlertsEnabled,

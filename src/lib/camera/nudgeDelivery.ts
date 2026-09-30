@@ -22,7 +22,13 @@ export function deliverNudge(kind: NudgeKind) {
   if (!store.systemNotifications || !systemNotificationsSupported() || Notification.permission !== "granted") return;
   if (document.hasFocus()) return; // the in-app toast is already visible
   try {
-    new Notification(message.title, { body: message.body, tag: "togetherfit-nudge", icon: "/brand/icon-light-192.png" });
+    // renotify: a repeat reminder pops up again instead of silently replacing the last one (same tag).
+    const options = { body: message.body, tag: "togetherfit-nudge", renotify: true, icon: "/brand/icon-light-192.png" };
+    const notification = new Notification(message.title, options as NotificationOptions);
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
   } catch {
     // Some mobile browsers only allow notifications from a service worker; the in-app nudge still shows.
   }

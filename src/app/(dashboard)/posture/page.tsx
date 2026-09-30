@@ -5,13 +5,12 @@ import Link from "next/link";
 import clsx from "clsx";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { useCameraStore } from "@/lib/store/cameraStore";
-import { usePostureCamera } from "@/lib/camera/usePostureCamera";
+import { usePostureMonitor } from "@/components/camera/PostureMonitorProvider";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CameraUnavailablePanel } from "@/components/camera/CameraUnavailablePanel";
 import { DemoSliders } from "@/components/camera/DemoSliders";
 import { PostureGazeStatus } from "@/components/camera/PostureGazeStatus";
-import { PostureNudgeToast } from "@/components/camera/PostureNudgeToast";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
 
 function formatDuration(startedAt: number | null): string {
@@ -38,9 +37,17 @@ export default function PosturePage() {
   const setDemoSliderMode = useCameraStore((s) => s.setDemoSliderMode);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { start, stop } = usePostureCamera(videoRef);
+  const { start, stop, stream } = usePostureMonitor();
   const [, forceTick] = useState(0);
   const [starting, setStarting] = useState(false);
+
+  // Monitoring lives in PostureMonitorProvider; this page just previews the same stream.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.srcObject = stream;
+    if (stream) video.play().catch(() => {});
+  }, [stream]);
 
   useEffect(() => {
     if (!monitoring) return;
@@ -207,7 +214,6 @@ export default function PosturePage() {
       </div>
 
       <ActivityExplorer />
-      <PostureNudgeToast />
     </div>
   );
 }

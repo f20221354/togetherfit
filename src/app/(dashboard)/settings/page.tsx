@@ -142,7 +142,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="flex items-center justify-between text-sm text-foreground">
-            Alert cooldown (minutes)
+            Remind again every (minutes)
             <input
               type="number"
               min={1}

@@ -4,9 +4,10 @@
  * FaceLandmarker readings (see postureAnalysis.ts) and never runs its own
  * detector. Deliberately dependency-free so it can be unit-tested in plain Node.
  *
- *   optimal ──non-optimal for the warning duration──▶ warning (notify once, subject to cooldown)
+ *   optimal ──non-optimal for the warning duration──▶ warning (notify)
+ *   warning ──still non-optimal──▶ remind again every reminder interval until corrected
  *   warning ──back to good──▶ recovering ──good for RECOVERY_DURATION──▶ optimal (reset)
- *   recovering ──non-optimal again──▶ warning (no second notification)
+ *   recovering ──non-optimal again──▶ warning (reminders resume on the same schedule)
  *   anything ──no face / low confidence──▶ no-detection (timers cleared, never a warning)
  */
 
@@ -37,16 +38,22 @@ export interface ReadingLike {
   headTurn: number;
 }
 
-/** Non-optimal checks, built on the existing posture status and angle readings. */
-export function classifyReading(r: ReadingLike): { postureBad: boolean; gazeBad: boolean } {
+/**
+ * Non-optimal checks, built on the existing posture status and angle readings.
+ * "Mild" posture (eye level 55–75°) counts, except on Low sensitivity, which
+ * only nudges for the more pronounced "elevated-risk" range.
+ */
+export function classifyReading(r: ReadingLike, sensitivity: Sensitivity = "medium"): { postureBad: boolean; gazeBad: boolean } {
+  const postureOff = r.postureStatus === "elevated-risk" || (r.postureStatus === "mild" && sensitivity !== "low");
   return {
-    postureBad: r.postureStatus === "elevated-risk" || r.headTilt >= NUDGE_CONFIG.HEAD_TILT_LIMIT_DEG,
+    postureBad: postureOff || r.headTilt >= NUDGE_CONFIG.HEAD_TILT_LIMIT_DEG,
     gazeBad: r.headTurn >= NUDGE_CONFIG.GAZE_TURN_LIMIT_DEG,
   };
 }
 
 export interface TrackerSettings {
   sensitivity: Sensitivity;
+  /** While still non-optimal, remind again after this long (the "Remind again every" setting). */
   cooldownMs: number;
   postureEnabled: boolean;
   gazeEnabled: boolean;
@@ -54,7 +61,8 @@ export interface TrackerSettings {
 
 export interface NudgeEvent {
   kind: NudgeKind;
-  type: "warning" | "recovered";
+  /** warning = an episode started; reminder = still not corrected after the reminder interval. */
+  type: "warning" | "reminder" | "recovered";
   /** true when this warning should actually be shown (alerts on, cooldown passed). */
   notify: boolean;
   sustainedMs: number;
@@ -78,11 +86,14 @@ class SignalTracker {
 
     if (bad) {
       this.goodSince = null;
-      if (this.state === "recovering") {
-        this.state = "warning"; // same episode: no second notification
-        return null;
+      if (this.state === "recovering") this.state = "warning"; // same episode continues
+      if (this.state === "warning") {
+        // Not corrected yet: remind again once the reminder interval has passed.
+        const due = this.lastNotifiedAt === null || now - this.lastNotifiedAt >= cooldownMs;
+        if (!enabled || !due) return null;
+        this.lastNotifiedAt = now;
+        return { kind, type: "reminder", notify: true, sustainedMs: this.badSince === null ? 0 : now - this.badSince };
       }
-      if (this.state === "warning") return null;
       if (this.badSince === null) this.badSince = now;
       const sustainedMs = now - this.badSince;
       if (sustainedMs < warnMs) return null;
@@ -93,7 +104,7 @@ class SignalTracker {
       return { kind, type: "warning", notify, sustainedMs };
     }
 
-    this.badSince = null;
+    if (this.state !== "recovering" && this.state !== "warning") this.badSince = null;
     if (this.state === "warning") {
       this.state = "recovering";
       this.goodSince = now;
@@ -102,6 +113,7 @@ class SignalTracker {
     if (this.state === "recovering" && this.goodSince !== null && now - this.goodSince >= NUDGE_CONFIG.RECOVERY_DURATION_MS) {
       this.state = "optimal";
       this.goodSince = null;
+      this.badSince = null;
       return { kind, type: "recovered", notify: false, sustainedMs: 0 };
     }
     return null;
@@ -125,7 +137,7 @@ export class NudgeTracker {
    */
   update(now: number, reading: ReadingLike | null, settings: TrackerSettings): NudgeEvent[] {
     const detected = reading !== null;
-    const { postureBad, gazeBad } = reading ? classifyReading(reading) : { postureBad: false, gazeBad: false };
+    const { postureBad, gazeBad } = reading ? classifyReading(reading, settings.sensitivity) : { postureBad: false, gazeBad: false };
     const m = NUDGE_CONFIG.SENSITIVITY_MULTIPLIER[settings.sensitivity] ?? 1;
     const events = [
       this.posture.update(now, detected, postureBad, NUDGE_CONFIG.POSTURE_WARNING_DURATION_MS * m, settings.cooldownMs, settings.postureEnabled, "posture"),

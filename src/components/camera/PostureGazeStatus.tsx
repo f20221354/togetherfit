@@ -76,7 +76,7 @@ export function PostureGazeStatus() {
         <StatusCard label="Gaze" state={gazeState} monitoring={monitoring} />
       </div>
       <div className="text-xs text-muted">
-        {nudgesOn ? `${which} nudges on · at most one every ${cooldown} min.` : "Nudges are off."}{" "}
+        {nudgesOn ? `${which} nudges on · reminds again every ${cooldown} min until you correct it.` : "Nudges are off."}{" "}
         <Link href="/settings" className="font-medium text-accent-foreground hover:underline">
           Change in Settings
         </Link>

@@ -4,9 +4,12 @@ import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { FriendRequestNotifier } from "@/components/connect/FriendRequestNotifier";
 import { CelebrationOverlay } from "@/components/connect/CelebrationOverlay";
+import { PostureMonitorProvider } from "@/components/camera/PostureMonitorProvider";
+import { PostureNudgeToast } from "@/components/camera/PostureNudgeToast";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
+    <PostureMonitorProvider>
     <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar />
       <div className="flex min-h-screen flex-1 flex-col">
@@ -15,6 +18,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <FriendRequestNotifier />
       <CelebrationOverlay />
+      <PostureNudgeToast />
     </div>
+    </PostureMonitorProvider>
   );
 }
