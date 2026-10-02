@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS, PROFILE_ITEM } from "./navItems";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
+import { WinterArcNavBadge } from "@/components/winterArc/WinterArcNavBadge";
 
 const DRAWER_ID = "mobile-nav-drawer";
 
@@ -100,14 +101,19 @@ export function MobileDrawer({
           <div className="my-2 border-t border-border" />
 
           {ACTION_ITEMS.map((item) => (
-            <DrawerLink
-              key={item.key}
-              href={item.href}
-              icon={item.icon}
-              label={item.label}
-              active={pathname.startsWith(item.href)}
-              onNavigate={onClose}
-            />
+            <div key={item.key} className="relative">
+              <DrawerLink
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={pathname.startsWith(item.href)}
+                onNavigate={onClose}
+              />
+              {/* Sibling, not child: the badge is its own link. */}
+              {item.key === "move" && (
+                <WinterArcNavBadge onNavigate={onClose} className="absolute right-2 top-1/2 -translate-y-1/2" />
+              )}
+            </div>
           ))}
 
           <div className="my-2 border-t border-border" />

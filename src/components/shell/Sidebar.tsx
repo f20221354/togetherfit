@@ -7,6 +7,7 @@ import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS, PROFILE_ITEM } from "./nav
 import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
 import { useUnreadConnectionsCount } from "@/lib/network/useUnreadCount";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
+import { WinterArcNavBadge } from "@/components/winterArc/WinterArcNavBadge";
 
 function NavLink({
   href,
@@ -59,14 +60,17 @@ export function Sidebar() {
         <div className="my-2 border-t border-border" />
 
         {ACTION_ITEMS.map((item) => (
-          <NavLink
-            key={item.key}
-            href={item.href}
-            icon={item.icon}
-            label={item.label}
-            active={pathname.startsWith(item.href)}
-            badge={item.key === "connect" ? unreadCount : undefined}
-          />
+          <div key={item.key}>
+            <NavLink
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              active={pathname.startsWith(item.href)}
+              badge={item.key === "connect" ? unreadCount : undefined}
+            />
+            {/* Sibling, not child: the badge is its own link. Indented to line up with the label. */}
+            {item.key === "move" && <WinterArcNavBadge className="mb-1 ml-10" />}
+          </div>
         ))}
 
         <div className="my-2 border-t border-border" />

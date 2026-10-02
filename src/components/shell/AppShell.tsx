@@ -6,6 +6,7 @@ import { FriendRequestNotifier } from "@/components/connect/FriendRequestNotifie
 import { CelebrationOverlay } from "@/components/connect/CelebrationOverlay";
 import { PostureMonitorProvider } from "@/components/camera/PostureMonitorProvider";
 import { PostureNudgeToast } from "@/components/camera/PostureNudgeToast";
+import { WinterArcPopup } from "@/components/winterArc/WinterArcPopup";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <FriendRequestNotifier />
       <CelebrationOverlay />
       <PostureNudgeToast />
+      <WinterArcPopup />
     </div>
     </PostureMonitorProvider>
   );

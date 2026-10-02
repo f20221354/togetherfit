@@ -177,3 +177,21 @@ create table if not exists milestones (
 -- Celebration cards are ephemeral (24h) and the receiver can react once.
 alter table messages add column if not exists expires_at timestamptz;
 alter table messages add column if not exists reaction text;
+
+-- ============================================================
+-- Winter Arc (seasonal event) analytics
+-- ============================================================
+
+-- Append-only event log. winter_arc_popup_shown fires on every page load,
+-- so this is high-volume by design; nothing is throttled except
+-- winter_arc_daily_active (deduped to one row per user per India-time day).
+create table if not exists winter_arc_events (
+  id bigserial primary key,
+  event text not null,
+  user_email text not null,
+  props jsonb,
+  occurred_at timestamptz not null default now()
+);
+
+create index if not exists winter_arc_events_event_idx on winter_arc_events(event, occurred_at);
+create index if not exists winter_arc_events_user_idx on winter_arc_events(user_email, event);

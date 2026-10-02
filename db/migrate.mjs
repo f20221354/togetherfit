@@ -34,7 +34,7 @@ const pool = new pg.Pool({
 
 try {
   await pool.query(schema);
-  console.log("Migration applied: app_users, connections, messages, activity_intents, groups, group_members, reports, activity_sessions, milestones ready.");
+  console.log("Migration applied: app_users, connections, messages, activity_intents, groups, group_members, reports, activity_sessions, milestones, winter_arc_events ready.");
 } catch (err) {
   console.error("Migration failed:", err.message);
   process.exit(1);
