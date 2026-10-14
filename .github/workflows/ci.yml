@@ -68,6 +68,14 @@ jobs:
           npx next start -p 3100 > /tmp/app.log 2>&1 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3100/login && break; sleep 1; done
       - run: npm run test:api
-      - name: App log on failure
+      - name: Realtime stream tests (second app with REALTIME=sse)
+        run: |
+          AUTH_SECRET=ci-auth-secret-0123456789abcdef0123456789 \
+          SMTP_HOST=127.0.0.1 SMTP_PORT=2465 SMTP_SECURE=true SMTP_USER=noreply@example.com SMTP_PASS=x \
+          NODE_TLS_REJECT_UNAUTHORIZED=0 VERIFICATION=mock CRON_SECRET=ci-cron-secret REALTIME=sse \
+          npx next start -p 3101 > /tmp/app-sse.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3101/login && break; sleep 1; done
+          TEST_BASE_URL=http://localhost:3101 TEST_REALTIME=sse npx vitest run --project api tests/api/realtime.test.ts
+      - name: App logs on failure
         if: failure()
-        run: tail -100 /tmp/app.log
+        run: tail -100 /tmp/app.log; tail -50 /tmp/app-sse.log || true
