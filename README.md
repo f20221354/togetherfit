@@ -73,13 +73,13 @@ at `/privacy` and `/terms`.
 
 ## Trust & safety
 
-- **Profile photos** (Settings → Profile, or onboarding): cropped in the
+- **Profile photos** (My Profile at `/profile`, or onboarding): cropped in the
   browser, then re-encoded on the server with `sharp`, which strips EXIF data
   such as GPS location. Stored in Postgres (`profile_photos`, ~30 KB each).
   Served only through `/api/photos/<id>`, which checks on every request that
   the viewer is the owner, an accepted friend, or someone who can see them on
   Find a Friend *and* the owner turned on "show my photo on Find a Friend".
-- **Gender (optional) and comfort preferences**: Anyone / Women only / Men
+- **Gender (optional) and comfort preferences** (Settings → Privacy & safety): Anyone / Women only / Men
   only, plus "only match verified people". Matching is **mutual**: both
   people's preferences must fit each other (`src/lib/trust/matching.ts`),
   enforced in the radar query and when sending a radar request. Gender is

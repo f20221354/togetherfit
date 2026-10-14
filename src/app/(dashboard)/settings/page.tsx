@@ -10,11 +10,13 @@ import { useCameraStore } from "@/lib/store/cameraStore";
 import { usePreferencesStore } from "@/lib/store/preferencesStore";
 import { useIsClient } from "@/lib/useIsClient";
 import { AccountDataSection } from "@/components/settings/AccountDataSection";
-import { ProfileSection } from "@/components/profile/ProfileSection";
+import { MatchingSettings } from "@/components/profile/MatchingSettings";
+import { Avatar } from "@/components/profile/Avatar";
+import { useMyProfile } from "@/lib/profile/profileStore";
 
-function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+function SettingsSection({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-border bg-surface p-5">
+    <section id={id} className="scroll-mt-20 rounded-2xl border border-border bg-surface p-5">
       <h2 className="mb-4 text-sm font-semibold text-foreground">{title}</h2>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
@@ -52,6 +54,7 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const mounted = useIsClient();
 
+  const { profile } = useMyProfile();
   const permission = useCameraStore((s) => s.permission);
   const monitoring = useCameraStore((s) => s.monitoring);
   const alertsEnabled = useCameraStore((s) => s.alertsEnabled);
@@ -71,7 +74,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="⚙️" title="Settings" subtitle="Account, your data, privacy, notifications and appearance." />
+      <PageHeader icon="⚙️" title="Settings" subtitle="Account, privacy & safety, notifications, appearance and your data." />
 
       <SettingsSection title="Account">
         <div className="flex flex-col gap-1 text-sm">
@@ -82,11 +85,14 @@ export default function SettingsPage() {
           <span className="text-muted">Email</span>
           <span className="break-all text-foreground">{user?.email ?? "—"}</span>
         </div>
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Friend code</span>
-          <span className="font-mono text-foreground">{user?.code ?? "—"}</span>
-          <span className="text-xs text-muted">Share this so friends can add you. Your email is never shown to other people.</span>
-        </div>
+        <Link href="/profile" className="flex items-center gap-3 rounded-xl bg-surface-2 p-3 hover:bg-border">
+          <Avatar name={user?.name ?? "?"} photoId={profile?.photoId} verified={!!profile?.verifiedAt} size="sm" />
+          <span className="flex-1 text-sm">
+            <span className="block text-foreground">My Profile</span>
+            <span className="block text-xs text-muted">Photo, verification and your friend code</span>
+          </span>
+          <span className="text-muted" aria-hidden="true">→</span>
+        </Link>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={async () => {
@@ -100,11 +106,11 @@ export default function SettingsPage() {
         </div>
       </SettingsSection>
 
-      <ProfileSection />
+      <SettingsSection title="Privacy & safety" id="privacy">
+        <MatchingSettings />
+      </SettingsSection>
 
-      <AccountDataSection />
-
-      <SettingsSection title="Camera & Privacy">
+      <SettingsSection title="Camera">
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-xl bg-surface-2 p-3">
             <div className="text-xs text-muted">Camera Monitoring</div>
@@ -183,6 +189,8 @@ export default function SettingsPage() {
           ))}
         </div>
       </SettingsSection>
+
+      <AccountDataSection />
 
       <p className="text-center text-xs text-muted">
         <Link href="/privacy" className="hover:text-foreground hover:underline">Privacy Policy</Link>

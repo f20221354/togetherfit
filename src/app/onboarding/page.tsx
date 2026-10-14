@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore, useCurrentUser, WellnessSetupPrefs } from "@/lib/auth/authStore";
 import { useCameraStore } from "@/lib/store/cameraStore";
-import { ProfileSection } from "@/components/profile/ProfileSection";
+import { PhotoEditor } from "@/components/profile/PhotoEditor";
+import { MatchingSettings } from "@/components/profile/MatchingSettings";
 
 const CAPABILITIES = [
   { icon: "🤝", label: "Connect", detail: "Find real people for running, gym, and walking" },
@@ -257,7 +258,8 @@ export default function OnboardingPage() {
                 Optional. Helps people you meet through Find a Friend feel safe. You can change it any time in Settings.
               </p>
             </div>
-            <ProfileSection compact />
+            <PhotoEditor />
+            <MatchingSettings compact />
             <div className="flex gap-2">
               <button
                 onClick={() => setStep(5)}

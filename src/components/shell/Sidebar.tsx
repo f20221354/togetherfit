@@ -8,6 +8,8 @@ import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
 import { useUnreadConnectionsCount } from "@/lib/network/useUnreadCount";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 import { WinterArcNavBadge } from "@/components/winterArc/WinterArcNavBadge";
+import { Avatar } from "@/components/profile/Avatar";
+import { useMyProfile } from "@/lib/profile/profileStore";
 
 function NavLink({
   href,
@@ -17,7 +19,7 @@ function NavLink({
   badge,
 }: {
   href: string;
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   active: boolean;
   badge?: number;
@@ -48,6 +50,7 @@ export function Sidebar() {
   const user = useCurrentUser();
   const logOut = useAuthStore((s) => s.logOut);
   const unreadCount = useUnreadConnectionsCount();
+  const { profile } = useMyProfile();
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-surface px-3 py-6 md:flex">
@@ -81,6 +84,12 @@ export function Sidebar() {
       </nav>
 
       <div className="flex flex-col gap-1 border-t border-border pt-3">
+        <NavLink
+          href="/profile"
+          icon={<Avatar name={user?.name ?? "?"} photoId={profile?.photoId} verified={!!profile?.verifiedAt} size="xs" />}
+          label="My Profile"
+          active={pathname === "/profile"}
+        />
         <NavLink href="/settings" icon="⚙️" label="Settings" active={pathname === "/settings"} />
         {user?.isAdmin && <NavLink href="/moderation" icon="🛡️" label="Moderation" active={pathname === "/moderation"} />}
         {user && (

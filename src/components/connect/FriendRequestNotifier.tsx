@@ -1,15 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/authStore";
-import { IncomingRequestActions, IncomingRequestView } from "./IncomingRequestActions";
-
-interface IncomingRequest extends IncomingRequestView {
-  createdAt: string;
-}
-
-const POLL_MS = 20_000;
+import { useIncomingRequests, type IncomingRequest } from "@/lib/network/useUnreadCount";
+import { IncomingRequestActions } from "./IncomingRequestActions";
 
 function seenKey(email: string) {
   return `sb-seen-friend-requests-${email}`;
@@ -38,54 +33,30 @@ function saveSeen(email: string, ids: Set<string>) {
 }
 
 /**
- * Global pop-up for incoming real connection requests (src/lib/network/friendsDb.ts).
- * There's no realtime layer in this app, so this polls periodically; a real
- * push/websocket notification could later replace just the polling loop below
- * without changing the toast UI or the responder actions.
+ * Global pop-up for incoming connection requests. It reads the shared
+ * network poller (useIncomingRequests), which also refreshes on realtime
+ * signals, instead of fetching on its own timer. A request disappears once
+ * it's dismissed, answered, or no longer pending.
  */
 export function FriendRequestNotifier() {
   const user = useCurrentUser();
-  const router = useRouter();
-  const [visible, setVisible] = useState<IncomingRequest[]>([]);
-  const seenRef = useRef<Set<string>>(new Set());
+  // Remount per account, so one person's dismissed pop-ups never apply to another.
+  return user ? <Notifier key={user.id} email={user.email} /> : null;
+}
 
-  useEffect(() => {
-    if (!user) return;
-    seenRef.current = loadSeen(user.email);
-    let cancelled = false;
-    async function poll() {
-      try {
-        const res = await fetch(`/api/friends/list`);
-        const data = await res.json();
-        if (cancelled || !data.ok) return;
-        const incoming: IncomingRequest[] = data.incoming ?? [];
-        const unseen = incoming.filter((r) => !seenRef.current.has(toastKey(r)));
-        if (unseen.length > 0) {
-          setVisible((current) => {
-            const existing = new Set(current.map(toastKey));
-            return [...current, ...unseen.filter((r) => !existing.has(toastKey(r)))];
-          });
-        }
-      } catch {
-        // Network unreachable (e.g. DATABASE_URL not configured) — fail silently, no toast.
-      }
-    }
-    poll();
-    const interval = setInterval(poll, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [user]);
+function Notifier({ email }: { email: string }) {
+  const router = useRouter();
+  const incoming = useIncomingRequests();
+  const [seen, setSeen] = useState(() => loadSeen(email));
+  const visible = incoming.filter((r) => !seen.has(toastKey(r)));
 
   function dismiss(req: IncomingRequest) {
-    if (!user) return;
-    seenRef.current.add(toastKey(req));
-    saveSeen(user.email, seenRef.current);
-    setVisible((current) => current.filter((r) => toastKey(r) !== toastKey(req)));
+    const next = new Set(seen).add(toastKey(req));
+    saveSeen(email, next);
+    setSeen(next);
   }
 
-  if (!user || visible.length === 0) return null;
+  if (visible.length === 0) return null;
 
   return (
     <div className="pointer-events-none fixed right-4 top-4 z-[60] flex flex-col gap-2">

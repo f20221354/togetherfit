@@ -4,6 +4,9 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { useChatSignals, useRealtimeStatus } from "@/lib/realtime/client";
+import type { IncomingRequest } from "./friendsDb";
+
+export type { IncomingRequest } from "./friendsDb";
 
 const POLL_MS = 20_000;
 /** With realtime live, new messages trigger a refresh, so the timer is only a safety net. */
@@ -13,13 +16,16 @@ interface NetworkSummary {
   /** Unread chat messages across all accepted connections. */
   totalUnread: number;
   friendCount: number;
+  /** Pending connection requests to you (the pop-up and the Friends page read these). */
+  incoming: IncomingRequest[];
 }
 
-const EMPTY: NetworkSummary = { totalUnread: 0, friendCount: 0 };
+const EMPTY: NetworkSummary = { totalUnread: 0, friendCount: 0, incoming: [] };
 const useSummaryStore = create<NetworkSummary>(() => EMPTY);
 
 // One poller shared by every component that shows these numbers (sidebar,
-// mobile tab bar, overview), however many are mounted; overlapping refreshes share one request.
+// mobile tab bar, overview, request pop-up), however many are mounted;
+// overlapping refreshes share one request.
 let subscribers = 0;
 let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -29,7 +35,13 @@ function poll(): Promise<void> {
   inflight ??= fetch("/api/friends/list")
     .then((res) => res.json())
     .then((data) => {
-      if (data.ok) useSummaryStore.setState({ totalUnread: data.totalUnread ?? 0, friendCount: data.friends?.length ?? 0 });
+      if (data.ok) {
+        useSummaryStore.setState({
+          totalUnread: data.totalUnread ?? 0,
+          friendCount: data.friends?.length ?? 0,
+          incoming: data.incoming ?? [],
+        });
+      }
     })
     .catch(() => {
       // Friend network unreachable — numbers stay at their last known values.
@@ -78,4 +90,9 @@ export function useUnreadConnectionsCount(): number {
 export function useFriendCount(): number {
   useNetworkPolling(useCurrentUser()?.id);
   return useSummaryStore((s) => s.friendCount);
+}
+
+export function useIncomingRequests(): IncomingRequest[] {
+  useNetworkPolling(useCurrentUser()?.id);
+  return useSummaryStore((s) => s.incoming);
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import clsx from "clsx";
 
-const SIZES = { sm: "h-8 w-8 text-xs", md: "h-10 w-10 text-sm", lg: "h-20 w-20 text-2xl", xl: "h-28 w-28 text-4xl" } as const;
+const SIZES = { xs: "h-6 w-6 text-[10px]", sm: "h-8 w-8 text-xs", md: "h-10 w-10 text-sm", lg: "h-20 w-20 text-2xl", xl: "h-28 w-28 text-4xl" } as const;
 
 /**
  * A person's photo when you're allowed to see it, otherwise their initial,

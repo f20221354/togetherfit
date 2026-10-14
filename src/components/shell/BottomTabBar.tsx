@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { OVERVIEW_ITEM, ACTION_ITEMS, PERSONAL_TAB, PERSONAL_TAB_PATHS, type NavItem } from "./navItems";
 import { useUnreadConnectionsCount } from "@/lib/network/useUnreadCount";
+import { useCurrentUser } from "@/lib/auth/authStore";
+import { useMyProfile } from "@/lib/profile/profileStore";
+import { Avatar } from "@/components/profile/Avatar";
 
 const TABS: NavItem[] = [OVERVIEW_ITEM, ...ACTION_ITEMS, PERSONAL_TAB];
 
@@ -18,6 +21,8 @@ function isActive(tab: NavItem, pathname: string): boolean {
 export function BottomTabBar() {
   const pathname = usePathname();
   const unreadCount = useUnreadConnectionsCount();
+  const user = useCurrentUser();
+  const { profile } = useMyProfile();
 
   return (
     <nav
@@ -39,7 +44,13 @@ export function BottomTabBar() {
                 )}
               >
                 <span className="relative text-lg leading-none">
-                  {tab.icon}
+                  {tab.key === PERSONAL_TAB.key && user ? (
+                    <span className={clsx("block rounded-full", active && "ring-2 ring-accent")}>
+                      <Avatar name={user.name} photoId={profile?.photoId} size="xs" />
+                    </span>
+                  ) : (
+                    tab.icon
+                  )}
                   {badge > 0 && (
                     <span
                       aria-label={`${badge} unread`}
