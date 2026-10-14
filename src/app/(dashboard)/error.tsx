@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportClientError } from "@/lib/observability/reportClientError";
 import { StatusScreen } from "@/components/ui/StatusScreen";
 
 /** Errors inside the signed-in app: the sidebar and tab bar stay, only the page shows the error. */
 export default function DashboardError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     console.error(error);
+    reportClientError(error);
   }, [error]);
   return (
     <StatusScreen

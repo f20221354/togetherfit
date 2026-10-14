@@ -6,6 +6,7 @@ import { rateLimit } from "@/lib/auth/server/rateLimit";
 import { sendPasswordChangedNotice } from "@/lib/auth/server/email";
 import { checkPassword } from "@/lib/auth/validation";
 import { bad, serverError } from "@/lib/network/apiHelpers";
+import { reportError } from "@/lib/observability/report";
 
 /** Change password while signed in: needs the current one, and signs out every other device. */
 export async function POST(req: NextRequest) {
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
     await setPassword(user.id, await hashPassword(next));
     await endOtherSessions(req, user.id);
-    await sendPasswordChangedNotice(user.email).catch((err) => console.error("Password notice failed:", err));
+    await sendPasswordChangedNotice(user.email).catch((err) => reportError(err, { where: "email password-changed notice" }));
     return NextResponse.json({ ok: true });
   } catch (err) {
     return serverError(err);

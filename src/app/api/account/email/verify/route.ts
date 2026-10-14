@@ -7,6 +7,7 @@ import { rateLimit, clientIp } from "@/lib/auth/server/rateLimit";
 import { sendEmailChangedNotice } from "@/lib/auth/server/email";
 import { isUuid } from "@/lib/network/friendsDb";
 import { bad, serverError } from "@/lib/network/apiHelpers";
+import { reportError } from "@/lib/observability/report";
 
 /** Step 2 of changing your email: the code from the new address moves the account there. */
 export async function POST(req: NextRequest) {
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     } finally {
       client.release();
     }
-    await sendEmailChangedNotice(user.email, result.email).catch((err) => console.error("Email-change notice failed:", err));
+    await sendEmailChangedNotice(user.email, result.email).catch((err) => reportError(err, { where: "email email-changed notice" }));
     return NextResponse.json({ ok: true, email: result.email });
   } catch (err) {
     return serverError(err);

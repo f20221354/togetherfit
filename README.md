@@ -154,6 +154,7 @@ Environment variables:
 | `MOCK_VERIFICATION_OUTCOME` | no | With `VERIFICATION=mock`: `pass` (default), `unsure` or `fail`, to test each path |
 | `REALTIME` | no | How chat updates are delivered: `poll` (default), `ably` or `sse`. See [Friend chat](#chat-friends-and-groups) |
 | `ABLY_API_KEY` | with `REALTIME=ably` | Ably API key; check it with `npm run realtime:test` |
+| `ERROR_WEBHOOK_URL` | no | Slack or Discord incoming-webhook URL; server and page crashes are posted there (each distinct error at most every 10 min). Every error is also logged as one JSON line |
 | `CRON_SECRET` | in production | Protects `/api/cron/cleanup-messages`; Vercel Cron sends it automatically (see `vercel.json`) |
 | `GROQ_API_KEY` | no | AI Coach answers. Crisis and emergency messages never reach the model (`src/lib/move/coachSafety.ts`) |
 

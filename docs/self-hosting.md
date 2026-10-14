@@ -63,6 +63,19 @@ docker compose up -d app
 | `caddy` | HTTPS, compression, and the real client IP in `X-Forwarded-For` |
 | `cron` | Calls `/api/cron/cleanup-messages` daily with `CRON_SECRET` |
 
+## Monitoring
+
+- **Crash alerts:** set `ERROR_WEBHOOK_URL` to a Slack or Discord incoming
+  webhook. Server errors and crashes caught by the app's error pages are
+  posted there, each distinct error at most once every 10 minutes. Reports
+  carry the error and page path only, never request data.
+- **Logs:** every error is one JSON line in `docker compose logs app`
+  (search for `"level":"error"`).
+- **Uptime:** point a free monitor (UptimeRobot, Better Stack…) at
+  `https://<DOMAIN>/api/health` every minute, with alerts to your phone. It
+  returns 200 when the app and database are up, and 503 when the database
+  is down. Docker's own health check uses the same URL.
+
 ## Backups
 
 Turn on daily backups and point-in-time recovery in your database

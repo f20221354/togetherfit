@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/observability/report";
 import { createAblyDriver } from "./drivers/ablyServer";
 import { pollDriver } from "./drivers/pollServer";
 import { sseDriver } from "./drivers/sseServer";
@@ -37,7 +38,7 @@ export async function signalUsers(userIds: string[], signal: ChatSignal): Promis
   try {
     await realtime().publish(userIds, signal);
   } catch (err) {
-    console.error("Realtime publish failed:", err);
+    reportError(err, { where: "realtime publish" });
   }
 }
 

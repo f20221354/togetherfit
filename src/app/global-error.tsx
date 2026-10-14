@@ -1,11 +1,17 @@
 "use client";
 
+import { useEffect } from "react";
+import { reportClientError } from "@/lib/observability/reportClientError";
+
 /**
  * Last-resort screen when the root layout itself fails. It replaces the
  * whole document, so it can't use the app's stylesheet: styles are inline
  * and follow the system light/dark setting.
  */
 export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
+  useEffect(() => {
+    reportClientError(error);
+  }, [error]);
   return (
     <html lang="en">
       <body

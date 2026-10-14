@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/observability/report";
 /**
  * Bot check for sign-up and password reset, so scripts can't make us email
  * thousands of strangers (which would get our sender suspended).
@@ -20,7 +21,7 @@ export async function verifyCaptcha(token: unknown, ip: string): Promise<boolean
   if (!captchaEnabled()) return true;
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) {
-    console.error('CAPTCHA="turnstile" but TURNSTILE_SECRET_KEY is not set — rejecting.');
+    reportError(new Error('CAPTCHA="turnstile" but TURNSTILE_SECRET_KEY is not set; rejecting sign-ups'), { where: "captcha" });
     return false;
   }
   if (typeof token !== "string" || !token || token.length > 2048) return false;
@@ -33,7 +34,7 @@ export async function verifyCaptcha(token: unknown, ip: string): Promise<boolean
     const data = (await res.json()) as { success?: boolean };
     return data.success === true;
   } catch (err) {
-    console.error("Turnstile verification failed:", err);
+    reportError(err, { where: "captcha verify" });
     return false;
   }
 }

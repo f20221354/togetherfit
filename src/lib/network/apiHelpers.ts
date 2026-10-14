@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
+import { reportError } from "@/lib/observability/report";
 
 export function bad(error: string, status = 400) {
   return NextResponse.json({ ok: false, error }, { status });
 }
 
-/** Logs the real error server-side; the client only gets a generic message. */
+/** Reports the real error (server log, and the team's webhook if set); the client only gets a generic message. */
 export function serverError(err: unknown) {
-  console.error(err);
+  reportError(err, { where: "api" });
   return NextResponse.json({ ok: false, error: "Something went wrong. Please try again." }, { status: 500 });
 }
 
