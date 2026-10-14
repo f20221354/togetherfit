@@ -21,11 +21,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const search = req.nextUrl.searchParams;
   const since = search.get("since");
+  const conv = { kind: "connection", id } as const;
   const limit = Number(search.get("limit")) || undefined;
   try {
     const result = since
-      ? await getMessagesSince(id, user.id, since)
-      : await getMessagePage(id, user.id, { before: search.get("before"), limit });
+      ? await getMessagesSince(conv, user.id, since)
+      : await getMessagePage(conv, user.id, { before: search.get("before"), limit });
     if (!result.ok) return result.reason === "bad_cursor" ? bad("Invalid cursor") : bad(NOT_PARTICIPANT, 403);
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (limited) return limited;
   try {
     // Celebration cards go through /api/milestones/[id]/send, which checks you own the milestone.
-    const result = await sendChatMessage(id, user.id, body, clientMessageId ?? null);
+    const result = await sendChatMessage({ kind: "connection", id }, user.id, body, clientMessageId ?? null);
     if (!result.ok) return result.reason === "not_a_participant" ? bad(NOT_PARTICIPANT, 403) : bad("Message cannot be empty");
     // Saved first, then both people's open tabs are told; the sender gets the response without waiting.
     after(() => signalUsers(result.participants, { type: "chat", connectionId: id }));

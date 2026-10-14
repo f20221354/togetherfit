@@ -17,9 +17,12 @@ import type { TokenRequest } from "ably";
 export const REALTIME_MODES = ["poll", "ably"] as const;
 export type RealtimeMode = (typeof REALTIME_MODES)[number];
 
-export interface ChatSignal {
-  type: "chat";
-  connectionId: string;
+/** A friend conversation (connectionId) or a group chat (groupId) changed. */
+export type ChatSignal = { type: "chat"; connectionId: string } | { type: "chat"; groupId: string };
+
+export function isChatSignal(value: unknown): value is ChatSignal {
+  const v = value as Record<string, unknown> | null;
+  return v?.type === "chat" && (typeof v.connectionId === "string" || typeof v.groupId === "string");
 }
 
 /** What GET /api/realtime/config tells the browser about how to listen. */

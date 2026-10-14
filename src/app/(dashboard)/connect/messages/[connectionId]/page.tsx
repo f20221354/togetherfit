@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { SPORTS } from "@/lib/connect/sports";
@@ -8,12 +8,10 @@ import { CELEBRATION_REACTIONS, CelebrationCard, REACTION_META, isReaction } fro
 import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
 import { CelebrationCardView } from "@/components/connect/CelebrationCardView";
 import { ChatMessage, useConversation } from "@/lib/chat/useConversation";
+import { useChatScroll } from "@/lib/chat/useChatScroll";
 import { ConnectionMenu } from "@/components/connect/ConnectionMenu";
 import { Avatar } from "@/components/profile/Avatar";
 import { Icon } from "@/components/ui/Icon";
-
-/** Within this many pixels of the bottom counts as "reading the latest", so new messages scroll into view. */
-const STICK_TO_BOTTOM_PX = 80;
 
 function parseCard(body: string): CelebrationCard | null {
   try {
@@ -46,45 +44,14 @@ function Conversation({ connectionId }: { connectionId: string }) {
   const [logging, setLogging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const listRef = useRef<HTMLDivElement>(null);
-  const stickToBottom = useRef(true);
-  const restoreScroll = useRef<{ height: number; top: number; firstId: string | undefined } | null>(null);
-
-  // Keep the reading position: older messages prepend without jumping; new ones scroll in only if you're at the bottom.
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const restore = restoreScroll.current;
-    if (restore) {
-      // Wait until the older page has actually been added above the first message.
-      if (messages?.[0]?.id !== restore.firstId) {
-        list.scrollTop = list.scrollHeight - restore.height + restore.top;
-        restoreScroll.current = null;
-      }
-    } else if (stickToBottom.current) {
-      list.scrollTop = list.scrollHeight;
-    }
-  }, [messages]);
-
-  function onScroll() {
-    const list = listRef.current;
-    if (list) stickToBottom.current = list.scrollHeight - list.scrollTop - list.clientHeight < STICK_TO_BOTTOM_PX;
-  }
-
-  function showOlder() {
-    const list = listRef.current;
-    if (list) restoreScroll.current = { height: list.scrollHeight, top: list.scrollTop, firstId: messages?.[0]?.id };
-    void loadOlder().then((added) => {
-      if (added === 0) restoreScroll.current = null;
-    });
-  }
+  const { listRef, onScroll, showOlder, scrollToLatest } = useChatScroll(messages, loadOlder);
 
   async function submit() {
     const text = draft.trim();
     if (!text) return;
     setDraft("");
     setSendError(null);
-    stickToBottom.current = true;
+    scrollToLatest();
     const result = await send(text);
     if (!result.ok && result.error) setSendError(result.error);
   }

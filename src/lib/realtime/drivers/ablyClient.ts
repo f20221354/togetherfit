@@ -1,7 +1,7 @@
 "use client";
 
 import { Realtime, type TokenRequest } from "ably";
-import { userChannel, type ChatSignal } from "../types";
+import { isChatSignal, userChannel } from "../types";
 import type { ClientDriverCallbacks } from "../client";
 
 /** Loaded only when the server says mode is "ably", so other modes never download the Ably SDK. */
@@ -46,8 +46,7 @@ export function connectAbly(userId: string, firstToken: TokenRequest, on: Client
     if (!change.resumed && wasLive) on.resync();
   });
   void channel.subscribe("chat", (message) => {
-    const signal = message.data as ChatSignal;
-    if (signal?.type === "chat" && typeof signal.connectionId === "string") on.signal(signal);
+    if (isChatSignal(message.data)) on.signal(message.data);
   });
 
   return () => realtime.close();

@@ -388,14 +388,6 @@ export async function joinGroup(email: string, groupId: string): Promise<{ ok: b
   return { ok: true };
 }
 
-async function groupMember(email: string, groupId: string): Promise<UserRow | null> {
-  if (!isUuid(groupId)) return null;
-  const me = await getUserRowByEmail(email);
-  if (!me) return null;
-  const result = await getPool().query("select 1 from group_members where group_id = $1 and user_id = $2", [groupId, me.id]);
-  return result.rows.length > 0 ? me : null;
-}
-
 export interface GroupSummary {
   groupId: string;
   name: string;
@@ -437,48 +429,29 @@ export async function listMyGroups(email: string): Promise<GroupSummary[]> {
   }));
 }
 
-export interface GroupChat {
-  group: { id: string; name: string; sport: string; mode: "now" | "scheduled"; startTime: string; members: string[] };
-  messages: { id: string; senderName: string; body: string; createdAt: string; mine: boolean }[];
+export interface GroupInfo {
+  id: string;
+  name: string;
+  sport: string;
+  mode: "now" | "scheduled";
+  startTime: string;
+  members: string[];
 }
 
-export async function getGroupChat(email: string, groupId: string): Promise<GroupChat | null> {
-  const me = await groupMember(email, groupId);
-  if (!me) return null;
+/** A group's header details. Callers check membership first (chatDb does, for the chat route). */
+export async function getGroupInfo(groupId: string): Promise<GroupInfo | null> {
   const pool = getPool();
   const group = await pool.query<{ id: string; name: string; sport: string; mode: "now" | "scheduled"; start_time: string }>(
     "select id, name, sport, mode, start_time from groups where id = $1",
     [groupId]
   );
+  const g = group.rows[0];
+  if (!g) return null;
   const members = await pool.query<{ name: string }>(
     "select u.name from group_members gm join app_users u on u.id = gm.user_id where gm.group_id = $1 order by gm.joined_at",
     [groupId]
   );
-  const messages = await pool.query<{ id: string; name: string; sender_id: string; body: string; created_at: string }>(
-    `select m.id, u.name, m.sender_id, m.body, m.created_at from messages m
-     join app_users u on u.id = m.sender_id
-     where m.group_id = $1 order by m.created_at asc`,
-    [groupId]
-  );
-  const g = group.rows[0];
-  return {
-    group: { id: g.id, name: g.name, sport: g.sport, mode: g.mode, startTime: g.start_time, members: members.rows.map((m) => m.name) },
-    messages: messages.rows.map((m) => ({
-      id: m.id,
-      senderName: m.name,
-      body: m.body,
-      createdAt: m.created_at,
-      mine: m.sender_id === me.id,
-    })),
-  };
-}
-
-export async function sendGroupMessage(email: string, groupId: string, body: string): Promise<{ ok: boolean }> {
-  if (!body.trim()) return { ok: false };
-  const me = await groupMember(email, groupId);
-  if (!me) return { ok: false };
-  await getPool().query("insert into messages (group_id, sender_id, body) values ($1, $2, $3)", [groupId, me.id, body.trim().slice(0, 2000)]);
-  return { ok: true };
+  return { id: g.id, name: g.name, sport: g.sport, mode: g.mode, startTime: g.start_time, members: members.rows.map((m) => m.name) };
 }
 
 // ---------- Safety ----------

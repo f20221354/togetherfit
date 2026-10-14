@@ -12,6 +12,7 @@ export interface ChatMessage {
   createdAt: string;
   updatedAt: string;
   mine: boolean;
+  senderName: string;
   expiresAt: string | null;
   reaction: string | null;
   clientMessageId: string | null;
@@ -50,14 +51,24 @@ async function getJson(url: string) {
   return res.json();
 }
 
+/** Header details the first page of a group chat carries (see GroupInfo in findDb.ts). */
+export interface GroupInfo {
+  id: string;
+  name: string;
+  sport: string;
+  mode: "now" | "scheduled";
+  startTime: string;
+  members: string[];
+}
+
 /**
- * One friend conversation: the newest page on open, older pages on demand,
- * and only *changes* afterwards. Changes are fetched when the realtime signal
- * arrives, after reconnecting or coming back to the tab, and on a timer as a
- * fallback.
+ * One conversation, with a friend or in a group: the newest page on open,
+ * older pages on demand, and only *changes* afterwards. Changes are fetched
+ * when the realtime signal arrives, after reconnecting or coming back to the
+ * tab, and on a timer as a fallback.
  */
-export function useConversation(connectionId: string) {
-  const base = `/api/connections/${connectionId}/messages`;
+export function useConversation(id: string, kind: "connection" | "group" = "connection") {
+  const base = kind === "group" ? `/api/groups/${id}/messages` : `/api/connections/${id}/messages`;
   const status = useRealtimeStatus();
 
   const [messages, setMessages] = useState<ChatMessage[] | null>(null);
@@ -66,7 +77,8 @@ export function useConversation(connectionId: string) {
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [partner, setPartner] = useState<{ name: string; photoId: string | null; verified: boolean } | null>(null);
-  /** The conversation is gone: unfriended, blocked or reported (by either side). */
+  const [group, setGroup] = useState<GroupInfo | null>(null);
+  /** The conversation is gone: unfriended, blocked or reported (by either side), or you left the group. */
   const [ended, setEnded] = useState(false);
 
   const syncCursor = useRef<string | null>(null);
@@ -75,14 +87,15 @@ export function useConversation(connectionId: string) {
   const readTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const markReadSoon = useCallback(() => {
-    if (document.visibilityState !== "visible") return;
+    // Unread counts are for friend chats only.
+    if (kind !== "connection" || document.visibilityState !== "visible") return;
     if (readTimer.current) clearTimeout(readTimer.current);
     readTimer.current = setTimeout(() => {
-      fetch(`/api/connections/${connectionId}/read`, { method: "POST" })
+      fetch(`/api/connections/${id}/read`, { method: "POST" })
         .then(() => refreshNetworkSummary())
         .catch(() => {});
     }, 800);
-  }, [connectionId]);
+  }, [id, kind]);
 
   /** Replaces the view with a fresh newest page, keeping messages that are still being sent. */
   const applyLatest = useCallback(
@@ -93,12 +106,14 @@ export function useConversation(connectionId: string) {
       hasMore: boolean;
       syncCursor: string;
       partner?: { name: string; photoId: string | null; verified: boolean };
+      group?: GroupInfo;
     }) => {
       if (!data.ok) {
         setError(data.error ?? "Couldn't load this conversation.");
         return;
       }
       if (data.partner) setPartner(data.partner);
+      if (data.group) setGroup(data.group);
       syncCursor.current = data.syncCursor;
       setHasMore(data.hasMore);
       setMessages((current) => merge((current ?? []).filter((m) => m.pending || m.failed), data.messages));
@@ -163,7 +178,8 @@ export function useConversation(connectionId: string) {
 
   // Realtime signal for this conversation, reconnects, tab focus, coming back online.
   useChatSignals((signal) => {
-    if (!signal || signal.connectionId === connectionId) void sync();
+    if (!signal) void sync();
+    else if (kind === "group" ? "groupId" in signal && signal.groupId === id : "connectionId" in signal && signal.connectionId === id) void sync();
   });
 
   // Fallback / safety-net timer; skipped while the tab is hidden.
@@ -243,6 +259,7 @@ export function useConversation(connectionId: string) {
         createdAt: at,
         updatedAt: at,
         mine: true,
+        senderName: "",
         expiresAt: null,
         reaction: null,
         clientMessageId,
@@ -284,5 +301,5 @@ export function useConversation(connectionId: string) {
     [messages, now]
   );
 
-  return { messages: visible, partner, ended, hasMore, loadingOlder, error, loadOlder, send, retry, react, live: status === "live" };
+  return { messages: visible, partner, group, ended, hasMore, loadingOlder, error, loadOlder, send, retry, react, live: status === "live" };
 }
