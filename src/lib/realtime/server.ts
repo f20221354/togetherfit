@@ -1,5 +1,6 @@
 import { createAblyDriver } from "./drivers/ablyServer";
 import { pollDriver } from "./drivers/pollServer";
+import { sseDriver } from "./drivers/sseServer";
 import { REALTIME_MODES, type ChatSignal, type RealtimeMode, type RealtimeServerDriver } from "./types";
 
 /**
@@ -22,10 +23,11 @@ function resolveDriver(): RealtimeServerDriver {
     }
     return createAblyDriver(key);
   }
+  if (raw === "sse") return sseDriver;
   return pollDriver;
 }
 
-function realtime(): RealtimeServerDriver {
+export function realtime(): RealtimeServerDriver {
   driver ??= resolveDriver();
   return driver;
 }

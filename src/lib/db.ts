@@ -17,7 +17,7 @@ declare global {
  * local database without TLS; DATABASE_SSL=no-verify encrypts without
  * checking the certificate (not recommended).
  */
-function sslConfig() {
+export function sslConfig() {
   const mode = process.env.DATABASE_SSL;
   if (mode === "false") return false;
   if (mode === "no-verify") return { rejectUnauthorized: false };

@@ -113,3 +113,21 @@ export async function logIn(email: string, password = PASSWORD): Promise<Client>
 export async function clearRateLimits() {
   await db.query("delete from rate_limits");
 }
+
+export async function userId(c: Client): Promise<string> {
+  return (await db.query("select id from app_users where email = $1", [c.email])).rows[0].id;
+}
+
+/** A group with the given members, created directly (the radar flow is tested elsewhere). */
+export async function makeGroup(owner: Client, ...members: Client[]): Promise<string> {
+  const created = await db.query(
+    `insert into groups (name, sport, area_geohash, area_lat, area_lng, mode, start_time, created_by)
+     values ('Morning runners', 'running', 'tdr1y', 12.97, 77.59, 'now', now(), $1) returning id`,
+    [await userId(owner)]
+  );
+  const id: string = created.rows[0].id;
+  for (const c of [owner, ...members]) {
+    await db.query("insert into group_members (group_id, user_id) values ($1, $2)", [id, await userId(c)]);
+  }
+  return id;
+}

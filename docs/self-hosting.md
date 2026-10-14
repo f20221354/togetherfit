@@ -59,7 +59,7 @@ docker compose up -d app
 
 | Service | What it does |
 |---|---|
-| `app` | The Next.js server (standalone build), as a non-root user, with a health check |
+| `app` | The Next.js server (standalone build), as a non-root user, with a health check. Chat is instant (`REALTIME=sse`), using one extra database connection |
 | `caddy` | HTTPS, compression, and the real client IP in `X-Forwarded-For` |
 | `cron` | Calls `/api/cron/cleanup-messages` daily with `CRON_SECRET` |
 

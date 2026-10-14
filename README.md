@@ -104,11 +104,12 @@ at `/privacy` and `/terms`.
   and people stuck in verification. Make someone an admin with
   `npm run admin:grant -- their@email.com`.
 
-## Friend chat
+## Chat (friends and groups)
 
 Postgres holds every message. Opening a chat loads the newest 50; older ones
 load in pages of 50 as you scroll up. After that the browser only ever asks
 for *changes* (`GET …/messages?since=<time>`): new messages and reactions.
+Group chats (`/api/groups/<id>/messages`) work the same way, members only.
 
 What triggers that request is set by `REALTIME`:
 
@@ -116,7 +117,7 @@ What triggers that request is set by `REALTIME`:
 |---|---|---|
 | `poll` (default) | The browser checks every 5 s | Any hosting, no extra service: UAT, small launches |
 | `ably` | Instantly: after saving, the server sends a tiny "conversation X changed" signal through [Ably](https://ably.com) to each person's private `user:<id>` channel. Needs `ABLY_API_KEY` | Vercel, where functions can't keep connections open |
-| `sse` *(planned)* | Instantly, pushed by our own server (Server-Sent Events + Postgres `LISTEN/NOTIFY`) | Self-hosting on a long-running server |
+| `sse` | Instantly, pushed by our own server: each tab keeps one Server-Sent Events stream (`/api/realtime/stream`); Postgres `NOTIFY` carries signals between server processes, each holding one `LISTEN` connection | Self-hosting on a long-running server (the Docker setup uses it) |
 
 In every mode, signals contain ids only, never message text, and the browser
 asks `/api/realtime/config` how to listen (for Ably, it returns a token that
@@ -151,7 +152,7 @@ Environment variables:
 | `CLIENT_IP_HEADER` | no | A header your proxy sets with the client IP (e.g. `cf-connecting-ip`), used instead of `X-Forwarded-For` |
 | `VERIFICATION` | no | Selfie verification and photo checks: `mock` (default) or `off`. **`mock` badges are not real — switch to a real provider before launch** |
 | `MOCK_VERIFICATION_OUTCOME` | no | With `VERIFICATION=mock`: `pass` (default), `unsure` or `fail`, to test each path |
-| `REALTIME` | no | How chat updates are delivered: `poll` (default) or `ably`. See [Friend chat](#friend-chat) |
+| `REALTIME` | no | How chat updates are delivered: `poll` (default), `ably` or `sse`. See [Friend chat](#chat-friends-and-groups) |
 | `ABLY_API_KEY` | with `REALTIME=ably` | Ably API key; check it with `npm run realtime:test` |
 | `CRON_SECRET` | in production | Protects `/api/cron/cleanup-messages`; Vercel Cron sends it automatically (see `vercel.json`) |
 | `GROQ_API_KEY` | no | AI Coach answers. Crisis and emergency messages never reach the model (`src/lib/move/coachSafety.ts`) |

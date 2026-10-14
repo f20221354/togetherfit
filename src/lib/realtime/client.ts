@@ -62,6 +62,13 @@ async function start(userId: string) {
       disconnect = connectAbly(userId, config.tokenRequest, callbacks);
       break;
     }
+    case "sse": {
+      callbacks.status("connecting");
+      const { connectSse } = await import("./drivers/sseClient");
+      if (activeUserId !== userId) return;
+      disconnect = connectSse(callbacks);
+      break;
+    }
     case "poll":
     default:
       // Nothing to connect to; useConversation & co. check for changes on their timers.

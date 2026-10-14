@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { Client, clearRateLimits, db, signUp } from "./helpers";
+import { Client, clearRateLimits, db, makeGroup, signUp } from "./helpers";
 
 beforeAll(clearRateLimits);
 afterAll(() => db.end());
@@ -19,25 +19,6 @@ interface Page {
   hasMore: boolean;
   syncCursor: string;
   group?: { name: string; members: string[] };
-}
-
-async function userId(c: Client): Promise<string> {
-  return (await db.query("select id from app_users where email = $1", [c.email])).rows[0].id;
-}
-
-/** A group with the given members, created directly (the radar flow is tested elsewhere). */
-async function makeGroup(owner: Client, ...members: Client[]): Promise<string> {
-  const ownerId = await userId(owner);
-  const created = await db.query(
-    `insert into groups (name, sport, area_geohash, area_lat, area_lng, mode, start_time, created_by)
-     values ('Morning runners', 'running', 'tdr1y', 12.97, 77.59, 'now', now(), $1) returning id`,
-    [ownerId]
-  );
-  const id = created.rows[0].id;
-  for (const c of [owner, ...members]) {
-    await db.query("insert into group_members (group_id, user_id) values ($1, $2)", [id, await userId(c)]);
-  }
-  return id;
 }
 
 describe("group chat", () => {
