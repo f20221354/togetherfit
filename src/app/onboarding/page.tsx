@@ -6,13 +6,14 @@ import { useAuthStore, useCurrentUser, WellnessSetupPrefs } from "@/lib/auth/aut
 import { useCameraStore } from "@/lib/store/cameraStore";
 import { PhotoEditor } from "@/components/profile/PhotoEditor";
 import { MatchingSettings } from "@/components/profile/MatchingSettings";
+import { Icon } from "@/components/ui/Icon";
 
 const CAPABILITIES = [
-  { icon: "🤝", label: "Connect", detail: "Find real people for running, gym, and walking" },
-  { icon: "🏋️", label: "Move & Coach", detail: "Goals, workouts, and AI-guided training" },
-  { icon: "🌿", label: "Sanctuary", detail: "A bio-room, plus light and sleep rhythm guidance" },
-  { icon: "👁", label: "Posture & Gaze Guard", detail: "Camera-based posture and eye-level monitoring" },
-  { icon: "🫁", label: "UrgeSurfer", detail: "Breathe, Rhythm, or Ground — fast recovery resets" },
+  { icon: "nav.connect" as const, label: "Connect", detail: "Find real people for running, gym, and walking" },
+  { icon: "nav.move" as const, label: "Move & Coach", detail: "Goals, workouts, and AI-guided training" },
+  { icon: "module.sanctuary" as const, label: "Sanctuary", detail: "A bio-room, plus light and sleep rhythm guidance" },
+  { icon: "module.posture" as const, label: "Posture & Gaze Guard", detail: "Camera-based posture and eye-level monitoring" },
+  { icon: "module.reset" as const, label: "UrgeSurfer", detail: "Breathe, Rhythm, or Ground — fast recovery resets" },
 ];
 
 type CameraStepResult = "granted" | "denied" | "skipped" | null;
@@ -111,7 +112,7 @@ export default function OnboardingPage() {
             <div className="flex flex-col gap-2 text-left">
               {CAPABILITIES.map((c) => (
                 <div key={c.label} className="flex items-center gap-3 rounded-xl bg-surface-2 p-3">
-                  <span className="text-xl">{c.icon}</span>
+                  <Icon name={c.icon} size={22} className="text-accent-foreground" />
                   <div>
                     <div className="text-sm font-medium text-foreground">{c.label}</div>
                     <div className="text-xs text-muted">{c.detail}</div>
@@ -130,7 +131,7 @@ export default function OnboardingPage() {
 
         {step === 2 && (
           <div className="flex flex-col gap-5 text-center">
-            <span className="text-3xl">👁</span>
+            <Icon name="module.posture" size={36} className="mx-auto text-accent-foreground" />
             <h2 className="text-xl font-semibold text-foreground">Posture & Gaze Guard</h2>
             <p className="text-sm text-muted">
               togetherfit can use your camera to estimate posture and eye/head alignment.
@@ -188,7 +189,7 @@ export default function OnboardingPage() {
         {step === 3 && (
           <div className="flex flex-col gap-5">
             <div className="text-center">
-              <span className="text-3xl">⚙️</span>
+              <Icon name="nav.settings" size={36} className="mx-auto text-accent-foreground" />
               <h2 className="mt-2 text-xl font-semibold text-foreground">Wellness Setup</h2>
               <p className="text-sm text-muted">Optional — helps togetherfit tailor recommendations.</p>
             </div>

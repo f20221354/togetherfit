@@ -35,7 +35,7 @@ export default function ExerciseLibraryPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader icon="📚" title="Exercise Library" subtitle="Search exercises and learn how to perform them." />
+      <PageHeader icon="object.books" title="Exercise Library" subtitle="Search exercises and learn how to perform them." />
 
       <input
         value={query}

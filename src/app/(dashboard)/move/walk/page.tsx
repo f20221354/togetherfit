@@ -6,6 +6,7 @@ import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
+import { Icon } from "@/components/ui/Icon";
 
 const DURATION = 15 * 60;
 
@@ -47,13 +48,13 @@ export default function MicroStrollWalkPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <PageHeader
-        icon="🚶"
+        icon="sport.walking"
         title="15-Minute Micro-Stroll"
         subtitle="A short sunlight walk matched to your schedule — boosts Movement and Circadian scores."
       />
 
       <div className="flex flex-col items-center gap-5 rounded-3xl border border-border bg-surface p-10">
-        <span className="text-6xl">🚶</span>
+        <Icon name="sport.walking" size={64} className="text-accent-foreground" />
         <div className="flex gap-6 text-center text-sm text-muted">
           <div>
             <div className="text-xs">Duration</div>

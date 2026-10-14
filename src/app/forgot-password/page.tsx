@@ -8,6 +8,7 @@ import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { CurrentUser, useAuthStore } from "@/lib/auth/authStore";
 import { authPost } from "@/lib/auth/authApi";
+import { Captcha, captchaRequired } from "@/components/auth/Captcha";
 import { checkPassword, isValidEmail } from "@/lib/auth/validation";
 
 export default function ForgotPasswordPage() {
@@ -22,6 +23,8 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | undefined>();
   const [notice, setNotice] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   async function requestCode(e: FormEvent) {
     e.preventDefault();
@@ -29,12 +32,17 @@ export default function ForgotPasswordPage() {
       setError("Enter a valid email address");
       return;
     }
+    if (captchaRequired && !captchaToken) {
+      setError("Please complete the quick check below first.");
+      return;
+    }
     setError(undefined);
     setLoading(true);
-    const result = await authPost<{ challengeId: string }>("/api/auth/forgot", { email });
+    const result = await authPost<{ challengeId: string }>("/api/auth/forgot", { email, captchaToken });
     setLoading(false);
     if (!result.ok) {
       setError(result.error);
+      setCaptchaReset((n) => n + 1);
       return;
     }
     setChallengeId(result.data.challengeId);
@@ -142,6 +150,7 @@ export default function ForgotPasswordPage() {
             error={error}
             placeholder="you@example.com"
           />
+          <Captcha onToken={setCaptchaToken} resetKey={captchaReset} />
           <button
             type="submit"
             disabled={loading}

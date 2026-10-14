@@ -9,7 +9,7 @@ import { useMoveStore } from "@/lib/store/moveStore";
 import { useIsClient } from "@/lib/useIsClient";
 import { useWinterArcJoined, useWinterArcStore } from "@/lib/winterArc/store";
 import { markWinterArcDailyActive, trackWinterArc } from "@/lib/winterArc/analytics";
-import { CelebrationCard } from "@/lib/connect/milestones";
+import { CelebrationCard, cardIcon } from "@/lib/connect/milestones";
 import {
   WINTER_ARC_COPY,
   WINTER_ARC_PARTNER_FINDER_PATH,
@@ -21,6 +21,7 @@ import {
   winterArcStart,
   winterArcTotalDays,
 } from "@/lib/winterArc/config";
+import { Icon } from "@/components/ui/Icon";
 
 const shortDate = (d: Date) => d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
@@ -119,7 +120,7 @@ function WinterArcContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader icon="❄️" title={WINTER_ARC_COPY.title} subtitle={WINTER_ARC_COPY.hook} />
+      <PageHeader icon="season.winter" title={WINTER_ARC_COPY.title} subtitle={WINTER_ARC_COPY.hook} />
 
       <section
         className="rounded-3xl border border-winter/30 bg-surface p-6"
@@ -193,7 +194,8 @@ function WinterArcContent() {
                 : "border border-border text-foreground hover:bg-surface-2"
             )}
           >
-            🤝 {WINTER_ARC_COPY.findPartnerCta}
+            <Icon name="nav.connect" size={16} className="mr-1 inline-block align-[-0.2em]" />
+              {WINTER_ARC_COPY.findPartnerCta}
           </Link>
         </div>
       </section>
@@ -219,7 +221,7 @@ function WinterArcContent() {
                   Milestones this arc:{" "}
                   {arcMilestones.map((m) => (
                     <span key={m.milestoneId} className="mr-2 whitespace-nowrap text-foreground">
-                      {m.icon} {m.title}
+                      <Icon name={cardIcon(m)} size={16} className="inline-block align-[-0.2em]" /> {m.title}
                     </span>
                   ))}
                 </span>

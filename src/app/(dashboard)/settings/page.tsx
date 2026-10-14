@@ -10,6 +10,7 @@ import { useCameraStore } from "@/lib/store/cameraStore";
 import { usePreferencesStore } from "@/lib/store/preferencesStore";
 import { useIsClient } from "@/lib/useIsClient";
 import { AccountDataSection } from "@/components/settings/AccountDataSection";
+import { AccountEditor } from "@/components/settings/AccountEditor";
 import { MatchingSettings } from "@/components/profile/MatchingSettings";
 import { Avatar } from "@/components/profile/Avatar";
 import { useMyProfile } from "@/lib/profile/profileStore";
@@ -74,17 +75,10 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="⚙️" title="Settings" subtitle="Account, privacy & safety, notifications, appearance and your data." />
+      <PageHeader icon="nav.settings" title="Settings" subtitle="Account, privacy & safety, notifications, appearance and your data." />
 
       <SettingsSection title="Account">
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Name</span>
-          <span className="text-foreground">{user?.name ?? "—"}</span>
-        </div>
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Email</span>
-          <span className="break-all text-foreground">{user?.email ?? "—"}</span>
-        </div>
+        <AccountEditor />
         <Link href="/profile" className="flex items-center gap-3 rounded-xl bg-surface-2 p-3 hover:bg-border">
           <Avatar name={user?.name ?? "?"} photoId={profile?.photoId} verified={!!profile?.verifiedAt} size="sm" />
           <span className="flex-1 text-sm">

@@ -8,6 +8,7 @@ import { useCurrentUser } from "@/lib/auth/authStore";
 import { sportMeta } from "@/lib/connect/sports";
 import { timeSlotLabel } from "@/lib/connect/timeSlot";
 import { Avatar } from "@/components/profile/Avatar";
+import { Icon, type IconName } from "@/components/ui/Icon";
 
 interface RadarPerson {
   userId: string;
@@ -70,7 +71,7 @@ function angleFor(id: string): number {
   return (h % 360) * (Math.PI / 180);
 }
 
-function RadarVisual({ people, radiusKm, icon }: { people: RadarPerson[]; radiusKm: number; icon: string }) {
+function RadarVisual({ people, radiusKm, icon }: { people: RadarPerson[]; radiusKm: number; icon: IconName }) {
   return (
     <div className="relative mx-auto aspect-square w-64 max-w-full">
       <div className="absolute inset-0 rounded-full border border-accent/30 bg-accent/5" />
@@ -95,8 +96,8 @@ function RadarVisual({ people, radiusKm, icon }: { people: RadarPerson[]; radius
           </span>
         );
       })}
-      <span className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-xl shadow">
-        {icon}
+      <span className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-accent-foreground shadow">
+        <Icon name={icon} size={22} />
       </span>
     </div>
   );
@@ -270,7 +271,7 @@ export default function RadarPage() {
   if (data.intent.status !== "active") {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-3 text-center">
-        <span className="text-4xl">{meta.icon}</span>
+        <Icon name={meta.icon} size={44} className="text-accent-foreground" />
         <h1 className="text-lg font-semibold text-foreground">This search has ended</h1>
         <p className="text-sm text-muted">
           {data.intent.status === "cancelled"
@@ -297,7 +298,7 @@ export default function RadarPage() {
               {person.verified && <span className="ml-1.5 text-xs font-medium text-sky-500">Verified</span>}
             </div>
             <div className="text-xs text-muted">
-              {meta.icon} {meta.label} · {timeSlotLabel(person.mode, person.startTime)} · {distanceLabel(person.approxDistanceKm)}
+              <Icon name={meta.icon} size={14} className="inline-block align-[-0.2em]" /> {meta.label} · {timeSlotLabel(person.mode, person.startTime)} · {distanceLabel(person.approxDistanceKm)}
             </div>
           </div>
           <button
@@ -362,7 +363,8 @@ export default function RadarPage() {
             href={`/connect/messages/${person.connectionId}`}
             className="rounded-full border border-border px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-surface-2"
           >
-            💬 Connected — chat
+            <Icon name="action.chat" size={14} className="mr-1 inline-block align-[-0.15em]" />
+            Connected: chat
           </Link>
         ) : person.connection === "requested" ? (
           <button disabled className="rounded-full bg-surface-2 px-4 py-2 text-sm text-muted">
@@ -438,13 +440,13 @@ export default function RadarPage() {
           )}
           {data.now.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">⚡ Free now</h2>
+              <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted"><Icon name="status.energy" size={14} /> Free now</h2>
               {data.now.map(renderPerson)}
             </section>
           )}
           {data.scheduled.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">📅 Scheduled</h2>
+              <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted"><Icon name="object.calendar" size={14} /> Scheduled</h2>
               {data.scheduled.map(renderPerson)}
             </section>
           )}
@@ -453,7 +455,7 @@ export default function RadarPage() {
         <div className="flex flex-col gap-3">
           {data.groups.map((g) => (
             <div key={g.groupId} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
-              <span className="text-2xl">{meta.icon}</span>
+              <Icon name={meta.icon} size={28} className="text-accent-foreground" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-foreground">{g.name}</div>
                 <div className="text-xs text-muted">

@@ -9,6 +9,7 @@ import { useConnectBadgeCount } from "@/lib/network/useUnreadCount";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 import { WinterArcNavBadge } from "@/components/winterArc/WinterArcNavBadge";
 import { Avatar } from "@/components/profile/Avatar";
+import { Icon } from "@/components/ui/Icon";
 import { useMyProfile } from "@/lib/profile/profileStore";
 
 function NavLink({
@@ -33,7 +34,7 @@ function NavLink({
         active ? "bg-accent/15 text-accent-foreground" : "text-muted hover:bg-surface-2 hover:text-foreground"
       )}
     >
-      <span className="text-base">{icon}</span>
+      <span className="flex h-5 w-5 items-center justify-center">{icon}</span>
       {label}
       {!!badge && (
         <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold text-black">
@@ -58,7 +59,7 @@ export function Sidebar() {
         <TogetherfitLogo layout="inline" size={40} />
       </div>
       <nav className="flex flex-1 flex-col gap-1">
-        <NavLink href={OVERVIEW_ITEM.href} icon={OVERVIEW_ITEM.icon} label={OVERVIEW_ITEM.label} active={pathname === "/"} />
+        <NavLink href={OVERVIEW_ITEM.href} icon={<Icon name={OVERVIEW_ITEM.icon} />} label={OVERVIEW_ITEM.label} active={pathname === "/"} />
 
         <div className="my-2 border-t border-border" />
 
@@ -66,7 +67,7 @@ export function Sidebar() {
           <div key={item.key}>
             <NavLink
               href={item.href}
-              icon={item.icon}
+              icon={<Icon name={item.icon} />}
               label={item.label}
               active={pathname.startsWith(item.href)}
               badge={item.key === "connect" ? unreadCount : undefined}
@@ -79,7 +80,7 @@ export function Sidebar() {
         <div className="my-2 border-t border-border" />
 
         {WELLNESS_ITEMS.map((item) => (
-          <NavLink key={item.key} href={item.href} icon={item.icon} label={item.label} active={pathname.startsWith(item.href)} />
+          <NavLink key={item.key} href={item.href} icon={<Icon name={item.icon} />} label={item.label} active={pathname.startsWith(item.href)} />
         ))}
       </nav>
 
@@ -90,8 +91,8 @@ export function Sidebar() {
           label="My Profile"
           active={pathname === "/profile"}
         />
-        <NavLink href="/settings" icon="⚙️" label="Settings" active={pathname === "/settings"} />
-        {user?.isAdmin && <NavLink href="/moderation" icon="🛡️" label="Moderation" active={pathname === "/moderation"} />}
+        <NavLink href="/settings" icon={<Icon name="nav.settings" />} label="Settings" active={pathname === "/settings"} />
+        {user?.isAdmin && <NavLink href="/moderation" icon={<Icon name="nav.moderation" />} label="Moderation" active={pathname === "/moderation"} />}
         {user && (
           <button
             onClick={async () => {
@@ -100,7 +101,7 @@ export function Sidebar() {
             }}
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted hover:bg-surface-2 hover:text-foreground"
           >
-            <span className="text-base">↩</span>
+            <Icon name="nav.signout" />
             Log Out
           </button>
         )}

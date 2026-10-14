@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon, type IconName } from "@/components/ui/Icon";
 import Link from "next/link";
 import clsx from "clsx";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -13,7 +14,7 @@ export function ModuleStatusCard({
   href,
   progress,
 }: {
-  icon: string;
+  icon: IconName;
   title: string;
   metricLabel: string;
   metricValue: string | number;
@@ -30,7 +31,7 @@ export function ModuleStatusCard({
       )}
     >
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <span className="text-lg">{icon}</span>
+        <Icon name={icon} size={18} className="text-accent-foreground" />
         {title}
       </div>
       <div className="flex items-baseline justify-between">

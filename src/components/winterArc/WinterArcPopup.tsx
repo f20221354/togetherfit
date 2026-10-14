@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/ui/Icon";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { useIsClient } from "@/lib/useIsClient";
 import { useWinterArcJoined, useWinterArcPopupDue, useWinterArcStore } from "@/lib/winterArc/store";
@@ -127,8 +128,8 @@ function WinterArcDialog({ email, onClose }: { email: string; onClose: () => voi
           ✕
         </button>
 
-        <div className="mb-3 text-4xl" aria-hidden="true">
-          ❄️
+        <div className="mb-3 text-winter">
+          <Icon name="season.winter" size={40} />
         </div>
 
         {joined ? (

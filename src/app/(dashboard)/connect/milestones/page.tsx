@@ -8,6 +8,7 @@ import { CelebrationCard, MILESTONES, MilestoneDef } from "@/lib/connect/milesto
 import { SPORTS } from "@/lib/connect/sports";
 import { useCelebrationStore } from "@/lib/connect/celebrationStore";
 import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
+import { Icon } from "@/components/ui/Icon";
 
 interface Overview {
   achieved: CelebrationCard[];
@@ -53,7 +54,7 @@ export default function MilestonesPage() {
   async function logSolo(sport: string) {
     if (!user) return;
     const result = await logActivityAndCelebrate(user, { sport });
-    setNotice(result.ok ? (result.newMilestones.length > 0 ? null : "Activity logged ✅") : (result.error ?? "Couldn't log it."));
+    setNotice(result.ok ? (result.newMilestones.length > 0 ? null : "Activity logged.") : (result.error ?? "Couldn't log it."));
     const data = await fetchOverview();
     if (data) setOverview(data);
   }
@@ -63,7 +64,7 @@ export default function MilestonesPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="🏅" title="Milestones" subtitle="Celebrate progress and share it with your friends." />
+      <PageHeader icon="object.medal" title="Milestones" subtitle="Celebrate progress and share it with your friends." />
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
@@ -91,7 +92,7 @@ export default function MilestonesPage() {
               onClick={() => logSolo(s.key)}
               className="rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-surface-2"
             >
-              {s.icon} {s.label}
+              <Icon name={s.icon} size={14} className="inline-block align-[-0.2em]" /> {s.label}
             </button>
           ))}
         </div>
@@ -113,7 +114,7 @@ export default function MilestonesPage() {
                 card ? "border-accent/40 bg-accent/5" : "border-border bg-surface opacity-70"
               )}
             >
-              <span className={clsx("text-2xl", !card && "grayscale")}>{def.icon}</span>
+              <Icon name={def.icon} size={28} className={card ? "text-accent-foreground" : "text-muted opacity-50"} />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold text-foreground">{def.title}</div>
                 <div className="text-xs text-muted">
@@ -125,7 +126,8 @@ export default function MilestonesPage() {
                   onClick={() => celebrate([card])}
                   className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-black hover:opacity-90"
                 >
-                  🎉 Share
+                  <Icon name="status.celebrate" size={14} className="mr-1 inline-block align-[-0.15em]" />
+              Share
                 </button>
               )}
             </div>

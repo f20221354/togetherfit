@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { ProgressBar } from "./ProgressBar";
 
 export function ManualCounter({
@@ -11,7 +12,7 @@ export function ManualCounter({
   step = 1,
   onChange,
 }: {
-  icon: string;
+  icon: IconName;
   label: string;
   value: number;
   target: number;
@@ -30,7 +31,7 @@ export function ManualCounter({
       }
     >
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <span className="text-xl">{icon}</span>
+        <Icon name={icon} size={20} className="text-accent-foreground" />
         {label}
       </div>
 

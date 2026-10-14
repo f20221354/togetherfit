@@ -9,6 +9,7 @@ import { PasswordField } from "@/components/ui/PasswordField";
 import { OtpStep } from "@/components/auth/OtpStep";
 import { CurrentUser, useAuthStore } from "@/lib/auth/authStore";
 import { authPost } from "@/lib/auth/authApi";
+import { Captcha, captchaRequired } from "@/components/auth/Captcha";
 import { isValidEmail, checkPassword } from "@/lib/auth/validation";
 
 interface FieldErrors {
@@ -30,6 +31,8 @@ export default function SignupPage() {
   const [formError, setFormError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -44,13 +47,18 @@ export default function SignupPage() {
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+    if (captchaRequired && !captchaToken) {
+      setFormError("Please complete the quick check below first.");
+      return;
+    }
 
     setLoading(true);
-    const result = await authPost<{ challengeId: string }>("/api/auth/signup", { name: name.trim(), email, password });
+    const result = await authPost<{ challengeId: string }>("/api/auth/signup", { name: name.trim(), email, password, captchaToken });
     setLoading(false);
 
     if (!result.ok) {
       setFormError(result.error);
+      setCaptchaReset((n) => n + 1); // tokens are single-use
       return;
     }
     setChallengeId(result.data.challengeId);
@@ -115,6 +123,8 @@ export default function SignupPage() {
           placeholder="••••••••"
           required
         />
+
+        <Captcha onToken={setCaptchaToken} resetKey={captchaReset} />
 
         {formError && (
           <div className="rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">{formError}</div>

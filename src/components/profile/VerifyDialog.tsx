@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "@/components/ui/Icon";
 
 const POSES = ["Hold up 3 fingers", "Give a thumbs up", "Touch your ear", "Put a hand on your chin", "Wave at the camera"];
 
@@ -108,7 +109,9 @@ export function VerifyDialog({ onClose, onVerified }: { onClose: () => void; onV
 
         {step === "result" && result && (
           <>
-            <p className="text-center text-3xl">{result.decision === "verified" ? "✅" : "🔁"}</p>
+            <div className="flex justify-center">
+              <Icon name={result.decision === "verified" ? "status.done" : "action.repeat"} size={40} weight={result.decision === "verified" ? "fill" : "regular"} className={result.decision === "verified" ? "text-sky-500" : "text-muted"} />
+            </div>
             <p className="text-center text-sm text-foreground">{result.message}</p>
             <button onClick={onClose} className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-black hover:opacity-90">
               {result.decision === "verified" ? "Done" : "Close"}

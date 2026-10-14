@@ -8,6 +8,7 @@ import { useConnectBadgeCount } from "@/lib/network/useUnreadCount";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { useMyProfile } from "@/lib/profile/profileStore";
 import { Avatar } from "@/components/profile/Avatar";
+import { Icon } from "@/components/ui/Icon";
 
 const TABS: NavItem[] = [OVERVIEW_ITEM, ...ACTION_ITEMS, PERSONAL_TAB];
 
@@ -43,13 +44,13 @@ export function BottomTabBar() {
                   active ? "text-accent-foreground" : "text-muted hover:text-foreground"
                 )}
               >
-                <span className="relative text-lg leading-none">
+                <span className="relative leading-none">
                   {tab.key === PERSONAL_TAB.key && user ? (
                     <span className={clsx("block rounded-full", active && "ring-2 ring-accent")}>
                       <Avatar name={user.name} photoId={profile?.photoId} size="xs" />
                     </span>
                   ) : (
-                    tab.icon
+                    <Icon name={tab.icon} size={22} weight={active ? "fill" : "regular"} />
                   )}
                   {badge > 0 && (
                     <span

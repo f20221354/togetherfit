@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useCurrentUser } from "@/lib/auth/authStore";
+import { Icon } from "@/components/ui/Icon";
 
 /**
  * Quick "Add Friend" entry point on the main Connect screen, using the same
@@ -48,7 +49,7 @@ export function AddFriendModal({ onClose }: { onClose: () => void }) {
 
         {status === "sent" ? (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <span className="text-3xl">✅</span>
+            <Icon name="status.done" size={36} weight="fill" className="text-accent" />
             <div className="text-sm font-medium text-foreground">Request sent!</div>
             <Link
               href="/connect/friends"

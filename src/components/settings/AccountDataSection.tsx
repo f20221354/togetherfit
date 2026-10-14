@@ -89,7 +89,7 @@ export function AccountDataSection() {
               disabled={exporting}
               className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2 disabled:opacity-60"
             >
-              {exporting ? "Preparing…" : "⬇ Download my data"}
+              {exporting ? "Preparing…" : "Download my data"}
             </button>
           </div>
           {exportError && <p className="text-xs text-danger">{exportError}</p>}

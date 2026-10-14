@@ -5,6 +5,7 @@ import { PERSONAL_NAV_ITEMS } from "@/components/shell/navItems";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { useMyProfile } from "@/lib/profile/profileStore";
 import { Avatar } from "@/components/profile/Avatar";
+import { Icon } from "@/components/ui/Icon";
 
 const DESCRIPTIONS: Record<string, string> = {
   sanctuary: "Your environment, plus light, sleep, and daily rhythm.",
@@ -40,7 +41,7 @@ export default function MePage() {
             href={item.href}
             className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
           >
-            <span className="text-2xl">{item.icon}</span>
+            <Icon name={item.icon} size={26} className="text-accent-foreground" />
             <div>
               <div className="text-sm font-medium text-foreground">{item.label}</div>
               <div className="text-xs text-muted">{DESCRIPTIONS[item.key]}</div>
@@ -52,7 +53,7 @@ export default function MePage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Account</h2>
         <Link href="/settings" className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2">
-          <span className="text-2xl">⚙️</span>
+          <Icon name="nav.settings" size={26} className="text-accent-foreground" />
           <div>
             <div className="text-sm font-medium text-foreground">Settings</div>
             <div className="text-xs text-muted">Privacy &amp; safety, notifications, appearance, your data.</div>
@@ -60,7 +61,7 @@ export default function MePage() {
         </Link>
         {user.isAdmin && (
           <Link href="/moderation" className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2">
-            <span className="text-2xl">🛡️</span>
+            <Icon name="nav.moderation" size={26} className="text-accent-foreground" />
             <div>
               <div className="text-sm font-medium text-foreground">Moderation</div>
               <div className="text-xs text-muted">Reports and verification appeals (admins only).</div>

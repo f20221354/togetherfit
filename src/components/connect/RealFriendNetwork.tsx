@@ -10,6 +10,7 @@ import { refreshNetworkSummary } from "@/lib/network/useUnreadCount";
 import { IncomingRequestActions, IncomingRequestView } from "./IncomingRequestActions";
 import { ConnectionMenu } from "./ConnectionMenu";
 import { Avatar } from "@/components/profile/Avatar";
+import { Icon } from "@/components/ui/Icon";
 
 interface Friend {
   name: string;
@@ -190,7 +191,8 @@ export function RealFriendNetwork() {
                   href={`/connect/messages/${f.connectionId}`}
                   className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-2"
                 >
-                  💬 Chat
+                  <Icon name="action.chat" size={14} className="mr-1 inline" />
+                  Chat
                 </Link>
                 <ConnectionMenu
                   connectionId={f.connectionId}

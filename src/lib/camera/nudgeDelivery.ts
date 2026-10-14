@@ -39,7 +39,7 @@ export function sendTestNotification(): "sent" | "blocked" | "unsupported" | "fa
   if (!systemNotificationsSupported()) return "unsupported";
   if (Notification.permission !== "granted") return "blocked";
   try {
-    const notification = new Notification("togetherfit test ✅", {
+    const notification = new Notification("togetherfit test notification", {
       body: "If you can see this, posture reminders can reach you while you use other apps.",
       tag: "togetherfit-test",
       icon: "/brand/icon-light-192.png",

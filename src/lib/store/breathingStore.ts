@@ -33,9 +33,9 @@ export const useBreathingStore = create<BreathingState>()(
       lastPattern: DEFAULT_PATTERN,
       lastSessionDuration: DEFAULT_SESSION_DURATION,
       savedPatterns: [
-        { id: "preset_calm", name: "Calm", icon: "🌿", pattern: { inhale: 10, holdAfterInhale: 10, exhale: 10, holdAfterExhale: 10 } },
-        { id: "preset_evening", name: "Evening", icon: "🌙", pattern: { inhale: 6, holdAfterInhale: 6, exhale: 8, holdAfterExhale: 6 } },
-        { id: "preset_quick", name: "Quick Reset", icon: "⚡", pattern: { inhale: 4, holdAfterInhale: 4, exhale: 4, holdAfterExhale: 4 } },
+        { id: "preset_calm", name: "Calm", icon: "module.sanctuary", pattern: { inhale: 10, holdAfterInhale: 10, exhale: 10, holdAfterExhale: 10 } },
+        { id: "preset_evening", name: "Evening", icon: "time.moon", pattern: { inhale: 6, holdAfterInhale: 6, exhale: 8, holdAfterExhale: 6 } },
+        { id: "preset_quick", name: "Quick Reset", icon: "status.energy", pattern: { inhale: 4, holdAfterInhale: 4, exhale: 4, holdAfterExhale: 4 } },
       ],
       history: [],
       soundEnabled: true,

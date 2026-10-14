@@ -4,12 +4,13 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { SPORTS } from "@/lib/connect/sports";
-import { CELEBRATION_REACTIONS, CelebrationCard } from "@/lib/connect/milestones";
+import { CELEBRATION_REACTIONS, CelebrationCard, REACTION_META, isReaction } from "@/lib/connect/milestones";
 import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
 import { CelebrationCardView } from "@/components/connect/CelebrationCardView";
 import { ChatMessage, useConversation } from "@/lib/chat/useConversation";
 import { ConnectionMenu } from "@/components/connect/ConnectionMenu";
 import { Avatar } from "@/components/profile/Avatar";
+import { Icon } from "@/components/ui/Icon";
 
 /** Within this many pixels of the bottom counts as "reading the latest", so new messages scroll into view. */
 const STICK_TO_BOTTOM_PX = 80;
@@ -98,7 +99,7 @@ function Conversation({ connectionId }: { connectionId: string }) {
     if (!user) return;
     setLogging(false);
     const result = await logActivityAndCelebrate(user, { sport, connectionId });
-    setNotice(result.ok ? "Session logged together ✅" : (result.error ?? "Couldn't log the session."));
+    setNotice(result.ok ? "Session logged together." : (result.error ?? "Couldn't log the session."));
   }
 
   function renderCelebration(m: ChatMessage) {
@@ -107,19 +108,28 @@ function Conversation({ connectionId }: { connectionId: string }) {
     return (
       <div className="flex flex-col gap-1.5">
         <CelebrationCardView card={card} compact />
-        <div className="text-[11px] text-muted">🎉 Celebration · {expiresLabel(m.expiresAt)}</div>
+        <div className="text-[11px] text-muted">Celebration · {expiresLabel(m.expiresAt)}</div>
         {m.mine ? (
-          <div className="text-xs text-muted">{m.reaction ? `They reacted ${m.reaction}` : "No reaction yet"}</div>
+          <div className="flex items-center gap-1 text-xs text-muted">
+            {isReaction(m.reaction) ? (
+              <>
+                They reacted <Icon name={REACTION_META[m.reaction].icon} size={14} weight="fill" className="text-accent-foreground" label={REACTION_META[m.reaction].label} />
+              </>
+            ) : (
+              "No reaction yet"
+            )}
+          </div>
         ) : (
           <div className="flex gap-1">
-            {CELEBRATION_REACTIONS.map((emoji) => (
+            {CELEBRATION_REACTIONS.map((reaction) => (
               <button
-                key={emoji}
-                onClick={() => react(m.id, emoji)}
-                aria-label={`React ${emoji}`}
-                className={`rounded-full px-2 py-0.5 text-base ${m.reaction === emoji ? "bg-accent/30" : "hover:bg-surface-2"}`}
+                key={reaction}
+                onClick={() => react(m.id, reaction)}
+                aria-label={`React with ${REACTION_META[reaction].label}`}
+                aria-pressed={m.reaction === reaction}
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${m.reaction === reaction ? "bg-accent/30 text-accent-foreground" : "text-muted hover:bg-surface-2 hover:text-foreground"}`}
               >
-                {emoji}
+                <Icon name={REACTION_META[reaction].icon} size={18} weight={m.reaction === reaction ? "fill" : "regular"} />
               </button>
             ))}
           </div>
@@ -162,7 +172,7 @@ function Conversation({ connectionId }: { connectionId: string }) {
 
       {justConnected && (
         <div className="rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm font-medium text-foreground">
-          🎉 You&apos;re connected — say hi 👋
+          You&apos;re connected. Say hi!
         </div>
       )}
       {error && <p className="text-sm text-danger">{error}</p>}
@@ -177,7 +187,7 @@ function Conversation({ connectionId }: { connectionId: string }) {
                 onClick={() => logSession(s.key)}
                 className="rounded-full border border-border px-3 py-1 text-xs text-foreground hover:bg-surface-2"
               >
-                {s.icon} {s.label}
+                <Icon name={s.icon} size={14} className="inline-block align-[-0.2em]" /> {s.label}
               </button>
             ))}
             <button onClick={() => setLogging(false)} className="text-xs text-muted hover:text-foreground">
@@ -192,7 +202,8 @@ function Conversation({ connectionId }: { connectionId: string }) {
             }}
             className="self-start rounded-full border border-accent/40 px-4 py-1.5 text-xs font-medium text-foreground hover:bg-accent/10"
           >
-            ✅ Log a session together
+            <Icon name="status.done" size={14} className="mr-1 inline-block align-[-0.15em]" />
+            Log a session together
           </button>
         )}
         {notice && <p className="text-xs text-muted">{notice}</p>}
@@ -215,7 +226,7 @@ function Conversation({ connectionId }: { connectionId: string }) {
         {messages === null ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : messages.length === 0 ? (
-          <p className="text-center text-sm text-muted">You&apos;re connected — say hi 👋</p>
+          <p className="text-center text-sm text-muted">You&apos;re connected. Say hi!</p>
         ) : (
           messages.map((m) => (
             <div key={m.id} className={`flex flex-col ${m.mine ? "items-end" : "items-start"}`}>

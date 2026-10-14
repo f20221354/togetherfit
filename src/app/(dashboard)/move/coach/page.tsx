@@ -63,7 +63,7 @@ export default function AiCoachPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icon="🤖"
+        icon="object.coach"
         title="AI Coach"
         subtitle="Suggestions based on your activity history — not medical advice."
       />

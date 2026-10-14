@@ -5,6 +5,7 @@ import { useCameraStore } from "@/lib/store/cameraStore";
 import { CameraPrivacyIndicator } from "@/components/camera/CameraPrivacyIndicator";
 import { useIsClient } from "@/lib/useIsClient";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
+import { Icon } from "@/components/ui/Icon";
 
 export function Header() {
   const monitoring = useCameraStore((s) => s.monitoring);
@@ -24,7 +25,7 @@ export function Header() {
           className="rounded-full bg-surface-2 p-2 text-sm text-foreground hover:bg-border"
           aria-label="Toggle theme"
         >
-          {mounted ? (resolvedTheme === "dark" ? "☾" : "☀") : "◐"}
+          {mounted ? <Icon name={resolvedTheme === "dark" ? "time.moon" : "time.sun"} size={16} /> : <span className="block h-4 w-4" />}
         </button>
       </div>
     </header>

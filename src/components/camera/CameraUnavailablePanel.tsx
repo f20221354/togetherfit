@@ -1,4 +1,5 @@
 import { CameraPermissionState } from "@/lib/store/cameraStore";
+import { Icon } from "@/components/ui/Icon";
 
 const MESSAGES: Record<Exclude<CameraPermissionState, "granted" | "unknown">, string> = {
   denied:
@@ -16,7 +17,7 @@ export function CameraUnavailablePanel({
 }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface-2 p-6 text-center">
-      <span className="text-2xl">📷</span>
+      <Icon name="object.camera" size={28} className="text-muted" />
       <h3 className="text-sm font-semibold text-foreground">Camera unavailable</h3>
       <p className="max-w-sm text-xs text-muted">{MESSAGES[permission]}</p>
       <p className="text-xs text-muted">Everything else in togetherfit works without the camera.</p>

@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { AreaPicker, AreaPoint } from "@/components/connect/AreaPicker";
 import { SPORTS, SPORT_KEYS, sportMeta } from "@/lib/connect/sports";
 import { useCurrentUser } from "@/lib/auth/authStore";
+import { Icon } from "@/components/ui/Icon";
 
 const RADIUS_OPTIONS = [1, 2, 5, 10, 25];
 const STEPS = ["Area", "When", "Activity"] as const;
@@ -94,14 +95,14 @@ export default function FindAFriendPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="🔎" title="Find a Friend" subtitle="Find real people nearby who want to do the same activity." />
+      <PageHeader icon="action.search" title="Find a Friend" subtitle="Find real people nearby who want to do the same activity." />
 
       {active && (
         <Link
           href={`/connect/find/${active.intentId}`}
           className="rounded-2xl border border-accent/40 bg-accent/10 p-4 text-sm text-foreground hover:bg-accent/15"
         >
-          {sportMeta(active.sport).icon} You have a live {sportMeta(active.sport).label} search — <b>resume radar →</b>
+          <Icon name={sportMeta(active.sport).icon} size={16} className="inline-block align-[-0.2em]" /> You have a live {sportMeta(active.sport).label} search — <b>resume radar →</b>
         </Link>
       )}
 
@@ -154,7 +155,7 @@ export default function FindAFriendPage() {
                   mode === m ? "border-accent bg-accent/10" : "border-border bg-surface hover:bg-surface-2"
                 )}
               >
-                <div className="text-lg">{m === "now" ? "⚡" : "📅"}</div>
+                <Icon name={m === "now" ? "status.energy" : "object.calendar"} size={22} className="text-accent-foreground" />
                 <div className="text-sm font-semibold text-foreground">{m === "now" ? "Now" : "Schedule for later"}</div>
                 <div className="text-xs text-muted">
                   {m === "now" ? "Match with people who are free right now" : "Pick a date and time"}
@@ -187,7 +188,7 @@ export default function FindAFriendPage() {
                   sport === s.key ? "border-accent bg-accent/10 text-foreground" : "border-border bg-surface text-foreground hover:bg-surface-2"
                 )}
               >
-                <span className="text-2xl">{s.icon}</span>
+                <Icon name={s.icon} size={28} className="text-accent-foreground" />
                 {s.label}
               </button>
             ))}

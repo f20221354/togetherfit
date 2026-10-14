@@ -127,3 +127,9 @@ export async function requireAdmin(req: NextRequest): Promise<SessionUser | Next
   if (user instanceof NextResponse) return user;
   return user.isAdmin ? user : NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
 }
+
+/** Signs the user out everywhere except this request's session (after a password change). */
+export async function endOtherSessions(req: NextRequest, userId: string): Promise<void> {
+  const token = req.cookies.get(SESSION_COOKIE)?.value;
+  await getPool().query("delete from auth_sessions where user_id = $1 and id <> $2", [userId, token ? tokenId(token) : ""]);
+}

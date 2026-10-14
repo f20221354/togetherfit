@@ -95,9 +95,9 @@ export default function MyProfilePage() {
             name={user.name}
             photoId={profile?.photoOnRadar ? profile.photoId : null}
             verified={verified}
-            detail="🏃 Running · Now · ~1 km away"
+            detail="Running · Now · ~1 km away"
           />
-          <PreviewCard title="Your friends" name={user.name} photoId={profile?.photoId ?? null} verified={verified} detail="💬 Chat · Milestones" />
+          <PreviewCard title="Your friends" name={user.name} photoId={profile?.photoId ?? null} verified={verified} detail="Chat · Milestones" />
         </div>
         <p className="text-xs text-muted">
           {profile?.photoOnRadar

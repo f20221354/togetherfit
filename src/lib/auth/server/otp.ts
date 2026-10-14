@@ -2,7 +2,7 @@ import { createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto
 import { getPool } from "@/lib/db";
 import { sendOtpEmail } from "./email";
 
-export type OtpPurpose = "signup" | "login" | "reset";
+export type OtpPurpose = "signup" | "login" | "reset" | "email_change";
 
 const OTP_TTL_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
@@ -14,6 +14,8 @@ export interface OtpPayload {
   passwordHash?: string;
   /** No account behind this challenge: nothing is emailed and it can never verify. */
   dud?: boolean;
+  /** email_change: the signed-in account that asked to move to this address. */
+  userId?: string;
 }
 
 function secret(): string {

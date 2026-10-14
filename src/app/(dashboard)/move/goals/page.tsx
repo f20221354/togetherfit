@@ -5,15 +5,17 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useMoveStore, GOAL_TYPE_LABELS } from "@/lib/store/moveStore";
 import { GoalType } from "@/lib/move/types";
+import { Icon, type IconName } from "@/components/ui/Icon";
+import { goalIcon } from "@/lib/move/goalIcon";
 
-const GOAL_SUGGESTIONS: { icon: string; label: string; type: GoalType; target: number; unit: string }[] = [
-  { icon: "🏃", label: "Run 5 km", type: "distance", target: 5, unit: "km" },
-  { icon: "🚶", label: "Walk 8,000 steps/day", type: "duration", target: 8000, unit: "steps" },
-  { icon: "🏋️", label: "Strength train 3x/week", type: "frequency", target: 3, unit: "sessions/week" },
-  { icon: "💪", label: "Improve consistency", type: "consistency", target: 4, unit: "sessions/week" },
-  { icon: "🧘", label: "Complete mobility sessions", type: "mobility", target: 5, unit: "sessions/week" },
-  { icon: "☀️", label: "Get 15 minutes of outdoor movement", type: "duration", target: 15, unit: "min/day" },
-  { icon: "🚴", label: "Cycle 20 km/week", type: "distance", target: 20, unit: "km/week" },
+const GOAL_SUGGESTIONS: { icon: IconName; label: string; type: GoalType; target: number; unit: string }[] = [
+  { icon: "sport.running", label: "Run 5 km", type: "distance", target: 5, unit: "km" },
+  { icon: "sport.walking", label: "Walk 8,000 steps/day", type: "duration", target: 8000, unit: "steps" },
+  { icon: "sport.gym", label: "Strength train 3x/week", type: "frequency", target: 3, unit: "sessions/week" },
+  { icon: "status.energy", label: "Improve consistency", type: "consistency", target: 4, unit: "sessions/week" },
+  { icon: "sport.yoga", label: "Complete mobility sessions", type: "mobility", target: 5, unit: "sessions/week" },
+  { icon: "time.sun", label: "Get 15 minutes of outdoor movement", type: "duration", target: 15, unit: "min/day" },
+  { icon: "sport.cycling", label: "Cycle 20 km/week", type: "distance", target: 20, unit: "km/week" },
 ];
 
 export default function GoalsPage() {
@@ -43,7 +45,7 @@ export default function GoalsPage() {
     if (!label.trim()) return;
     createGoal({
       label: label.trim(),
-      icon: "🎯",
+      icon: "object.goal",
       type,
       target,
       current,
@@ -58,7 +60,7 @@ export default function GoalsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader icon="🎯" title="My Goals" subtitle="Set personal fitness goals togetherfit can help you reach." />
+      <PageHeader icon="object.goal" title="My Goals" subtitle="Set personal fitness goals togetherfit can help you reach." />
 
       <div className="flex flex-wrap gap-2">
         {GOAL_SUGGESTIONS.map((s) => (
@@ -67,7 +69,7 @@ export default function GoalsPage() {
             onClick={() => applySuggestion(s)}
             className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-2"
           >
-            {s.icon} {s.label}
+            <Icon name={s.icon} size={14} className="inline-block align-[-0.2em]" /> {s.label}
           </button>
         ))}
         <button
@@ -174,7 +176,7 @@ export default function GoalsPage() {
             <div key={goal.id} className="rounded-2xl border border-border bg-surface p-4">
               <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <span>{goal.icon}</span>
+                  <Icon name={goalIcon(goal)} size={18} className="text-accent-foreground" />
                   {goal.label}
                 </div>
                 <button onClick={() => deleteGoal(goal.id)} className="text-xs text-muted hover:text-danger">

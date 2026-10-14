@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { AddFriendModal } from "@/components/connect/AddFriendModal";
 import { SPORTS, sportMeta } from "@/lib/connect/sports";
 import { useCurrentUser } from "@/lib/auth/authStore";
+import { Icon } from "@/components/ui/Icon";
 
 interface Friend {
   name: string;
@@ -49,19 +50,21 @@ export default function ConnectDashboardPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader icon="🤝" title="Connect" subtitle="Find real people nearby to move with." />
+        <PageHeader icon="nav.connect" title="Connect" subtitle="Find real people nearby to move with." />
         <div className="flex flex-wrap items-center gap-2 sm:mt-1 sm:shrink-0">
           <Link
             href="/connect/find"
             className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-black hover:opacity-90"
           >
-            🔎 Find a Friend
+            <Icon name="action.search" size={14} weight="bold" className="mr-1 inline-block align-[-0.15em]" />
+            Find a Friend
           </Link>
           <button
             onClick={() => setAddFriendOpen(true)}
             className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground hover:bg-surface-2"
           >
-            ➕ Add Friend
+            <Icon name="action.add" size={14} weight="bold" className="mr-1 inline-block align-[-0.15em]" />
+            Add Friend
           </button>
         </div>
       </div>
@@ -77,7 +80,7 @@ export default function ConnectDashboardPage() {
               href={`/connect/find?sport=${s.key}`}
               className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 text-center text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-surface-2"
             >
-              <span className="text-2xl">{s.icon}</span>
+              <Icon name={s.icon} size={28} className="text-accent-foreground" />
               {s.label}
             </Link>
           ))}
@@ -111,7 +114,7 @@ export default function ConnectDashboardPage() {
                 href={`/connect/messages/${f.connectionId}`}
                 className="flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
               >
-                <span className="truncate">{f.name}</span> <span aria-hidden="true">💬</span>
+                <span className="truncate">{f.name}</span> <Icon name="action.chat" size={14} className="shrink-0 text-muted" />
               </Link>
             ))}
           </div>
@@ -130,7 +133,7 @@ export default function ConnectDashboardPage() {
               >
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium text-foreground">
-                    {sportMeta(g.sport).icon} {g.name}
+                    <Icon name={sportMeta(g.sport).icon} size={16} className="inline-block align-[-0.2em]" /> {g.name}
                   </div>
                   {g.lastMessage && <div className="truncate text-xs text-muted">{g.lastMessage}</div>}
                 </div>

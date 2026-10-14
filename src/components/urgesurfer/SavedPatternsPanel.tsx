@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon, isIconName } from "@/components/ui/Icon";
 import { useState } from "react";
 import { useBreathingStore } from "@/lib/store/breathingStore";
 import { BreathingPattern, formatPattern } from "@/lib/breathing/types";
@@ -29,7 +30,7 @@ export function SavedPatternsPanel({
               onClick={() => onSelect(saved.pattern)}
               className="flex flex-1 items-center gap-2 text-left text-sm text-foreground disabled:opacity-50"
             >
-              <span>{saved.icon}</span>
+              <Icon name={isIconName(saved.icon) ? saved.icon : "module.reset"} size={16} className="text-accent-foreground" />
               <span>{saved.name}</span>
               <span className="text-xs text-muted">{formatPattern(saved.pattern)}</span>
             </button>
@@ -55,7 +56,7 @@ export function SavedPatternsPanel({
         <button
           disabled={!name.trim()}
           onClick={() => {
-            savePattern(name.trim(), "🫁", currentPattern);
+            savePattern(name.trim(), "module.reset", currentPattern);
             setName("");
           }}
           className="rounded-lg bg-accent/15 px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/25 disabled:opacity-50"

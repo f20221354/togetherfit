@@ -25,7 +25,7 @@ export default function CircadianPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <PageHeader
-        icon="☀️"
+        icon="module.circadian"
         title="Circadian Arc"
         subtitle="Your light and sleep architecture. Sunlight exposure logged anywhere in togetherfit updates this timeline."
       />

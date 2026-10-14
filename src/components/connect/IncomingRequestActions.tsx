@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { sportMeta } from "@/lib/connect/sports";
 import { formatWhen, timeSlotLabel } from "@/lib/connect/timeSlot";
+import { Icon } from "@/components/ui/Icon";
 
 export interface IncomingRequestView {
   id: string;
@@ -74,11 +75,11 @@ export function IncomingRequestActions({
         <div className="text-xs text-muted">
           {request.proposedTime ? (
             <>
-              {meta.icon} Suggested a new time for {meta.label}: <b className="text-foreground">{formatWhen(request.proposedTime)}</b>
+              <Icon name={meta.icon} size={14} className="inline-block align-[-0.2em]" /> Suggested a new time for {meta.label}: <b className="text-foreground">{formatWhen(request.proposedTime)}</b>
             </>
           ) : (
             <>
-              {meta.icon} Wants to do {meta.label} · <b className="text-foreground">{timeSlotLabel(activity.mode, activity.startTime)}</b>
+              <Icon name={meta.icon} size={14} className="inline-block align-[-0.2em]" /> Wants to do {meta.label} · <b className="text-foreground">{timeSlotLabel(activity.mode, activity.startTime)}</b>
               {activity.areaLabel ? ` · ${activity.areaLabel}` : ""}
             </>
           )}

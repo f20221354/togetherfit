@@ -1,5 +1,6 @@
 import clsx from "clsx";
-import { CelebrationCard } from "@/lib/connect/milestones";
+import { CelebrationCard, cardIcon } from "@/lib/connect/milestones";
+import { Icon } from "@/components/ui/Icon";
 import { sportMeta } from "@/lib/connect/sports";
 
 function formatDate(iso: string): string {
@@ -16,12 +17,13 @@ export function CelebrationCardView({ card, compact = false }: { card: Celebrati
         compact ? "w-56 p-4" : "w-full max-w-xs p-6"
       )}
     >
-      <div className={compact ? "text-4xl" : "text-7xl"}>{card.icon}</div>
+      <Icon name={cardIcon(card)} size={compact ? 36 : 64} weight="duotone" className="text-amber-300" />
       <div className={clsx("font-bold", compact ? "text-base" : "text-2xl")}>{card.title}</div>
       <div className="text-xs text-slate-300">{card.description}</div>
       {sport && (
         <div className="mt-1 text-sm font-semibold text-emerald-300">
-          {sport.icon} {sport.label}
+          <Icon name={sport.icon} size={14} className="mr-1 inline-block align-[-0.15em]" />
+          {sport.label}
         </div>
       )}
       <div className="mt-2 text-xs text-slate-400">

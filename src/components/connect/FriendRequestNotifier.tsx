@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { useIncomingRequests, type IncomingRequest } from "@/lib/network/useUnreadCount";
 import { IncomingRequestActions } from "./IncomingRequestActions";
+import { Icon } from "@/components/ui/Icon";
 
 function seenKey(email: string) {
   return `sb-seen-friend-requests-${email}`;
@@ -67,7 +68,8 @@ function Notifier({ email }: { email: string }) {
         >
           <div className="flex items-start justify-between gap-2">
             <div className="text-sm font-medium text-foreground">
-              🤝 {req.from.name}{" "}
+              <Icon name="nav.connect" size={16} className="mr-1 inline text-accent-foreground" />
+              {req.from.name}{" "}
               {req.proposedTime ? "suggested another time" : req.source === "find_a_friend" ? "found you on the radar" : "sent you a friend request"}
             </div>
             <button onClick={() => dismiss(req)} className="text-muted hover:text-foreground" aria-label="Dismiss">

@@ -325,3 +325,14 @@ alter table app_users add column if not exists restriction_scope text check (res
 alter table app_users add column if not exists restriction_reason text;
 -- Escalation: 1st full restriction 7 days, 2nd 30 days, 3rd permanent.
 alter table app_users add column if not exists strikes int not null default 0;
+
+-- ============================================================
+-- Account editing: email change codes
+-- ============================================================
+alter table auth_otps drop constraint if exists auth_otps_purpose_check;
+alter table auth_otps add constraint auth_otps_purpose_check check (purpose in ('signup', 'login', 'reset', 'email_change'));
+
+-- Celebration reactions are stored by key ("fire"), not as emoji characters.
+update messages set reaction = case reaction
+  when '🔥' then 'fire' when '👏' then 'clap' when '💪' then 'strong' when '❤️' then 'love' when '🎉' then 'party' else reaction end
+where reaction in ('🔥', '👏', '💪', '❤️', '🎉');

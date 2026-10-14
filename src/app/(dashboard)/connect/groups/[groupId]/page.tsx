@@ -7,6 +7,7 @@ import { useCurrentUser } from "@/lib/auth/authStore";
 import { sportMeta } from "@/lib/connect/sports";
 import { timeSlotLabel } from "@/lib/connect/timeSlot";
 import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
+import { Icon } from "@/components/ui/Icon";
 
 interface GroupChatResponse {
   ok: boolean;
@@ -84,7 +85,7 @@ export default function GroupChatPage() {
   async function logSession() {
     if (!user || !chat) return;
     const result = await logActivityAndCelebrate(user, { sport: chat.group.sport, groupId });
-    setNotice(result.ok ? "Group session logged ✅" : (result.error ?? "Couldn't log the session."));
+    setNotice(result.ok ? "Group session logged." : (result.error ?? "Couldn't log the session."));
   }
 
   const group = chat?.group;
@@ -97,7 +98,7 @@ export default function GroupChatPage() {
           ← Back
         </button>
         <PageHeader
-          icon={meta?.icon ?? "👥"}
+          icon={meta?.icon ?? "people.friends"}
           title={group?.name ?? "Group"}
           subtitle={group && meta ? `${meta.label} · ${timeSlotLabel(group.mode, group.startTime)} · ${group.members.length} ${group.members.length === 1 ? "member" : "members"}` : ""}
         />
@@ -110,7 +111,8 @@ export default function GroupChatPage() {
             onClick={logSession}
             className="rounded-full border border-accent/40 px-4 py-1.5 text-xs font-medium text-foreground hover:bg-accent/10"
           >
-            ✅ We did it — log this session
+            <Icon name="status.done" size={14} className="mr-1 inline-block align-[-0.15em]" />
+            We did it: log this session
           </button>
         </div>
       )}
@@ -121,7 +123,7 @@ export default function GroupChatPage() {
         {chat === null ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : chat.messages.length === 0 ? (
-          <p className="text-center text-sm text-muted">You&apos;re in the group — say hi 👋</p>
+          <p className="text-center text-sm text-muted">You&apos;re in the group. Say hi!</p>
         ) : (
           chat.messages.map((m) => (
             <div key={m.id} className={`flex flex-col ${m.mine ? "items-end" : "items-start"}`}>

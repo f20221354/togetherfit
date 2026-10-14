@@ -65,7 +65,7 @@ export default function PosturePage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <PageHeader
-        icon="👁"
+        icon="module.posture"
         title="Posture & Gaze Guard"
         subtitle="Real-time posture and eye-level estimation, processed entirely in your browser. Nothing is recorded or uploaded."
       />

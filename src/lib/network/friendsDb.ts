@@ -306,7 +306,7 @@ export async function listConversations(email: string): Promise<ConversationSumm
     `select
        c.id as connection_id,
        u.name, u.code, ph.id as photo_id, u.verified_at is not null as verified,
-       case when lm.type = 'celebration' then '🎉 Sent a celebration' else lm.body end as last_message,
+       case when lm.type = 'celebration' then 'Sent a celebration' else lm.body end as last_message,
        lm.created_at as last_message_at,
        (select count(*) from messages um where um.connection_id = c.id and um.sender_id != $1 and um.read_at is null
           and (um.expires_at is null or um.expires_at > now())) as unread_count

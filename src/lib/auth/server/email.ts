@@ -14,7 +14,7 @@ import nodemailer, { type Transporter } from "nodemailer";
  *
  * SMTP config (env):
  * - SMTP_USER / SMTP_PASS — for Gmail, the address and a 16-character app password
- * - SMTP_HOST / SMTP_PORT — default smtp.gmail.com:465 (TLS)
+ * - SMTP_HOST / SMTP_PORT — default smtp.gmail.com:465 (TLS); SMTP_SECURE=true|false for other ports
  * - EMAIL_FROM      optional; defaults to "Togetherfit <SMTP_USER>". Gmail
  *   rewrites any other sender address to SMTP_USER.
  *
@@ -27,11 +27,13 @@ let smtp: Transporter | null = null;
 
 function smtpTransport(user: string, pass: string): Transporter {
   const port = Number(process.env.SMTP_PORT ?? 465);
+  // Implicit TLS on 465 by default; SMTP_SECURE=true|false overrides for other ports.
+  const secure = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465;
   smtp ??= nodemailer.createTransport({
     host: process.env.SMTP_HOST ?? "smtp.gmail.com",
     port,
-    secure: port === 465,
-    requireTLS: port !== 465,
+    secure,
+    requireTLS: !secure,
     // App passwords are often copied with their display spaces.
     auth: { user, pass: pass.replace(/\s+/g, "") },
     connectionTimeout: 10_000,
@@ -87,6 +89,7 @@ const PURPOSE_COPY = {
   signup: { subject: "Your togetherfit verification code", lead: "Use this code to finish creating your account:" },
   login: { subject: "Your togetherfit sign-in code", lead: "Use this code to finish signing in:" },
   reset: { subject: "Reset your togetherfit password", lead: "Use this code to reset your password:" },
+  email_change: { subject: "Confirm your new togetherfit email", lead: "Use this code to confirm this is your new email address:" },
 } as const;
 
 export async function sendOtpEmail(to: string, purpose: keyof typeof PURPOSE_COPY, code: string): Promise<void> {
@@ -106,4 +109,21 @@ export async function sendAccountExistsEmail(to: string): Promise<void> {
     "Someone tried to create a togetherfit account with this email, but you already have one. " +
     "Log in instead, or use \"Forgot password\" if you can't remember it. If this wasn't you, you can ignore this email.";
   await sendEmail(to, "You already have a togetherfit account", text, `<p style="font-family:system-ui,sans-serif">${text}</p>`);
+}
+
+/** Sent to the old address after an email change, so a hijacked account doesn't go unnoticed. */
+export async function sendEmailChangedNotice(oldEmail: string, newEmail: string): Promise<void> {
+  const masked = newEmail.replace(/^(.).*(@.*)$/, "$1***$2");
+  const text =
+    `The email address on your togetherfit account was changed to ${masked}. ` +
+    "If you made this change, there's nothing to do. If you didn't, reset your password right away from the login page and contact us.";
+  await sendEmail(oldEmail, "Your togetherfit email was changed", text, `<p style="font-family:system-ui,sans-serif">${text}</p>`);
+}
+
+/** Sent after a password change. */
+export async function sendPasswordChangedNotice(email: string): Promise<void> {
+  const text =
+    "Your togetherfit password was just changed, and you were signed out on your other devices. " +
+    "If this wasn't you, reset your password from the login page right away.";
+  await sendEmail(email, "Your togetherfit password was changed", text, `<p style="font-family:system-ui,sans-serif">${text}</p>`);
 }

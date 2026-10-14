@@ -21,7 +21,7 @@ export function MoveSubNav() {
   // Seasonal tab, only while the event is live (client-only to avoid a hydration mismatch).
   const tabs =
     isClient && isWinterArcActive()
-      ? [...TABS, { label: `❄️ ${WINTER_ARC_COPY.title}`, href: WINTER_ARC_PAGE_PATH }]
+      ? [...TABS, { label: WINTER_ARC_COPY.title, href: WINTER_ARC_PAGE_PATH }]
       : TABS;
 
   return (

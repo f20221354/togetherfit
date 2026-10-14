@@ -5,6 +5,7 @@ import { issueOtp } from "@/lib/auth/server/otp";
 import { sendAccountExistsEmail } from "@/lib/auth/server/email";
 import { hashPassword } from "@/lib/auth/server/password";
 import { clientIp, rateLimit } from "@/lib/auth/server/rateLimit";
+import { CAPTCHA_ERROR, verifyCaptcha } from "@/lib/auth/server/captcha";
 import { bad, serverError } from "@/lib/network/apiHelpers";
 
 /**
@@ -21,6 +22,8 @@ export async function POST(req: NextRequest) {
   if (name.length < 2 || name.length > 60) return bad("Enter your name (2–60 characters)");
   const passwordCheck = checkPassword(password);
   if (!passwordCheck.valid) return bad(passwordCheck.message ?? "Choose a stronger password");
+
+  if (!(await verifyCaptcha(body.captchaToken, clientIp(req)))) return bad(CAPTCHA_ERROR);
 
   const limited = await rateLimit(
     { key: `signup:ip:${clientIp(req)}`, limit: 10, windowSeconds: 3600 },

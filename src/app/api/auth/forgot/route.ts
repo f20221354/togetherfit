@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { findAuthUser, parseEmail, readJson } from "@/lib/auth/server/accounts";
 import { issueOtp } from "@/lib/auth/server/otp";
 import { clientIp, rateLimit } from "@/lib/auth/server/rateLimit";
+import { CAPTCHA_ERROR, verifyCaptcha } from "@/lib/auth/server/captcha";
 import { bad, serverError } from "@/lib/network/apiHelpers";
 
 /**
@@ -13,6 +14,8 @@ export async function POST(req: NextRequest) {
   const body = await readJson(req);
   const email = parseEmail(body.email);
   if (!email) return bad("Enter a valid email address");
+
+  if (!(await verifyCaptcha(body.captchaToken, clientIp(req)))) return bad(CAPTCHA_ERROR);
 
   const limited = await rateLimit(
     { key: `forgot:ip:${clientIp(req)}`, limit: 10, windowSeconds: 3600 },

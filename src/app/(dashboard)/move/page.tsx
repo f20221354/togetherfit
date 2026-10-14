@@ -8,6 +8,7 @@ import { useCurrentUser } from "@/lib/auth/authStore";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getCoachSuggestions } from "@/lib/move/aiCoach";
 import { getWorkoutTemplate } from "@/lib/move/workoutTemplates";
+import { Icon } from "@/components/ui/Icon";
 
 function isToday(iso: string): boolean {
   return new Date(iso).toDateString() === new Date().toDateString();
@@ -53,7 +54,7 @@ export default function MoveOverviewPage() {
       <div className="rounded-2xl border border-border bg-surface p-5">
         <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">Today&apos;s Goal</div>
         <div className="mb-3 flex items-center gap-2 text-lg font-semibold text-foreground">
-          🏃 {todayGoalMinutes} min movement
+          <Icon name="sport.running" size={20} className="text-accent-foreground" /> {todayGoalMinutes} min movement
         </div>
         <ProgressBar value={progressPct} tone="good" />
         <div className="mt-2 flex items-center justify-between text-xs text-muted">
@@ -86,7 +87,7 @@ export default function MoveOverviewPage() {
           <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">Next Activity</div>
           {suggestedTemplate ? (
             <>
-              <div className="text-sm font-medium text-foreground">🏋️ {suggestedTemplate.name}</div>
+              <div className="flex items-center gap-1.5 text-sm font-medium text-foreground"><Icon name="sport.gym" size={16} /> {suggestedTemplate.name}</div>
               <div className="text-xs text-muted">{suggestedTemplate.durationMinutes} minutes</div>
               <Link
                 href="/move/workout"
@@ -108,7 +109,8 @@ export default function MoveOverviewPage() {
           href={partnerSuggestion.activity ? `/connect/find?sport=${partnerSuggestion.activity}` : "/connect/find"}
           className="inline-block rounded-full bg-accent/15 px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/25"
         >
-          🔎 {partnerSuggestion.label}
+          <Icon name="action.search" size={14} className="mr-1 inline-block align-[-0.15em]" />
+          {partnerSuggestion.label}
         </Link>
       </div>
     </div>

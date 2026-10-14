@@ -8,6 +8,7 @@ import { useChatSignals, useRealtimeStatus } from "@/lib/realtime/client";
 import { sportMeta } from "@/lib/connect/sports";
 import { timeSlotLabel } from "@/lib/connect/timeSlot";
 import { Avatar } from "@/components/profile/Avatar";
+import { Icon } from "@/components/ui/Icon";
 
 interface ConversationSummary {
   connectionId: string;
@@ -63,7 +64,7 @@ export default function ConnectMessagesPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="💬" title="Messages" subtitle="Chat unlocks once a connection is accepted." />
+      <PageHeader icon="action.chat" title="Messages" subtitle="Chat unlocks once a connection is accepted." />
 
       {groups.length > 0 && (
         <div className="flex flex-col gap-2">
@@ -74,11 +75,11 @@ export default function ConnectMessagesPage() {
               href={`/connect/groups/${g.groupId}`}
               className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
             >
-              <span className="text-xl">{sportMeta(g.sport).icon}</span>
+              <Icon name={sportMeta(g.sport).icon} size={22} className="text-accent-foreground" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground">{g.name}</div>
                 <div className="truncate text-xs text-muted">
-                  {timeSlotLabel(g.mode, g.startTime)} · {g.memberCount} {g.memberCount === 1 ? "member" : "members"} · {g.lastMessage ?? "Say hi 👋"}
+                  {timeSlotLabel(g.mode, g.startTime)} · {g.memberCount} {g.memberCount === 1 ? "member" : "members"} · {g.lastMessage ?? "Say hi!"}
                 </div>
               </div>
             </Link>
@@ -108,7 +109,7 @@ export default function ConnectMessagesPage() {
               <Avatar name={c.with.name} photoId={c.with.photoId} verified={c.with.verified} />
               <div className="flex-1 min-w-0">
                 <div className="truncate text-sm font-medium text-foreground">{c.with.name}</div>
-                <div className="truncate text-xs text-muted">{c.lastMessage ?? "Say hi 👋"}</div>
+                <div className="truncate text-xs text-muted">{c.lastMessage ?? "Say hi!"}</div>
               </div>
               {c.unreadCount > 0 && (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold text-black">

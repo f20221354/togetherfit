@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ExerciseThumb } from "@/components/move/ExerciseThumb";
 import { getExerciseBySlug } from "@/lib/move/exercises";
 import { useMoveStore } from "@/lib/store/moveStore";
+import { Icon } from "@/components/ui/Icon";
 
 export default function ExerciseDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -23,7 +24,7 @@ export default function ExerciseDetailPage() {
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
-      <PageHeader icon="🏋️" title={exercise.name} subtitle={`${exercise.defaultSets} × ${exercise.defaultReps}`} />
+      <PageHeader icon="sport.gym" title={exercise.name} subtitle={`${exercise.defaultSets} × ${exercise.defaultReps}`} />
 
       <div className="rounded-2xl border border-border bg-surface p-6">
         <div className="mb-4 flex flex-wrap justify-center gap-2">
@@ -44,7 +45,7 @@ export default function ExerciseDetailPage() {
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-full bg-danger px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
           >
-            <span aria-hidden="true">▶</span> Watch form tutorial on YouTube
+            <Icon name="action.play" size={14} weight="fill" /> Watch form tutorial on YouTube
           </a>
         </div>
       </div>

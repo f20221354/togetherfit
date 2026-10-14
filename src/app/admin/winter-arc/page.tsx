@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { WinterArcStats } from "@/lib/network/winterArcDb";
 import { useIsClient } from "@/lib/useIsClient";
+import { Icon } from "@/components/ui/Icon";
 
 const KEY_STORAGE = "vitaos-winter-arc-admin-key";
 
@@ -58,7 +59,7 @@ function AdminView() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <div>
-        <div className="flex items-center gap-2 text-2xl font-semibold">❄️ Winter Arc analytics</div>
+        <h1 className="flex items-center gap-2 text-2xl font-semibold"><Icon name="season.winter" size={24} /> Winter Arc analytics</h1>
         <p className="mt-1 text-sm text-muted">
           Internal view.{" "}
           {stats && `${stats.window.start} → ${stats.window.end}, days in ${stats.window.timeZone}.`}

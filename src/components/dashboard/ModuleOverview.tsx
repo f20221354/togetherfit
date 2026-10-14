@@ -25,7 +25,7 @@ export function ModuleOverview() {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       <ModuleStatusCard
-        icon="🤝"
+        icon="nav.connect"
         title="Connect"
         metricLabel="Friends"
         metricValue={friendCount}
@@ -33,7 +33,7 @@ export function ModuleOverview() {
         href="/connect"
       />
       <ModuleStatusCard
-        icon="🏋️"
+        icon="nav.move"
         title="Move & Coach"
         metricLabel="Goals"
         metricValue={goals.length}
@@ -41,7 +41,7 @@ export function ModuleOverview() {
         href="/move"
       />
       <ModuleStatusCard
-        icon="🌿"
+        icon="module.sanctuary"
         title="Sanctuary"
         metricLabel="Room Health"
         metricValue={`${roomBrightness}%`}
@@ -54,7 +54,7 @@ export function ModuleOverview() {
         href="/sanctuary"
       />
       <ModuleStatusCard
-        icon="👁"
+        icon="module.posture"
         title="Posture & Gaze"
         metricLabel="Posture Score"
         metricValue={scores.posture}
@@ -63,7 +63,7 @@ export function ModuleOverview() {
         href="/posture"
       />
       <ModuleStatusCard
-        icon="🫁"
+        icon="module.reset"
         title="UrgeSurfer"
         metricLabel="Resets Today"
         metricValue={urgeSurferResetsToday}

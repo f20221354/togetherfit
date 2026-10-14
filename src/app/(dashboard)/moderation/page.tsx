@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { useCurrentUser } from "@/lib/auth/authStore";
+import { Icon } from "@/components/ui/Icon";
 
 interface OpenReport {
   id: string;
@@ -104,7 +105,7 @@ export default function ModerationPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <PageHeader icon="🛡️" title="Moderation" subtitle="Reports, restrictions and verification appeals. Everything else is automatic." />
+      <PageHeader icon="nav.moderation" title="Moderation" subtitle="Reports, restrictions and verification appeals. Everything else is automatic." />
       {error && <p className="text-sm text-danger">{error}</p>}
 
       <section className="flex flex-col gap-3">
@@ -112,7 +113,7 @@ export default function ModerationPage() {
         {reports === null ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : reports.length === 0 ? (
-          <p className="text-sm text-muted">Nothing to review. 🎉</p>
+          <p className="text-sm text-muted">Nothing to review.</p>
         ) : (
           reports.map((r) => (
             <div key={r.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
@@ -134,7 +135,7 @@ export default function ModerationPage() {
                     {r.reported.reportCount > 1 && ` · reported ${r.reported.reportCount} times in total`}
                   </div>
                   {r.reported.restriction && (
-                    <div className="mt-0.5 text-xs font-medium text-foreground">⛔ {restrictionLabel(r.reported.restriction)} (automatic)</div>
+                    <div className="mt-0.5 flex items-center gap-1 text-xs font-medium text-foreground"><Icon name="status.blocked" size={14} className="text-danger" /> {restrictionLabel(r.reported.restriction)} (automatic)</div>
                   )}
                   <p className="mt-1 break-words text-foreground">“{r.reason}”</p>
                   <div className="mt-1 text-xs text-muted">

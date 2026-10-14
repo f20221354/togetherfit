@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
+import { Icon } from "@/components/ui/Icon";
 
 export function ConnectRecommendation() {
   const scores = useWellnessStore((s) => s.scores);
@@ -42,7 +43,8 @@ export function ConnectRecommendation() {
         onClick={() => router.push(`/connect/find?sport=${suggestion!.activity}`)}
         className="shrink-0 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/25"
       >
-        🤝 Find Partner
+        <Icon name="action.search" size={14} className="mr-1 inline" />
+        Find Partner
       </button>
     </div>
   );
