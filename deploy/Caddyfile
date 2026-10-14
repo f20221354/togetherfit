@@ -1,0 +1,15 @@
+# Caddy gets and renews the HTTPS certificate for DOMAIN automatically.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000 {
+		# Replace whatever the client sent with the address Caddy actually saw,
+		# so rate limiting can't be fooled (the app reads this with TRUSTED_PROXY_HOPS=1).
+		header_up X-Forwarded-For {remote_host}
+		# Stream responses immediately (needed for realtime streams).
+		flush_interval -1
+	}
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
