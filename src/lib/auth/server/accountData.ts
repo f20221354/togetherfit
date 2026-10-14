@@ -10,7 +10,7 @@ export async function exportAccountData(userId: string) {
   const pool = getPool();
   const q = async <T extends Record<string, unknown>>(sql: string) => (await pool.query<T>(sql, [userId])).rows;
 
-  const [profile, connections, messages, searches, groups, groupMessages, activities, milestones, winterArc, sessions, photo, verification, reportsMade] =
+  const [profile, connections, messages, searches, groups, groupMessages, activities, milestones, winterArc, sessions, photo, verification, reportsMade, appState] =
     await Promise.all([
       q(`select name, email, code, created_at, email_verified_at, onboarding_completed_at, wellness_setup,
                 gender, gender_changed_at, match_preference, verified_only, photo_on_radar, verified_at
@@ -41,6 +41,7 @@ export async function exportAccountData(userId: string) {
       q(`select created_at, provider, status, liveness_confidence, similarity from verification_attempts where user_id = $1 order by created_at`),
       q(`select r.created_at, r.category, r.reason, u.name as reported_name from reports r
          join app_users u on u.id = r.reported_id where r.reporter_id = $1 order by r.created_at`),
+      q(`select store, data, revision, updated_at from user_app_state where user_id = $1 order by store`),
     ]);
 
   return {
@@ -59,6 +60,8 @@ export async function exportAccountData(userId: string) {
     // Scores and decisions only: selfies are never stored.
     verificationAttempts: verification,
     reportsYouMade: reportsMade,
+    // Wellness, workouts and goals, breathing and settings, as synced from your devices.
+    appData: appState,
   };
 }
 

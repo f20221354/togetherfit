@@ -336,3 +336,18 @@ alter table auth_otps add constraint auth_otps_purpose_check check (purpose in (
 update messages set reaction = case reaction
   when '🔥' then 'fire' when '👏' then 'clap' when '💪' then 'strong' when '❤️' then 'love' when '🎉' then 'party' else reaction end
 where reaction in ('🔥', '👏', '💪', '❤️', '🎉');
+
+-- ============================================================
+-- Wellness, workouts, goals and settings, synced from the browser
+-- ============================================================
+-- One JSON document per app store (the browser keeps a cache). `revision`
+-- goes up by one on every save, so a device with stale data can't silently
+-- overwrite newer data: it gets a conflict and catches up first.
+create table if not exists user_app_state (
+  user_id uuid not null references app_users(id) on delete cascade,
+  store text not null,
+  data jsonb not null,
+  revision int not null default 1,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, store)
+);

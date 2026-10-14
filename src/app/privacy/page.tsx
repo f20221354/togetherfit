@@ -76,9 +76,9 @@ export default function PrivacyPage() {
             Google&apos;s servers the first time you use it.
           </li>
           <li>
-            <b>Workouts, wellness scores, breathing patterns and reminder settings</b> are saved in your browser&apos;s
-            local storage, separately for each account. They are not sent to our servers unless you choose to
-            download your data.
+            <b>Workouts, wellness scores, breathing patterns and reminder settings</b> are saved to your account on
+            our servers, so they follow you to a new phone or browser, and kept in your browser as a cache
+            (separately for each account). They are included in your data download and deleted with your account.
           </li>
         </ul>
       </section>

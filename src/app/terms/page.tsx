@@ -82,9 +82,9 @@ export default function TermsPage() {
         <h2>6. The service</h2>
         <p>
           togetherfit is provided &quot;as is&quot;. We work to keep it available and secure, but we may change,
-          suspend or discontinue features, and we don&apos;t promise it will be error-free or always available. Data
-          saved only in your browser (workouts, wellness and breathing data) can be lost if you clear your browser
-          storage.
+          suspend or discontinue features, and we don&apos;t promise it will be error-free or always available. Changes
+          made while offline are saved to your account when you reconnect; if you edit the same data on two
+          devices at once, the most recent edit is kept.
         </p>
       </section>
 

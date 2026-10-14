@@ -38,7 +38,7 @@ export function AccountDataSection() {
       if (!res.ok || !json.ok) throw new Error(json.error);
       downloadJson(`togetherfit-data-${new Date().toISOString().slice(0, 10)}.json`, {
         ...json.data,
-        // Workouts, wellness, breathing and settings are stored only in this browser.
+        // This browser's copy too, in case it has changes not yet saved to the server.
         thisBrowser: exportUserScopedData(),
       });
     } catch (err) {
@@ -81,7 +81,7 @@ export function AccountDataSection() {
         <div className="flex flex-col gap-2 text-sm">
           <p className="text-muted">
             Download a copy of everything togetherfit stores about you: your account, friends, messages, searches,
-            groups, activities and milestones, plus the workouts and wellness data saved in this browser.
+            groups, activities and milestones, workouts, wellness and goals, and your settings.
           </p>
           <div>
             <button
