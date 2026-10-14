@@ -89,6 +89,7 @@ export default function PrivacyPage() {
           <li><b>Other members:</b> your name and friend code are shown to people you connect with. Your email address is never shown to other members.</li>
           <li><b>Hosting and database providers</b> that run togetherfit and store its data on our behalf.</li>
           <li><b>Email delivery:</b> Google (Gmail) or Amazon Web Services (SES) send our one-time codes and account emails.</li>
+          <li><b>Live notifications:</b> Ably delivers &quot;you have a new message&quot; signals to your open app, identified by your account id. They never contain the message text, which stays on our servers.</li>
           <li><b>AI Coach:</b> the question you type is sent to Groq, Inc. to generate an answer. Don&apos;t include personal details you don&apos;t want to share.</li>
           <li><b>Maps:</b> place searches are sent from our server to OpenStreetMap&apos;s Nominatim service, and your browser loads map tiles from OpenStreetMap, which sees your IP address.</li>
           <li><b>Legal requirements:</b> we may disclose data when required by law or a valid order from an authority.</li>

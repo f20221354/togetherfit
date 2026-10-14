@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { useCurrentUser } from "@/lib/auth/authStore";
+import { useChatSignals, useRealtimeStatus } from "@/lib/realtime/client";
 import { sportMeta } from "@/lib/connect/sports";
 import { timeSlotLabel } from "@/lib/connect/timeSlot";
 
@@ -26,30 +27,38 @@ interface GroupSummary {
 }
 
 const POLL_MS = 8_000;
+/** With realtime live, friend chats refresh on each new message; the timer mainly keeps group previews fresh. */
+const LIVE_POLL_MS = 30_000;
+
+function fetchLists() {
+  return Promise.all([fetch("/api/connections").then((r) => r.json()), fetch("/api/groups").then((r) => r.json())]);
+}
 
 export default function ConnectMessagesPage() {
   const user = useCurrentUser();
   const [conversations, setConversations] = useState<ConversationSummary[] | null>(null);
   const [groups, setGroups] = useState<GroupSummary[]>([]);
 
+  const applyLists = useCallback(([conversationsData, groupsData]: [{ ok: boolean; conversations: ConversationSummary[] }, { ok: boolean; groups: GroupSummary[] }]) => {
+    if (conversationsData.ok) setConversations(conversationsData.conversations);
+    if (groupsData.ok) setGroups(groupsData.groups);
+  }, []);
+
+  // Friend network unreachable — the page just keeps showing the last known list.
+  const refresh = useCallback(() => fetchLists().then(applyLists).catch(() => {}), [applyLists]);
+
+  const intervalMs = useRealtimeStatus() === "live" ? LIVE_POLL_MS : POLL_MS;
   useEffect(() => {
     if (!user) return;
-    async function refresh() {
-      try {
-        const res = await fetch(`/api/connections`);
-        const data = await res.json();
-        if (data.ok) setConversations(data.conversations);
-        const groupsRes = await fetch(`/api/groups`);
-        const groupsData = await groupsRes.json();
-        if (groupsData.ok) setGroups(groupsData.groups);
-      } catch {
-        // Friend network unreachable — the page just keeps showing the last known list.
-      }
-    }
-    refresh();
-    const interval = setInterval(refresh, POLL_MS);
+    fetchLists().then(applyLists).catch(() => {});
+    const interval = setInterval(refresh, intervalMs);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, refresh, applyLists, intervalMs]);
+
+  // A new message in any conversation (or reconnecting) refreshes previews and unread counts.
+  useChatSignals(() => {
+    if (user) void refresh();
+  });
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">

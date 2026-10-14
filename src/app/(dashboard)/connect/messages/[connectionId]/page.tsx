@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { useCurrentUser } from "@/lib/auth/authStore";
@@ -8,18 +8,10 @@ import { SPORTS } from "@/lib/connect/sports";
 import { CELEBRATION_REACTIONS, CelebrationCard } from "@/lib/connect/milestones";
 import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
 import { CelebrationCardView } from "@/components/connect/CelebrationCardView";
+import { ChatMessage, useConversation } from "@/lib/chat/useConversation";
 
-interface ChatMessage {
-  id: string;
-  type: "text" | "celebration";
-  body: string;
-  createdAt: string;
-  mine: boolean;
-  expiresAt?: string | null;
-  reaction?: string | null;
-}
-
-const POLL_MS = 3_000;
+/** Within this many pixels of the bottom counts as "reading the latest", so new messages scroll into view. */
+const STICK_TO_BOTTOM_PX = 80;
 
 function parseCard(body: string): CelebrationCard | null {
   try {
@@ -35,70 +27,70 @@ function expiresLabel(expiresAt: string | null | undefined): string {
   return hours <= 1 ? "Disappears within the hour" : `Disappears in ${hours}h`;
 }
 
-async function fetchMessages(connectionId: string) {
-  const res = await fetch(`/api/connections/${connectionId}/messages`);
-  return res.json();
+export default function ConnectionChatPage() {
+  const { connectionId } = useParams<{ connectionId: string }>();
+  // A fresh component per conversation, so no state leaks between chats.
+  return <Conversation key={connectionId} connectionId={connectionId} />;
 }
 
-export default function ConnectionChatPage() {
+function Conversation({ connectionId }: { connectionId: string }) {
   const user = useCurrentUser();
   const router = useRouter();
-  const { connectionId } = useParams<{ connectionId: string }>();
   const justConnected = useSearchParams().get("new") === "1";
+  const { messages, hasMore, loadingOlder, error, loadOlder, send, retry, react } = useConversation(connectionId);
 
-  const [messages, setMessages] = useState<ChatMessage[] | null>(null);
   const [draft, setDraft] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [logging, setLogging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+
   const listRef = useRef<HTMLDivElement>(null);
+  const stickToBottom = useRef(true);
+  const restoreScroll = useRef<{ height: number; top: number; firstId: string | undefined } | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    async function tick() {
-      try {
-        const data = await fetchMessages(connectionId);
-        if (data.ok) {
-          setMessages(data.messages);
-          setError(null);
-        } else {
-          setError(data.error ?? "Couldn't load this conversation.");
-        }
-      } catch {
-        setError("Couldn't reach the friend network — is DATABASE_URL configured?");
+  // Keep the reading position: older messages prepend without jumping; new ones scroll in only if you're at the bottom.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const restore = restoreScroll.current;
+    if (restore) {
+      // Wait until the older page has actually been added above the first message.
+      if (messages?.[0]?.id !== restore.firstId) {
+        list.scrollTop = list.scrollHeight - restore.height + restore.top;
+        restoreScroll.current = null;
       }
+    } else if (stickToBottom.current) {
+      list.scrollTop = list.scrollHeight;
     }
-    tick();
-    const interval = setInterval(tick, POLL_MS);
-    return () => clearInterval(interval);
-  }, [user, connectionId]);
-
-  useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages]);
 
-  async function send() {
-    if (!user || !draft.trim() || sending) return;
-    setSending(true);
+  function onScroll() {
+    const list = listRef.current;
+    if (list) stickToBottom.current = list.scrollHeight - list.scrollTop - list.clientHeight < STICK_TO_BOTTOM_PX;
+  }
+
+  function showOlder() {
+    const list = listRef.current;
+    if (list) restoreScroll.current = { height: list.scrollHeight, top: list.scrollTop, firstId: messages?.[0]?.id };
+    void loadOlder().then((added) => {
+      if (added === 0) restoreScroll.current = null;
+    });
+  }
+
+  async function submit() {
     const text = draft.trim();
+    if (!text) return;
     setDraft("");
-    try {
-      const res = await fetch(`/api/connections/${connectionId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: text }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        const refreshed = await fetchMessages(connectionId);
-        if (refreshed.ok) setMessages(refreshed.messages);
-      } else {
-        setError(data.error ?? "Message failed to send.");
-      }
-    } finally {
-      setSending(false);
-    }
+    setSendError(null);
+    stickToBottom.current = true;
+    const result = await send(text);
+    if (!result.ok && result.error) setSendError(result.error);
+  }
+
+  async function resend(message: ChatMessage) {
+    setSendError(null);
+    const result = await retry(message);
+    if (!result.ok && result.error) setSendError(result.error);
   }
 
   async function logSession(sport: string) {
@@ -106,17 +98,6 @@ export default function ConnectionChatPage() {
     setLogging(false);
     const result = await logActivityAndCelebrate(user, { sport, connectionId });
     setNotice(result.ok ? "Session logged together ✅" : (result.error ?? "Couldn't log the session."));
-  }
-
-  async function react(messageId: string, emoji: string) {
-    if (!user) return;
-    const res = await fetch(`/api/connections/${connectionId}/messages/${messageId}/react`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ emoji }),
-    });
-    const data = await res.json();
-    if (data.ok) setMessages((current) => current?.map((m) => (m.id === messageId ? { ...m, reaction: emoji } : m)) ?? null);
   }
 
   function renderCelebration(m: ChatMessage) {
@@ -193,7 +174,20 @@ export default function ConnectionChatPage() {
         {notice && <p className="text-xs text-muted">{notice}</p>}
       </div>
 
-      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-4">
+      <div
+        ref={listRef}
+        onScroll={onScroll}
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-4"
+      >
+        {hasMore && (
+          <button
+            onClick={showOlder}
+            disabled={loadingOlder}
+            className="self-center rounded-full border border-border px-3 py-1 text-xs text-muted hover:text-foreground disabled:opacity-60"
+          >
+            {loadingOlder ? "Loading…" : "Load earlier messages"}
+          </button>
+        )}
         {messages === null ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : messages.length === 0 ? (
@@ -207,20 +201,26 @@ export default function ConnectionChatPage() {
                 <div
                   className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm [overflow-wrap:anywhere] ${
                     m.mine ? "bg-accent text-black" : "bg-surface-2 text-foreground"
-                  }`}
+                  } ${m.pending ? "opacity-60" : ""}`}
                 >
                   {m.body}
                 </div>
+              )}
+              {m.failed && (
+                <button onClick={() => void resend(m)} className="mt-0.5 text-[11px] text-danger hover:underline">
+                  Not sent · Retry
+                </button>
               )}
             </div>
           ))
         )}
       </div>
 
+      {sendError && <p className="-mt-2 text-xs text-danger">{sendError}</p>}
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          send();
+          void submit();
         }}
         className="flex items-center gap-2"
       >
@@ -233,7 +233,7 @@ export default function ConnectionChatPage() {
         />
         <button
           type="submit"
-          disabled={!draft.trim() || sending}
+          disabled={!draft.trim()}
           className="shrink-0 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
         >
           Send

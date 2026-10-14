@@ -8,8 +8,10 @@ import { CelebrationOverlay } from "@/components/connect/CelebrationOverlay";
 import { PostureMonitorProvider } from "@/components/camera/PostureMonitorProvider";
 import { PostureNudgeToast } from "@/components/camera/PostureNudgeToast";
 import { WinterArcPopup } from "@/components/winterArc/WinterArcPopup";
+import { useRealtimeConnection } from "@/lib/realtime/client";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  useRealtimeConnection();
   return (
     <PostureMonitorProvider>
     <div className="flex min-h-dvh bg-background text-foreground">

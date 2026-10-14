@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { sendCelebration } from "@/lib/network/milestonesDb";
 import { requireUser } from "@/lib/auth/server/session";
+import { connectionUserIds } from "@/lib/network/chatDb";
+import { signalUsers } from "@/lib/realtime/server";
 import { rateLimit } from "@/lib/auth/server/rateLimit";
 import { bad, readBody, serverError } from "@/lib/network/apiHelpers";
 
@@ -16,6 +18,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const result = await sendCelebration(user.email, id, body.connectionId);
     if (!result.ok) return bad(result.error ?? "Couldn't send", 403);
+    const connectionId = body.connectionId;
+    after(async () => signalUsers(await connectionUserIds(connectionId), { type: "chat", connectionId }));
     return NextResponse.json({ ok: true });
   } catch (err) {
     return serverError(err);

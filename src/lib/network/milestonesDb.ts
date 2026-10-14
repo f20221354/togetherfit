@@ -177,7 +177,7 @@ export async function reactToCelebration(email: string, connectionId: string, me
   const me = await getUserRowByEmail(email);
   if (!me || !(await isAcceptedParticipant(me.id, connectionId))) return { ok: false };
   const result = await getPool().query(
-    `update messages set reaction = $1
+    `update messages set reaction = $1, updated_at = now()
      where id = $2 and connection_id = $3 and type = 'celebration' and sender_id != $4
        and (expires_at is null or expires_at > now())`,
     [emoji, messageId, connectionId, me.id]

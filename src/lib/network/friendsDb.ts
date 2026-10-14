@@ -240,7 +240,8 @@ export async function listFriends(email: string): Promise<FriendsList> {
   const unread = await pool.query<{ count: string }>(
     `select count(*) from messages m
      join connections c on c.id = m.connection_id
-     where m.sender_id != $1 and m.read_at is null and (c.requester_id = $1 or c.receiver_id = $1)`,
+     where m.sender_id != $1 and m.read_at is null and (c.requester_id = $1 or c.receiver_id = $1)
+       and (m.expires_at is null or m.expires_at > now())`,
     [me.id]
   );
 
@@ -265,17 +266,6 @@ export async function listFriends(email: string): Promise<FriendsList> {
 
 // ---------- Chat (unlocked only once a connection is accepted) ----------
 
-export interface ChatMessage {
-  id: string;
-  type: "text" | "celebration";
-  body: string;
-  createdAt: string;
-  mine: boolean;
-  /** Celebration cards disappear after 24h; the receiver can react once. */
-  expiresAt?: string | null;
-  reaction?: string | null;
-}
-
 export interface ConversationSummary {
   connectionId: string;
   with: NetworkUser;
@@ -284,28 +274,10 @@ export interface ConversationSummary {
   unreadCount: number;
 }
 
-async function assertParticipant(connectionId: string, email: string): Promise<UserRow | null> {
-  if (!isUuid(connectionId)) return null;
-  const pool = getPool();
-  const me = await getUserRowByEmail(email);
-  if (!me) return null;
-  const result = await pool.query(
-    "select 1 from connections where id = $1 and status = 'accepted' and (requester_id = $2 or receiver_id = $2)",
-    [connectionId, me.id]
-  );
-  return result.rows.length > 0 ? me : null;
-}
-
-/** Celebration cards are ephemeral: once expired they're deleted, not just hidden. */
-async function deleteExpiredMessages(): Promise<void> {
-  await getPool().query("delete from messages where expires_at is not null and expires_at <= now()");
-}
-
 export async function listConversations(email: string): Promise<ConversationSummary[]> {
   const pool = getPool();
   const me = await getUserRowByEmail(email);
   if (!me) return [];
-  await deleteExpiredMessages();
 
   const result = await pool.query<{
     connection_id: string;
@@ -320,11 +292,14 @@ export async function listConversations(email: string): Promise<ConversationSumm
        u.name, u.code,
        case when lm.type = 'celebration' then '🎉 Sent a celebration' else lm.body end as last_message,
        lm.created_at as last_message_at,
-       (select count(*) from messages um where um.connection_id = c.id and um.sender_id != $1 and um.read_at is null) as unread_count
+       (select count(*) from messages um where um.connection_id = c.id and um.sender_id != $1 and um.read_at is null
+          and (um.expires_at is null or um.expires_at > now())) as unread_count
      from connections c
      join app_users u on u.id = (case when c.requester_id = $1 then c.receiver_id else c.requester_id end)
      left join lateral (
-       select type, body, created_at from messages m where m.connection_id = c.id order by m.created_at desc limit 1
+       select type, body, created_at from messages m
+       where m.connection_id = c.id and (m.expires_at is null or m.expires_at > now())
+       order by m.created_at desc, m.id desc limit 1
      ) lm on true
      where c.status = 'accepted' and (c.requester_id = $1 or c.receiver_id = $1)
      order by coalesce(lm.created_at, c.created_at) desc`,
@@ -338,77 +313,4 @@ export async function listConversations(email: string): Promise<ConversationSumm
     lastMessageAt: r.last_message_at,
     unreadCount: Number(r.unread_count),
   }));
-}
-
-export type MessagesResult = { ok: true; messages: ChatMessage[] } | { ok: false; reason: "not_a_participant" };
-
-export async function getMessages(connectionId: string, email: string): Promise<MessagesResult> {
-  const pool = getPool();
-  const me = await assertParticipant(connectionId, email);
-  if (!me) return { ok: false, reason: "not_a_participant" };
-  await deleteExpiredMessages();
-
-  // Viewing a thread marks the other person's messages as read.
-  await pool.query(
-    "update messages set read_at = now() where connection_id = $1 and sender_id != $2 and read_at is null",
-    [connectionId, me.id]
-  );
-
-  const result = await pool.query<{
-    id: string;
-    sender_id: string;
-    type: "text" | "celebration";
-    body: string;
-    created_at: string;
-    expires_at: string | null;
-    reaction: string | null;
-  }>(
-    `select m.id, m.sender_id, m.type, m.body, m.created_at, m.expires_at, m.reaction from messages m
-     where m.connection_id = $1
-     order by m.created_at asc`,
-    [connectionId]
-  );
-
-  return {
-    ok: true,
-    messages: result.rows.map((r) => ({
-      id: r.id,
-      type: r.type,
-      body: r.body,
-      createdAt: r.created_at,
-      mine: r.sender_id === me.id,
-      expiresAt: r.expires_at,
-      reaction: r.reaction,
-    })),
-  };
-}
-
-export type SendMessageResult = { ok: true; message: ChatMessage } | { ok: false; reason: "not_a_participant" | "empty" };
-
-export async function sendMessage(
-  connectionId: string,
-  email: string,
-  body: string,
-  type: "text" | "celebration" = "text"
-): Promise<SendMessageResult> {
-  if (!body.trim()) return { ok: false, reason: "empty" };
-  const pool = getPool();
-  const me = await assertParticipant(connectionId, email);
-  if (!me) return { ok: false, reason: "not_a_participant" };
-
-  const inserted = await pool.query<{ id: string; created_at: string }>(
-    "insert into messages (connection_id, sender_id, type, body) values ($1, $2, $3, $4) returning id, created_at",
-    [connectionId, me.id, type, body.trim()]
-  );
-
-  return {
-    ok: true,
-    message: {
-      id: inserted.rows[0].id,
-      type,
-      body: body.trim(),
-      createdAt: inserted.rows[0].created_at,
-      mine: true,
-    },
-  };
 }
