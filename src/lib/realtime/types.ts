@@ -1,0 +1,35 @@
+import type { TokenRequest } from "ably";
+
+/**
+ * How "a conversation changed" reaches open browser tabs. Set with the
+ * REALTIME env var:
+ *
+ * - "poll": nothing pushed; browsers check for changes every few seconds.
+ *           Works on any hosting, needs no extra service. The default.
+ * - "ably": pushed through Ably (hosted). Needs ABLY_API_KEY.
+ *
+ * Planned: "sse" — pushed by our own server (Server-Sent Events + Postgres
+ * LISTEN/NOTIFY), for self-hosting on a long-running server.
+ *
+ * Whatever the mode, a signal only says *which* conversation changed; the
+ * browser always fetches the change from our API, which checks permissions.
+ */
+export const REALTIME_MODES = ["poll", "ably"] as const;
+export type RealtimeMode = (typeof REALTIME_MODES)[number];
+
+export interface ChatSignal {
+  type: "chat";
+  connectionId: string;
+}
+
+/** What GET /api/realtime/config tells the browser about how to listen. */
+export type RealtimeClientConfig = { mode: "poll" } | { mode: "ably"; tokenRequest: TokenRequest };
+
+/** Each server driver: deliver signals to users, and describe how a browser should connect. */
+export interface RealtimeServerDriver {
+  mode: RealtimeMode;
+  publish(userIds: string[], signal: ChatSignal): Promise<void>;
+  clientConfig(userId: string): Promise<RealtimeClientConfig>;
+}
+
+export const userChannel = (userId: string) => `user:${userId}`;

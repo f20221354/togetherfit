@@ -77,20 +77,26 @@ Postgres holds every message. Opening a chat loads the newest 50; older ones
 load in pages of 50 as you scroll up. After that the browser only ever asks
 for *changes* (`GET …/messages?since=<time>`): new messages and reactions.
 
-What triggers that request:
-- **With `ABLY_API_KEY`:** the server sends a tiny "conversation X changed"
-  signal through Ably to each person's private channel (`user:<id>`) right
-  after saving a message. Signals contain ids only, never message text.
-  Browsers get a token from `/api/realtime/token` that can only *listen* to
-  their own channel. Vercel Functions can't keep WebSockets open, which is why
-  a hosted service holds the connections.
-- **After reconnecting**, coming back to the tab, or going back online, the
-  browser asks for everything since its last check, so nothing is missed.
-- **Without Ably** (or if it's down), the same request runs every 5 s.
+What triggers that request is set by `REALTIME`:
+
+| `REALTIME` | How new messages arrive | Use it for |
+|---|---|---|
+| `poll` (default) | The browser checks every 5 s | Any hosting, no extra service: UAT, small launches |
+| `ably` | Instantly: after saving, the server sends a tiny "conversation X changed" signal through [Ably](https://ably.com) to each person's private `user:<id>` channel. Needs `ABLY_API_KEY` | Vercel, where functions can't keep connections open |
+| `sse` *(planned)* | Instantly, pushed by our own server (Server-Sent Events + Postgres `LISTEN/NOTIFY`) | Self-hosting on a long-running server |
+
+In every mode, signals contain ids only, never message text, and the browser
+asks `/api/realtime/config` how to listen (for Ably, it returns a token that
+can only *subscribe* to the user's own channel). After reconnecting, coming
+back to the tab, or going back online, the browser asks for everything since
+its last check, so nothing is missed. A bad setting never breaks chat: it
+falls back to `poll` and logs why. The drivers live in `src/lib/realtime/drivers/`.
 
 Sending is safe to retry: each message carries a browser-generated id, so a
 retry after a network error never creates a duplicate. Expired celebration
-cards are hidden by every query and deleted once a day by Vercel Cron.
+cards are hidden by every query and deleted once a day by a cron job calling
+`/api/cron/cleanup-messages` with `CRON_SECRET` (Vercel Cron via `vercel.json`;
+when self-hosting, a system cron entry).
 
 Environment variables:
 
@@ -105,7 +111,8 @@ Environment variables:
 | `SES_ACCESS_KEY_ID` / `SES_SECRET_ACCESS_KEY` | when not on AWS | IAM user with only `ses:SendEmail`. Omit when the app runs on AWS with an IAM role |
 | `SES_CONFIGURATION_SET` | no | SES configuration set, for bounce/complaint tracking |
 | `DATABASE_SSL` | no | `false` for a local database without SSL |
-| `ABLY_API_KEY` | no (recommended) | Realtime chat delivery ([Ably](https://ably.com)). Without it, chats check for new messages every 5 s instead of instantly |
+| `REALTIME` | no | How chat updates are delivered: `poll` (default) or `ably`. See [Friend chat](#friend-chat) |
+| `ABLY_API_KEY` | with `REALTIME=ably` | Ably API key; check it with `npm run realtime:test` |
 | `CRON_SECRET` | in production | Protects `/api/cron/cleanup-messages`; Vercel Cron sends it automatically (see `vercel.json`) |
 | `GROQ_API_KEY` | no | AI Coach answers |
 | `WINTER_ARC_ADMIN_KEY` | no | Unlocks `/admin/winter-arc` |

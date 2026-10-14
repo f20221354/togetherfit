@@ -1,58 +1,45 @@
-import { Rest } from "ably";
+import { createAblyDriver } from "./drivers/ablyServer";
+import { pollDriver } from "./drivers/pollServer";
+import { REALTIME_MODES, type ChatSignal, type RealtimeMode, type RealtimeServerDriver } from "./types";
 
 /**
- * Realtime delivery through Ably. Vercel Functions can't hold WebSockets
- * open, so Ably keeps the browser connections and we publish to it over
- * HTTPS.
- *
- * - Each user has one private channel, `user:<id>`. Only this server can
- *   publish to it; a browser gets a token that can only *subscribe* to its
- *   own channel.
- * - Signals carry ids only, never message text. The browser fetches the
- *   actual change from our API, which checks permissions, so chat content
- *   never passes through Ably.
- *
- * Without ABLY_API_KEY everything still works: browsers fall back to asking
- * our API for changes every few seconds.
+ * Picks the realtime driver from REALTIME (see types.ts). A misconfiguration
+ * never breaks chat: it falls back to "poll" and says why in the server log.
  */
+let driver: RealtimeServerDriver | null = null;
 
-export interface ChatSignal {
-  type: "chat";
-  connectionId: string;
+function resolveDriver(): RealtimeServerDriver {
+  const raw = (process.env.REALTIME ?? "poll").trim().toLowerCase();
+  if (!REALTIME_MODES.includes(raw as RealtimeMode)) {
+    console.warn(`REALTIME="${raw}" is not one of ${REALTIME_MODES.join(", ")} — using "poll".`);
+    return pollDriver;
+  }
+  if (raw === "ably") {
+    const key = process.env.ABLY_API_KEY;
+    if (!key) {
+      console.warn('REALTIME="ably" but ABLY_API_KEY is not set — using "poll".');
+      return pollDriver;
+    }
+    return createAblyDriver(key);
+  }
+  return pollDriver;
 }
 
-let rest: Rest | null = null;
-
-function ablyClient(): Rest | null {
-  const key = process.env.ABLY_API_KEY;
-  if (!key) return null;
-  rest ??= new Rest({ key });
-  return rest;
+function realtime(): RealtimeServerDriver {
+  driver ??= resolveDriver();
+  return driver;
 }
 
-export function realtimeEnabled(): boolean {
-  return !!process.env.ABLY_API_KEY;
-}
-
-export const userChannel = (userId: string) => `user:${userId}`;
-
-/** Tells each user's open tabs that a conversation changed. Never throws: the message is already saved, and clients catch up on their own. */
+/** Tells each user's open tabs that a conversation changed. Never throws: the change is already saved and clients catch up on their own. */
 export async function signalUsers(userIds: string[], signal: ChatSignal): Promise<void> {
-  const client = ablyClient();
-  if (!client) return;
-  const results = await Promise.allSettled(
-    [...new Set(userIds)].map((id) => client.channels.get(userChannel(id)).publish("chat", signal))
-  );
-  for (const r of results) if (r.status === "rejected") console.error("Realtime publish failed:", r.reason);
+  try {
+    await realtime().publish(userIds, signal);
+  } catch (err) {
+    console.error("Realtime publish failed:", err);
+  }
 }
 
-/** A short-lived token that lets this user subscribe to their own channel and nothing else. */
-export async function createUserTokenRequest(userId: string) {
-  const client = ablyClient();
-  if (!client) return null;
-  return client.auth.createTokenRequest({
-    clientId: userId,
-    capability: { [userChannel(userId)]: ["subscribe"] },
-    ttl: 60 * 60 * 1000,
-  });
+/** How this user's browser should listen (and, for Ably, a fresh subscribe-only token). */
+export function realtimeClientConfig(userId: string) {
+  return realtime().clientConfig(userId);
 }

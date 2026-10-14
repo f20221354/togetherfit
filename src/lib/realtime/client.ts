@@ -2,23 +2,29 @@
 
 import { useEffect, useRef } from "react";
 import { create } from "zustand";
-import type { Realtime, TokenRequest } from "ably";
 import { useCurrentUser } from "@/lib/auth/authStore";
+import type { ChatSignal, RealtimeClientConfig } from "./types";
+
+export type { ChatSignal } from "./types";
 
 /**
- * One Ably connection per signed-in browser tab, listening on the user's own
- * channel. Components don't talk to Ably directly: they subscribe to
- * "conversation X changed" and "we reconnected" through the hooks below.
+ * One realtime connection per signed-in browser tab, whichever mode the
+ * server is configured for (REALTIME, see types.ts). Components never see the
+ * mode: they subscribe to "conversation X changed" and "we reconnected"
+ * through the hooks below.
  *
  * status:
- * - "off":       realtime isn't configured on the server (or failed) → callers poll for changes instead
- * - "connecting" / "live": the connection is coming up / delivering signals
+ * - "off":        nothing pushed (poll mode, or the connection failed) → callers check for changes on a timer
+ * - "connecting": coming up / reconnecting
+ * - "live":       signals are being delivered → callers only keep a slow safety-net timer
  */
 type Status = "off" | "connecting" | "live";
 
-export interface ChatSignal {
-  type: "chat";
-  connectionId: string;
+/** What a client driver reports back. Each driver lives in ./drivers/<mode>Client.ts. */
+export interface ClientDriverCallbacks {
+  signal: (signal: ChatSignal) => void;
+  resync: () => void;
+  status: (status: Status) => void;
 }
 
 const useRealtimeStore = create<{ status: Status }>(() => ({ status: "off" }));
@@ -26,79 +32,48 @@ const useRealtimeStore = create<{ status: Status }>(() => ({ status: "off" }));
 const signalListeners = new Set<(signal: ChatSignal) => void>();
 const resyncListeners = new Set<() => void>();
 
-let client: Realtime | null = null;
-let clientUserId: string | null = null;
+let disconnect: (() => void) | null = null;
+let activeUserId: string | null = null;
 
-function notifyResync() {
-  for (const listener of resyncListeners) listener();
-}
+const callbacks: ClientDriverCallbacks = {
+  signal: (signal) => {
+    for (const listener of signalListeners) listener(signal);
+  },
+  resync: () => {
+    for (const listener of resyncListeners) listener();
+  },
+  status: (status) => useRealtimeStore.setState({ status }),
+};
 
 async function start(userId: string) {
-  if (clientUserId === userId) return;
+  if (activeUserId === userId) return;
   stop();
-  clientUserId = userId;
+  activeUserId = userId;
 
-  // Ask first, so a server without ABLY_API_KEY costs one request, not an Ably SDK download.
-  const probe = await fetch("/api/realtime/token", { cache: "no-store" }).catch(() => null);
-  if (!probe?.ok || clientUserId !== userId) return;
+  const res = await fetch("/api/realtime/config", { cache: "no-store" }).catch(() => null);
+  const config: RealtimeClientConfig | null = res?.ok ? await res.json() : null;
+  if (!config || activeUserId !== userId) return;
 
-  useRealtimeStore.setState({ status: "connecting" });
-  const { Realtime } = await import("ably");
-  if (clientUserId !== userId) return;
-
-  // The probe already returned a signed token request; use it for the first connection.
-  let firstToken: TokenRequest | null = await probe.json();
-  const realtime = new Realtime({
-    authCallback: async (_params, callback) => {
-      try {
-        if (firstToken) {
-          const token = firstToken;
-          firstToken = null;
-          callback(null, token);
-          return;
-        }
-        const res = await fetch("/api/realtime/token", { cache: "no-store" });
-        if (!res.ok) throw new Error(`token ${res.status}`);
-        callback(null, await res.json());
-      } catch (err) {
-        callback(String(err), null);
-      }
-    },
-  });
-  client = realtime;
-
-  let wasLive = false;
-  realtime.connection.on((change) => {
-    if (change.current === "connected") {
-      useRealtimeStore.setState({ status: "live" });
-      // Anything sent while we were away is fetched from our API.
-      if (wasLive) notifyResync();
-      wasLive = true;
-    } else if (change.current === "failed") {
-      useRealtimeStore.setState({ status: "off" });
-    } else if (change.current !== "closing" && change.current !== "closed") {
-      useRealtimeStore.setState({ status: "connecting" });
+  switch (config.mode) {
+    case "ably": {
+      callbacks.status("connecting");
+      const { connectAbly } = await import("./drivers/ablyClient");
+      if (activeUserId !== userId) return;
+      disconnect = connectAbly(userId, config.tokenRequest, callbacks);
+      break;
     }
-  });
-
-  const channel = realtime.channels.get(`user:${userId}`);
-  // Ably couldn't guarantee continuity on this channel (e.g. a long disconnect): catch up from our API.
-  channel.on("attached", (change) => {
-    if (!change.resumed && wasLive) notifyResync();
-  });
-  await channel.subscribe("chat", (message) => {
-    const signal = message.data as ChatSignal;
-    if (signal?.type === "chat" && typeof signal.connectionId === "string") {
-      for (const listener of signalListeners) listener(signal);
-    }
-  });
+    case "poll":
+    default:
+      // Nothing to connect to; useConversation & co. check for changes on their timers.
+      break;
+  }
 }
 
 function stop() {
-  clientUserId = null;
-  client?.close();
-  client = null;
-  useRealtimeStore.setState({ status: "off" });
+  activeUserId = null;
+  disconnect?.();
+  disconnect = null;
+  callbacks.status("off");
 }
 
 /** Mounted once in the app shell: connects for the signed-in user, disconnects on logout. */
