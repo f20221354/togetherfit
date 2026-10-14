@@ -43,35 +43,11 @@ interface MoveState {
   addMovementMinutes: (minutes: number) => void;
 }
 
-const DEFAULT_GOALS: Goal[] = [
-  {
-    id: "goal_run5k",
-    label: "Run 5 km",
-    icon: "🏃",
-    type: "distance",
-    target: 5,
-    current: 2,
-    unit: "km",
-    frequencyPerWeek: 3,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "goal_gym4x",
-    label: "Strength train 3x/week",
-    icon: "🏋️",
-    type: "frequency",
-    target: 3,
-    current: 0,
-    unit: "sessions/week",
-    frequencyPerWeek: 3,
-    createdAt: new Date().toISOString(),
-  },
-];
-
 export const useMoveStore = create<MoveState>()(
   persist(
     (set) => ({
-      goals: DEFAULT_GOALS,
+      // Nobody starts with goals: they set their own (Goals page or onboarding).
+      goals: [],
       workoutHistory: [],
       coachChat: [],
       todayGoalMinutes: 30,

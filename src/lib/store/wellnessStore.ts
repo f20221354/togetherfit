@@ -188,7 +188,6 @@ interface WellnessState {
   scoreHistory: { time: string; score: number }[];
   events: WellnessEvent[];
   habits: Habits;
-  dateRange: "today" | "7d" | "30d";
 
   roomBrightness: number; // 0-100, driven by wellness score
   plantGrowth: number; // 0-100, driven by movement/circadian
@@ -208,7 +207,6 @@ interface WellnessState {
   stretchTarget: number;
 
   logEvent: (type: EventType, extra?: { duration?: number }) => void;
-  setDateRange: (range: "today" | "7d" | "30d") => void;
   toggleHabit: (habit: keyof Habits) => void;
   setHydrationGlasses: (glasses: number) => void;
   setStretchMinutes: (minutes: number) => void;
@@ -241,7 +239,6 @@ export const useWellnessStore = create<WellnessState>()(
       scoreHistory: [{ time: new Date().toISOString(), score: computeGlobalScore(INITIAL_SCORES) }],
       events: [],
       habits: INITIAL_HABITS,
-      dateRange: "today",
 
       roomBrightness: 70,
       plantGrowth: 55,
@@ -319,7 +316,6 @@ export const useWellnessStore = create<WellnessState>()(
         });
       },
 
-      setDateRange: (range) => set({ dateRange: range }),
       toggleHabit: (habit) =>
         set((state) => ({ habits: { ...state.habits, [habit]: !state.habits[habit] } })),
 
@@ -370,7 +366,6 @@ export const useWellnessStore = create<WellnessState>()(
       partialize: (state) => {
         const {
           logEvent,
-          setDateRange,
           toggleHabit,
           setHydrationGlasses,
           setStretchMinutes,
@@ -379,7 +374,6 @@ export const useWellnessStore = create<WellnessState>()(
           ...rest
         } = state;
         void logEvent;
-        void setDateRange;
         void toggleHabit;
         void setHydrationGlasses;
         void setStretchMinutes;

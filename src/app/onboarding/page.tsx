@@ -17,6 +17,12 @@ const CAPABILITIES = [
 
 type CameraStepResult = "granted" | "denied" | "skipped" | null;
 
+const FIRST_ACTIONS = [
+  { title: "Find someone to walk with today", detail: "See who's nearby and free right now.", href: "/connect/find?sport=walking" },
+  { title: "Set your first goal", detail: "A weekly target you can actually track.", href: "/move/goals" },
+  { title: "Do a 1-minute posture check", detail: "Uses your camera on this device. Nothing is recorded.", href: "/posture" },
+];
+
 export default function OnboardingPage() {
   const router = useRouter();
   const loaded = useAuthStore((s) => s.loaded);
@@ -67,7 +73,7 @@ export default function OnboardingPage() {
     }
   }
 
-  async function finish() {
+  async function finish(destination: string) {
     if (!user || saving) return;
     setSaving(true);
     setSaveError(undefined);
@@ -77,7 +83,7 @@ export default function OnboardingPage() {
       setSaveError("Couldn't save your setup. Check your connection and try again.");
       return;
     }
-    router.push("/");
+    router.push(destination);
   }
 
   return (
@@ -280,17 +286,24 @@ export default function OnboardingPage() {
         {step === 5 && (
           <div className="flex flex-col items-center gap-5 text-center">
             <span className="text-4xl">✓</span>
-            <h2 className="text-xl font-semibold text-foreground">You&apos;re ready.</h2>
-            <p className="text-sm text-muted">
-              togetherfit is set up. Your Global Wellness Score and all five modules are ready to go.
-            </p>
+            <h2 className="text-xl font-semibold text-foreground">What would you like to do first?</h2>
+            <p className="text-sm text-muted">Pick one to start. Everything else is a tap away.</p>
             {saveError && <p className="text-xs text-danger">{saveError}</p>}
-            <button
-              onClick={finish}
-              disabled={saving}
-              className="rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
-            >
-              {saving ? "Saving…" : "Enter togetherfit"}
+            <div className="flex w-full flex-col gap-2 text-left">
+              {FIRST_ACTIONS.map((a) => (
+                <button
+                  key={a.href}
+                  onClick={() => finish(a.href)}
+                  disabled={saving}
+                  className="flex flex-col rounded-xl border border-border px-4 py-3 hover:border-accent hover:bg-accent/5 disabled:opacity-60"
+                >
+                  <span className="text-sm font-semibold text-foreground">{a.title}</span>
+                  <span className="text-xs text-muted">{a.detail}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => finish("/")} disabled={saving} className="text-xs text-muted hover:text-foreground disabled:opacity-60">
+              {saving ? "Saving…" : "Skip to Home"}
             </button>
           </div>
         )}

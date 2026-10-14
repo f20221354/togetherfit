@@ -38,9 +38,6 @@ interface CameraState {
   /** Opt-in: also show a system notification when the app window isn't focused. */
   systemNotifications: boolean;
 
-  demoSliderMode: boolean;
-  demoPostureValue: number; // 0 = optimal, 100 = slouch
-  demoEyeLevelValue: number; // 0 = high (good), 100 = low (bad)
 
   alertsEnabled: boolean;
   gazeAlertsEnabled: boolean;
@@ -56,9 +53,6 @@ interface CameraState {
   dismissNudge: () => void;
   setSystemNotifications: (on: boolean) => void;
   registerSlouchEvent: () => void;
-  setDemoSliderMode: (on: boolean) => void;
-  setDemoPostureValue: (v: number) => void;
-  setDemoEyeLevelValue: (v: number) => void;
   setAlertsEnabled: (on: boolean) => void;
   setGazeAlertsEnabled: (on: boolean) => void;
   setAlertSensitivity: (s: CameraState["alertSensitivity"]) => void;
@@ -85,9 +79,6 @@ export const useCameraStore = create<CameraState>()(
       activeNudge: null,
       systemNotifications: false,
 
-      demoSliderMode: false,
-      demoPostureValue: 15,
-      demoEyeLevelValue: 20,
 
       alertsEnabled: true,
       gazeAlertsEnabled: true,
@@ -120,9 +111,6 @@ export const useCameraStore = create<CameraState>()(
       setSystemNotifications: (systemNotifications) => set({ systemNotifications }),
       registerSlouchEvent: () =>
         set((state) => ({ slouchEventsToday: state.slouchEventsToday + 1 })),
-      setDemoSliderMode: (demoSliderMode) => set({ demoSliderMode }),
-      setDemoPostureValue: (demoPostureValue) => set({ demoPostureValue }),
-      setDemoEyeLevelValue: (demoEyeLevelValue) => set({ demoEyeLevelValue }),
       setAlertsEnabled: (alertsEnabled) => set({ alertsEnabled }),
       setGazeAlertsEnabled: (gazeAlertsEnabled) => set({ gazeAlertsEnabled }),
       setAlertSensitivity: (alertSensitivity) => set({ alertSensitivity }),
@@ -150,8 +138,6 @@ export const useCameraStore = create<CameraState>()(
         alertSensitivity: state.alertSensitivity,
         alertCooldownMinutes: state.alertCooldownMinutes,
         systemNotifications: state.systemNotifications,
-        demoPostureValue: state.demoPostureValue,
-        demoEyeLevelValue: state.demoEyeLevelValue,
       }),
     }
   )

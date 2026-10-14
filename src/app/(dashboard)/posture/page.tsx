@@ -9,7 +9,6 @@ import { usePostureMonitor } from "@/components/camera/PostureMonitorProvider";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CameraUnavailablePanel } from "@/components/camera/CameraUnavailablePanel";
-import { DemoSliders } from "@/components/camera/DemoSliders";
 import { PostureGazeStatus } from "@/components/camera/PostureGazeStatus";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
 
@@ -33,8 +32,6 @@ export default function PosturePage() {
   const headTilt = useCameraStore((s) => s.headTilt);
   const postureStatus = useCameraStore((s) => s.postureStatus);
   const slouchEventsToday = useCameraStore((s) => s.slouchEventsToday);
-  const demoSliderMode = useCameraStore((s) => s.demoSliderMode);
-  const setDemoSliderMode = useCameraStore((s) => s.setDemoSliderMode);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { start, stop, stream } = usePostureMonitor();
@@ -159,19 +156,7 @@ export default function PosturePage() {
         <CameraUnavailablePanel
           permission={permission}
           onRetry={handleStart}
-          onUseDemo={() => setDemoSliderMode(true)}
         />
-      )}
-
-      {(demoSliderMode || showCameraPanel) && <DemoSliders />}
-
-      {!demoSliderMode && !monitoring && !showCameraPanel && (
-        <button
-          onClick={() => setDemoSliderMode(true)}
-          className="self-start text-xs font-medium text-accent-foreground hover:underline"
-        >
-          Use demo sliders instead
-        </button>
       )}
 
       <div className="rounded-2xl border border-border bg-surface p-5">
