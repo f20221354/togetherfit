@@ -97,8 +97,15 @@ function parseBefore(before: string): { createdAt: string; id: string } | null {
   return createdAt && PG_TIMESTAMP.test(createdAt) && isUuid(id) ? { createdAt, id } : null;
 }
 
+/** Who you're talking to, shown in the chat header (friends can always see each other's photo). */
+export interface ChatPartner {
+  name: string;
+  photoId: string | null;
+  verified: boolean;
+}
+
 export type PageResult =
-  | { ok: true; messages: ChatMessage[]; hasMore: boolean; syncCursor: string }
+  | { ok: true; messages: ChatMessage[]; hasMore: boolean; syncCursor: string; partner?: ChatPartner }
   | { ok: false; reason: "not_a_participant" | "bad_cursor" };
 
 /**
@@ -131,7 +138,19 @@ export async function getMessagePage(
     params
   );
   const rows = result.rows.slice(0, limit).reverse();
-  return { ok: true, messages: rows.map((r) => toMessage(r, userId)), hasMore: result.rows.length > limit, syncCursor };
+  const page = { messages: rows.map((r) => toMessage(r, userId)), hasMore: result.rows.length > limit, syncCursor };
+  if (before) return { ok: true, ...page };
+  // First page: also say who this is with.
+  const partner = await getPool().query<{ name: string; photo_id: string | null; verified: boolean }>(
+    `select u.name, p.id as photo_id, u.verified_at is not null as verified
+     from connections c
+     join app_users u on u.id = case when c.requester_id = $2 then c.receiver_id else c.requester_id end
+     left join profile_photos p on p.user_id = u.id
+     where c.id = $1`,
+    [connectionId, userId]
+  );
+  const r = partner.rows[0];
+  return { ok: true, ...page, partner: r ? { name: r.name, photoId: r.photo_id, verified: r.verified } : undefined };
 }
 
 export type SyncResult =

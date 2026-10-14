@@ -65,6 +65,9 @@ export function useConversation(connectionId: string) {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [partner, setPartner] = useState<{ name: string; photoId: string | null; verified: boolean } | null>(null);
+  /** The conversation is gone: unfriended, blocked or reported (by either side). */
+  const [ended, setEnded] = useState(false);
 
   const syncCursor = useRef<string | null>(null);
   const syncing = useRef(false);
@@ -83,11 +86,19 @@ export function useConversation(connectionId: string) {
 
   /** Replaces the view with a fresh newest page, keeping messages that are still being sent. */
   const applyLatest = useCallback(
-    (data: { ok: boolean; error?: string; messages: ChatMessage[]; hasMore: boolean; syncCursor: string }) => {
+    (data: {
+      ok: boolean;
+      error?: string;
+      messages: ChatMessage[];
+      hasMore: boolean;
+      syncCursor: string;
+      partner?: { name: string; photoId: string | null; verified: boolean };
+    }) => {
       if (!data.ok) {
         setError(data.error ?? "Couldn't load this conversation.");
         return;
       }
+      if (data.partner) setPartner(data.partner);
       syncCursor.current = data.syncCursor;
       setHasMore(data.hasMore);
       setMessages((current) => merge((current ?? []).filter((m) => m.pending || m.failed), data.messages));
@@ -110,9 +121,14 @@ export function useConversation(connectionId: string) {
     try {
       do {
         syncAgain.current = false;
-        const cursor = syncCursor.current;
+        const cursor: string | null = syncCursor.current;
         if (!cursor) break;
-        const data = await getJson(`${base}?since=${encodeURIComponent(cursor)}`);
+        const res: Response = await fetch(`${base}?since=${encodeURIComponent(cursor)}`, { cache: "no-store" });
+        const data: { ok: boolean; error?: string; reset?: boolean; syncCursor: string; messages: ChatMessage[] } = await res.json();
+        if (res.status === 403) {
+          setEnded(true);
+          break;
+        }
         if (!data.ok) {
           setError(data.error ?? "Couldn't load new messages.");
           break;
@@ -268,5 +284,5 @@ export function useConversation(connectionId: string) {
     [messages, now]
   );
 
-  return { messages: visible, hasMore, loadingOlder, error, loadOlder, send, retry, react, live: status === "live" };
+  return { messages: visible, partner, ended, hasMore, loadingOlder, error, loadOlder, send, retry, react, live: status === "live" };
 }

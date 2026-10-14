@@ -9,6 +9,7 @@ import { PostureMonitorProvider } from "@/components/camera/PostureMonitorProvid
 import { PostureNudgeToast } from "@/components/camera/PostureNudgeToast";
 import { WinterArcPopup } from "@/components/winterArc/WinterArcPopup";
 import { useRealtimeConnection } from "@/lib/realtime/client";
+import { RestrictionBanner } from "@/components/safety/RestrictionBanner";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   useRealtimeConnection();
@@ -18,6 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
         <Header />
+        <RestrictionBanner />
         <main className="flex-1 overflow-y-auto px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-6 md:px-8 md:pb-8">{children}</main>
       </div>
       <BottomTabBar />

@@ -96,3 +96,9 @@ export function useIncomingRequests(): IncomingRequest[] {
   useNetworkPolling(useCurrentUser()?.id);
   return useSummaryStore((s) => s.incoming);
 }
+
+/** Connect tab badge: unread messages plus requests waiting for you. */
+export function useConnectBadgeCount(): number {
+  useNetworkPolling(useCurrentUser()?.id);
+  return useSummaryStore((s) => s.totalUnread + s.incoming.length);
+}

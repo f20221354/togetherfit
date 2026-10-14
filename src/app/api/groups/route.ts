@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createGroup, listMyGroups } from "@/lib/network/findDb";
 import { requireUser } from "@/lib/auth/server/session";
+import { restrictedResponse } from "@/lib/safety/restrictions";
 import { rateLimit } from "@/lib/auth/server/rateLimit";
 import { bad, readBody, serverError } from "@/lib/network/apiHelpers";
 
@@ -19,6 +20,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const user = await requireUser(req);
   if (user instanceof NextResponse) return user;
+  const restricted = restrictedResponse(user.restriction, "radar");
+  if (restricted) return restricted;
   const body = await readBody(req);
   if (typeof body.intentId !== "string" || typeof body.name !== "string") return bad("intentId and name are required");
   const limited = await rateLimit({ key: `group:${user.id}`, limit: 10, windowSeconds: 3600 });

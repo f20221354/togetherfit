@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { joinGroup } from "@/lib/network/findDb";
 import { requireUser } from "@/lib/auth/server/session";
+import { restrictedResponse } from "@/lib/safety/restrictions";
 import { bad, serverError } from "@/lib/network/apiHelpers";
 
 /** Joining a group also puts you in its group chat. */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser(req);
   if (user instanceof NextResponse) return user;
+  const restricted = restrictedResponse(user.restriction, "radar");
+  if (restricted) return restricted;
   const { id } = await params;
   try {
     const result = await joinGroup(user.email, id);

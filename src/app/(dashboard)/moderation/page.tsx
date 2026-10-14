@@ -10,8 +10,31 @@ interface OpenReport {
   reason: string;
   createdAt: string;
   reporter: { name: string; code: string };
-  reported: { id: string; name: string; code: string; verified: boolean; hasPhoto: boolean; reportCount: number };
+  reported: {
+    id: string;
+    name: string;
+    code: string;
+    verified: boolean;
+    hasPhoto: boolean;
+    reportCount: number;
+    strikes: number;
+    restriction: { scope: "radar" | "full"; until: string | null } | null;
+  };
 }
+
+interface RestrictedUser {
+  id: string;
+  name: string;
+  code: string;
+  scope: "radar" | "full";
+  until: string | null;
+  reason: string | null;
+  strikes: number;
+}
+
+const NEXT_STEP = ["7 days", "30 days", "permanently"];
+const restrictionLabel = (r: { scope: "radar" | "full"; until: string | null }) =>
+  `${r.scope === "full" ? "Restricted" : "Hidden from Find a Friend"} ${r.until ? `until ${new Date(r.until).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : "permanently"}`;
 
 interface StuckUser {
   id: string;
@@ -37,15 +60,17 @@ export default function ModerationPage() {
   const user = useCurrentUser();
   const [reports, setReports] = useState<OpenReport[] | null>(null);
   const [stuck, setStuck] = useState<StuckUser[]>([]);
+  const [restricted, setRestricted] = useState<RestrictedUser[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const apply = useCallback((data: { ok: boolean; error?: string; reports: OpenReport[]; stuck: StuckUser[] }) => {
+  const apply = useCallback((data: { ok: boolean; error?: string; reports: OpenReport[]; stuck: StuckUser[]; restricted: RestrictedUser[] }) => {
     if (!data.ok) {
       setError(data.error ?? "Couldn't load moderation queue.");
       return;
     }
     setReports(data.reports);
     setStuck(data.stuck);
+    setRestricted(data.restricted);
   }, []);
 
   const load = useCallback(
@@ -79,7 +104,7 @@ export default function ModerationPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <PageHeader icon="🛡️" title="Moderation" subtitle="Reports and verification appeals. Everything else is automatic." />
+      <PageHeader icon="🛡️" title="Moderation" subtitle="Reports, restrictions and verification appeals. Everything else is automatic." />
       {error && <p className="text-sm text-danger">{error}</p>}
 
       <section className="flex flex-col gap-3">
@@ -108,6 +133,9 @@ export default function ModerationPage() {
                     {CATEGORY_LABELS[r.category] ?? r.category}
                     {r.reported.reportCount > 1 && ` · reported ${r.reported.reportCount} times in total`}
                   </div>
+                  {r.reported.restriction && (
+                    <div className="mt-0.5 text-xs font-medium text-foreground">⛔ {restrictionLabel(r.reported.restriction)} (automatic)</div>
+                  )}
                   <p className="mt-1 break-words text-foreground">“{r.reason}”</p>
                   <div className="mt-1 text-xs text-muted">
                     by {r.reporter.name} ({r.reporter.code}) · {when(r.createdAt)}
@@ -126,6 +154,20 @@ export default function ModerationPage() {
                     Remove photo
                   </button>
                 )}
+                {r.reported.restriction?.scope !== "full" && (
+                  <button
+                    onClick={() =>
+                      act(
+                        `/api/admin/reports/${r.id}`,
+                        "restrict",
+                        `Restrict ${r.reported.name} ${NEXT_STEP[Math.min(r.reported.strikes, 2)]}? They'll be hidden from Find a Friend and unable to send requests or messages.`
+                      )
+                    }
+                    className="rounded-full border border-danger/40 px-3 py-1 text-xs text-danger hover:bg-danger/10"
+                  >
+                    Restrict {NEXT_STEP[Math.min(r.reported.strikes, 2)]}
+                  </button>
+                )}
                 {r.reported.verified && (
                   <button
                     onClick={() => act(`/api/admin/reports/${r.id}`, "revoke_verification", `Remove ${r.reported.name}'s ✓ badge?`)}
@@ -135,6 +177,33 @@ export default function ModerationPage() {
                   </button>
                 )}
               </div>
+            </div>
+          ))
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Currently restricted ({restricted.length})</h2>
+        {restricted.length === 0 ? (
+          <p className="text-sm text-muted">No one is restricted.</p>
+        ) : (
+          restricted.map((u) => (
+            <div key={u.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 text-sm">
+              <div className="min-w-0">
+                <div className="font-semibold text-foreground">
+                  {u.name} <span className="font-mono text-xs text-muted">{u.code}</span>
+                </div>
+                <div className="text-xs text-muted">
+                  {restrictionLabel(u)} · {u.strikes} strike{u.strikes === 1 ? "" : "s"}
+                </div>
+                {u.reason && <div className="text-xs text-muted">{u.reason}</div>}
+              </div>
+              <button
+                onClick={() => act(`/api/admin/users/${u.id}`, "lift_restriction", `Lift ${u.name}'s restriction now?`)}
+                className="rounded-full border border-border px-3 py-1 text-xs text-foreground hover:bg-surface-2"
+              >
+                Lift
+              </button>
             </div>
           ))
         )}

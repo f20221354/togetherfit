@@ -59,7 +59,14 @@ export default function TermsPage() {
           <li>break the law or encourage others to;</li>
           <li>access other accounts, probe or disrupt the service, or scrape it with automated tools.</li>
         </ul>
-        <p>We may remove content, suspend or delete accounts that break these rules, with or without notice.</p>
+        <p>
+          When someone reports you, the two of you are blocked from each other straight away. A single report never
+          restricts your account. If several different members report you within 30 days, or after our team reviews a
+          serious report, your account may be restricted: hidden from Find a Friend and unable to send requests or
+          messages, for 7 days the first time, 30 days the second time, and permanently the third time. While
+          restricted you can still sign in, see why, export your data and appeal by writing to {mail}. We may also
+          remove content or close accounts for serious or repeated violations.
+        </p>
       </section>
 
       <section>

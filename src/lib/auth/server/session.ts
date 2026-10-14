@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 import { clientIp } from "./rateLimit";
+import { RESTRICTION_COLUMNS, toRestriction, type Restriction, type RestrictionScope } from "@/lib/safety/restrictions";
 
 export const SESSION_COOKIE = "tf_session";
 const SESSION_DAYS = 30;
@@ -15,6 +16,33 @@ export interface SessionUser {
   code: string;
   onboardingComplete: boolean;
   isAdmin: boolean;
+  /** Active safety restriction, if any (see src/lib/safety/restrictions.ts). */
+  restriction: Restriction | null;
+}
+
+interface UserColumns {
+  id: string;
+  email: string;
+  name: string;
+  code: string;
+  onboarding_completed_at: string | null;
+  role: string;
+  restriction_active: boolean | null;
+  restriction_scope: RestrictionScope | null;
+  restriction_until: Date | null;
+  restriction_reason: string | null;
+}
+
+function toSessionUser(row: UserColumns): SessionUser {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    code: row.code,
+    onboardingComplete: !!row.onboarding_completed_at,
+    isAdmin: row.role === "admin",
+    restriction: toRestriction(row),
+  };
 }
 
 function tokenId(token: string): string {
@@ -50,14 +78,13 @@ export async function endAllSessions(userId: string): Promise<void> {
 }
 
 export async function getSessionUserById(userId: string): Promise<SessionUser | null> {
-  const result = await getPool().query<{ id: string; email: string; name: string; code: string; onboarding_completed_at: string | null; role: string }>(
-    "select id, email, name, code, onboarding_completed_at, role from app_users where id = $1",
+  const result = await getPool().query<UserColumns>(
+    `select u.id, u.email, u.name, u.code, u.onboarding_completed_at, u.role, ${RESTRICTION_COLUMNS("u")}
+     from app_users u where u.id = $1`,
     [userId]
   );
   const row = result.rows[0];
-  return row
-    ? { id: row.id, email: row.email, name: row.name, code: row.code, onboardingComplete: !!row.onboarding_completed_at, isAdmin: row.role === "admin" }
-    : null;
+  return row ? toSessionUser(row) : null;
 }
 
 /** The signed-in user for this request, or null. */
@@ -66,16 +93,8 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
   if (!token) return null;
   const pool = getPool();
   const id = tokenId(token);
-  const result = await pool.query<{
-    id: string;
-    email: string;
-    name: string;
-    code: string;
-    onboarding_completed_at: string | null;
-    role: string;
-    stale: boolean;
-  }>(
-    `select u.id, u.email, u.name, u.code, u.onboarding_completed_at, u.role,
+  const result = await pool.query<UserColumns & { stale: boolean }>(
+    `select u.id, u.email, u.name, u.code, u.onboarding_completed_at, u.role, ${RESTRICTION_COLUMNS("u")},
             s.last_seen_at < now() - make_interval(mins => $2) as stale
      from auth_sessions s join app_users u on u.id = s.user_id
      where s.id = $1 and s.expires_at > now()`,
@@ -90,14 +109,7 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
       [id, SESSION_DAYS]
     );
   }
-  return {
-    id: row.id,
-    email: row.email,
-    name: row.name,
-    code: row.code,
-    onboardingComplete: !!row.onboarding_completed_at,
-    isAdmin: row.role === "admin",
-  };
+  return toSessionUser(row);
 }
 
 /**

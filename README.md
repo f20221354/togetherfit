@@ -90,6 +90,16 @@ at `/privacy` and `/terms`.
   stored. Changing your photo removes the badge. Provider set by
   `VERIFICATION`: `mock` (default, for development/UAT), `off`, and later
   `aws` (Amazon Rekognition).
+- **Friends page**: Friends / Received / Sent tabs; sent requests can be
+  cancelled. Every friend (and the chat header) has a ⋯ menu: Remove friend
+  (silent, deletes the chat), Block, Report (also blocks).
+- **Restrictions** (`src/lib/safety/restrictions.ts`): one report only blocks
+  the two people from each other. A "felt unsafe" or "harassment" report hides
+  the reported person from Find a Friend until reviewed. Reports worth 3+
+  points from different people in 30 days (1 each, +0.5 verified, +0.5 if the
+  account is over a week old, 0.25 for people whose reports keep being
+  dismissed) restrict the account fully: 7 days, then 30, then permanently.
+  Restricted people can still sign in, export, delete and appeal.
 - **Moderation** (`/moderation`, admins only): open reports (with categories)
   and people stuck in verification. Make someone an admin with
   `npm run admin:grant -- their@email.com`.

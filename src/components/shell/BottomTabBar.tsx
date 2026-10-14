@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { OVERVIEW_ITEM, ACTION_ITEMS, PERSONAL_TAB, PERSONAL_TAB_PATHS, type NavItem } from "./navItems";
-import { useUnreadConnectionsCount } from "@/lib/network/useUnreadCount";
+import { useConnectBadgeCount } from "@/lib/network/useUnreadCount";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { useMyProfile } from "@/lib/profile/profileStore";
 import { Avatar } from "@/components/profile/Avatar";
@@ -20,7 +20,7 @@ function isActive(tab: NavItem, pathname: string): boolean {
 /** Mobile navigation (below md); the Sidebar takes over on larger screens. */
 export function BottomTabBar() {
   const pathname = usePathname();
-  const unreadCount = useUnreadConnectionsCount();
+  const unreadCount = useConnectBadgeCount();
   const user = useCurrentUser();
   const { profile } = useMyProfile();
 
@@ -53,7 +53,7 @@ export function BottomTabBar() {
                   )}
                   {badge > 0 && (
                     <span
-                      aria-label={`${badge} unread`}
+                      aria-label={`${badge} new`}
                       className="absolute -right-3 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-black"
                     >
                       {badge > 99 ? "99+" : badge}

@@ -311,3 +311,17 @@ alter table reports add column if not exists category text not null default 'oth
   check (category in ('other', 'photo', 'gender', 'harassment', 'spam', 'safety'));
 alter table reports add column if not exists resolved_at timestamptz;
 alter table reports add column if not exists resolution text;
+
+-- ============================================================
+-- Safety restrictions (from reports)
+-- ============================================================
+
+-- A restriction never locks anyone out: they can still sign in, see why,
+-- export their data and appeal.
+--   'radar': hidden from Find a Friend and can't send radar requests
+--   'full':  also can't send friend requests or messages, or join/create groups
+alter table app_users add column if not exists restricted_until timestamptz;
+alter table app_users add column if not exists restriction_scope text check (restriction_scope in ('radar', 'full'));
+alter table app_users add column if not exists restriction_reason text;
+-- Escalation: 1st full restriction 7 days, 2nd 30 days, 3rd permanent.
+alter table app_users add column if not exists strikes int not null default 0;

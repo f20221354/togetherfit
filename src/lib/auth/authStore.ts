@@ -15,6 +15,7 @@ export interface CurrentUser {
   code: string;
   onboardingComplete: boolean;
   isAdmin: boolean;
+  restriction: { scope: "radar" | "full"; until: string | null; reason: string } | null;
 }
 
 export interface WellnessSetupPrefs {

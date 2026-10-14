@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { respondToRequest, RespondAction } from "@/lib/network/friendsDb";
 import { requireUser } from "@/lib/auth/server/session";
+import { restrictedResponse } from "@/lib/safety/restrictions";
 import { bad, readBody, serverError } from "@/lib/network/apiHelpers";
 
 const ACTIONS: RespondAction[] = ["accepted", "declined", "blocked", "join_their_time", "suggest"];
@@ -11,6 +12,11 @@ export async function POST(req: NextRequest) {
   const { requestId, status, proposedTime } = await readBody(req);
   if (typeof requestId !== "string" || !ACTIONS.includes(status as RespondAction)) {
     return bad(`requestId and status (${ACTIONS.join(" | ")}) are required`);
+  }
+  // Declining or blocking is always allowed; making a new connection isn't while fully restricted.
+  if (status !== "declined" && status !== "blocked") {
+    const restricted = restrictedResponse(user.restriction, "full");
+    if (restricted) return restricted;
   }
   if (status === "suggest" && typeof proposedTime !== "string") {
     return bad("proposedTime is required when suggesting another time");

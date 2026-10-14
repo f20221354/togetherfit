@@ -1,6 +1,7 @@
 import { after, NextRequest, NextResponse } from "next/server";
 import { sendCelebration } from "@/lib/network/milestonesDb";
 import { requireUser } from "@/lib/auth/server/session";
+import { restrictedResponse } from "@/lib/safety/restrictions";
 import { connectionUserIds } from "@/lib/network/chatDb";
 import { signalUsers } from "@/lib/realtime/server";
 import { rateLimit } from "@/lib/auth/server/rateLimit";
@@ -10,6 +11,8 @@ import { bad, readBody, serverError } from "@/lib/network/apiHelpers";
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser(req);
   if (user instanceof NextResponse) return user;
+  const restricted = restrictedResponse(user.restriction, "full");
+  if (restricted) return restricted;
   const { id } = await params;
   const body = await readBody(req);
   if (typeof body.connectionId !== "string") return bad("connectionId is required");

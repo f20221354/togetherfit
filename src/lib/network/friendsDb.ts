@@ -331,3 +331,40 @@ export async function listConversations(email: string): Promise<ConversationSumm
     unreadCount: Number(r.unread_count),
   }));
 }
+
+// ---------- Managing connections (by connection id, so other users' ids never reach the browser) ----------
+
+/** The other person in a connection you're part of (any status), or null. */
+export async function otherParticipantId(connectionId: string, userId: string): Promise<string | null> {
+  if (!isUuid(connectionId)) return null;
+  const result = await getPool().query<{ other: string }>(
+    `select case when requester_id = $2 then receiver_id else requester_id end as other
+     from connections where id = $1 and (requester_id = $2 or receiver_id = $2)`,
+    [connectionId, userId]
+  );
+  return result.rows[0]?.other ?? null;
+}
+
+/**
+ * Silently ends a friendship: the other person isn't notified, chat access
+ * ends for both (the conversation is deleted with the connection), and either
+ * can send a new request later.
+ */
+export async function removeFriend(connectionId: string, userId: string): Promise<boolean> {
+  if (!isUuid(connectionId)) return false;
+  const result = await getPool().query(
+    "delete from connections where id = $1 and status = 'accepted' and (requester_id = $2 or receiver_id = $2)",
+    [connectionId, userId]
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+/** Withdraws a request you sent that hasn't been answered yet. */
+export async function cancelSentRequest(connectionId: string, userId: string): Promise<boolean> {
+  if (!isUuid(connectionId)) return false;
+  const result = await getPool().query(
+    "delete from connections where id = $1 and status = 'pending' and requester_id = $2",
+    [connectionId, userId]
+  );
+  return (result.rowCount ?? 0) > 0;
+}

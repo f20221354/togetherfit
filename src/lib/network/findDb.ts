@@ -2,6 +2,7 @@ import { getPool } from "@/lib/db";
 import { SPORT_KEYS } from "@/lib/connect/sports";
 import { approxDistanceKm, coarsen, geohash } from "./geo";
 import { mutualMatchSql } from "@/lib/trust/matching";
+import { evaluateAfterReport } from "@/lib/safety/restrictions";
 import {
   createConnectionRequest,
   getOrCreateIdentity,
@@ -263,6 +264,7 @@ export async function radar(email: string, intentId: string): Promise<RadarResul
      where me.id = $1
        and o.status = 'active' and o.hidden = false
        and (conn.status is null or conn.status <> 'blocked')
+       and not coalesce(u.restricted_until > now(), false)
        and ${mutualMatchSql("meu", "u")}
        and ${HAVERSINE_KM("me", "o")} <= me.radius_km
        and ${SLOT_START("o")} < ${SLOT_START("me")} + interval '${SLOT_MINUTES} minutes'
@@ -515,5 +517,7 @@ export async function reportUser(email: string, targetUserId: string, category: 
     category,
     reason.trim().slice(0, 500) || "No reason given",
   ]);
-  return blockUser(email, targetUserId);
+  const blocked = await blockUser(email, targetUserId);
+  await evaluateAfterReport(target.id, category);
+  return blocked;
 }

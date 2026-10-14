@@ -2,13 +2,14 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { PageHeader } from "@/components/shell/PageHeader";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { SPORTS } from "@/lib/connect/sports";
 import { CELEBRATION_REACTIONS, CelebrationCard } from "@/lib/connect/milestones";
 import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
 import { CelebrationCardView } from "@/components/connect/CelebrationCardView";
 import { ChatMessage, useConversation } from "@/lib/chat/useConversation";
+import { ConnectionMenu } from "@/components/connect/ConnectionMenu";
+import { Avatar } from "@/components/profile/Avatar";
 
 /** Within this many pixels of the bottom counts as "reading the latest", so new messages scroll into view. */
 const STICK_TO_BOTTOM_PX = 80;
@@ -37,7 +38,7 @@ function Conversation({ connectionId }: { connectionId: string }) {
   const user = useCurrentUser();
   const router = useRouter();
   const justConnected = useSearchParams().get("new") === "1";
-  const { messages, hasMore, loadingOlder, error, loadOlder, send, retry, react } = useConversation(connectionId);
+  const { messages, partner, ended, hasMore, loadingOlder, error, loadOlder, send, retry, react } = useConversation(connectionId);
 
   const [draft, setDraft] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
@@ -130,11 +131,34 @@ function Conversation({ connectionId }: { connectionId: string }) {
   return (
     <div className="mx-auto flex h-[calc(100dvh-14rem-env(safe-area-inset-bottom))] min-h-[22rem] max-w-2xl flex-col gap-4 md:h-[calc(100dvh-11rem)]">
       <div className="flex items-center gap-3">
-        <button onClick={() => router.push("/connect/messages")} className="text-muted hover:text-foreground">
-          ← Back
+        <button onClick={() => router.push("/connect/messages")} aria-label="Back to messages" className="text-lg text-muted hover:text-foreground">
+          ←
         </button>
-        <PageHeader icon="💬" title="Conversation" subtitle="" />
+        {partner ? (
+          <>
+            <Avatar name={partner.name} photoId={partner.photoId} verified={partner.verified} />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-base font-semibold text-foreground">{partner.name}</div>
+              {partner.verified && <div className="text-xs text-sky-500">✓ Verified</div>}
+            </div>
+            {!ended && (
+              <ConnectionMenu
+                connectionId={connectionId}
+                name={partner.name.split(" ")[0]}
+                onDone={() => router.replace("/connect/messages")}
+              />
+            )}
+          </>
+        ) : (
+          <div className="flex-1 text-base font-semibold text-foreground">Conversation</div>
+        )}
       </div>
+
+      {ended && (
+        <div className="rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm text-muted">
+          This conversation has ended. You&apos;re no longer connected with this person.
+        </div>
+      )}
 
       {justConnected && (
         <div className="rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm font-medium text-foreground">
@@ -222,7 +246,7 @@ function Conversation({ connectionId }: { connectionId: string }) {
           e.preventDefault();
           void submit();
         }}
-        className="flex items-center gap-2"
+        className={`flex items-center gap-2 ${ended ? "hidden" : ""}`}
       >
         <input
           value={draft}

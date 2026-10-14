@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS } from "./navItems";
 import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
-import { useUnreadConnectionsCount } from "@/lib/network/useUnreadCount";
+import { useConnectBadgeCount } from "@/lib/network/useUnreadCount";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 import { WinterArcNavBadge } from "@/components/winterArc/WinterArcNavBadge";
 import { Avatar } from "@/components/profile/Avatar";
@@ -49,7 +49,7 @@ export function Sidebar() {
   const router = useRouter();
   const user = useCurrentUser();
   const logOut = useAuthStore((s) => s.logOut);
-  const unreadCount = useUnreadConnectionsCount();
+  const unreadCount = useConnectBadgeCount();
   const { profile } = useMyProfile();
 
   return (
