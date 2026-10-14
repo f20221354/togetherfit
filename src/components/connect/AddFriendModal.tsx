@@ -23,7 +23,7 @@ export function AddFriendModal({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/friends/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fromEmail: user.email, fromName: user.name, toCode: codeInput.trim() }),
+        body: JSON.stringify({ toCode: codeInput.trim() }),
       });
       const data = await res.json();
       if (data.ok) {

@@ -28,7 +28,7 @@ export function trackWinterArc(event: WinterArcEvent, email: string | undefined,
     void fetch("/api/winter-arc/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, email, props }),
+      body: JSON.stringify({ event, props }),
       keepalive: true,
     }).catch(() => {});
   } catch {

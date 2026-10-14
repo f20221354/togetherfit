@@ -4,50 +4,79 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { OtpStep } from "@/components/auth/OtpStep";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { useAuthStore } from "@/lib/auth/authStore";
+import { CurrentUser, useAuthStore } from "@/lib/auth/authStore";
+import { authPost } from "@/lib/auth/authApi";
 import { isValidEmail } from "@/lib/auth/validation";
+
+/** Where to go after signing in: the page the user was sent away from, if it's one of ours. */
+function nextPath(user: CurrentUser): string {
+  if (!user.onboardingComplete) return "/onboarding";
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const logIn = useAuthStore((s) => s.logIn);
-  const currentUserEmail = useAuthStore((s) => s.currentUserEmail);
-  const onboardingComplete = useAuthStore((s) => s.onboardingComplete);
+  const refresh = useAuthStore((s) => s.refresh);
+  const setUser = useAuthStore((s) => s.setUser);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState<string | undefined>();
   const [formError, setFormError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
 
+  // Already signed in (e.g. opened /login in a new tab) → skip the form.
   useEffect(() => {
-    if (currentUserEmail) {
-      router.replace(onboardingComplete[currentUserEmail] ? "/" : "/onboarding");
-    }
-  }, [currentUserEmail, onboardingComplete, router]);
+    refresh().then((user) => {
+      if (user) router.replace(nextPath(user));
+    });
+  }, [refresh, router]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setFormError(undefined);
-
-    if (!isValidEmail(email)) {
+    if (!isValidEmail(email.trim())) {
       setEmailError("Enter a valid email address");
       return;
     }
     setEmailError(undefined);
+    if (!password) {
+      setFormError("Enter your password");
+      return;
+    }
 
     setLoading(true);
-    const result = await logIn(email, password);
+    const result = await authPost<{ challengeId: string }>("/api/auth/login", { email, password });
     setLoading(false);
-
     if (!result.ok) {
       setFormError(result.error);
       return;
     }
-    setSuccess(true);
-    router.push("/");
+    setPassword("");
+    setChallengeId(result.data.challengeId);
+  }
+
+  if (challengeId) {
+    return (
+      <AuthLayout>
+        <OtpStep<{ user: CurrentUser }>
+          email={email.trim().toLowerCase()}
+          challengeId={challengeId}
+          purpose="login"
+          onChallengeChange={setChallengeId}
+          onVerified={({ user }) => {
+            setUser(user);
+            router.replace(nextPath(user));
+          }}
+          onBack={() => setChallengeId(null)}
+        />
+      </AuthLayout>
+    );
   }
 
   return (
@@ -72,17 +101,10 @@ export default function LoginPage() {
           required
         />
 
-        {formError && (
-          <div className="rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">{formError}</div>
-        )}
-        {success && (
-          <div className="rounded-lg bg-success/10 px-3 py-2 text-xs text-success">
-            Signed in — taking you to togetherfit…
-          </div>
-        )}
+        {formError && <div className="rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">{formError}</div>}
 
         <div className="flex items-center justify-between text-xs">
-          <Link href="/forgot-password" className="text-muted hover:text-foreground">
+          <Link href="/forgot-password" className="py-1 text-muted hover:text-foreground">
             Forgot password?
           </Link>
         </div>
@@ -90,10 +112,11 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="mt-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {loading ? "Signing in…" : "Log In"}
+          {loading ? "Checking…" : "Continue"}
         </button>
+        <p className="text-center text-xs text-muted">We&apos;ll email you a one-time code to finish signing in.</p>
 
         <p className="text-center text-xs text-muted">
           New to togetherfit?{" "}

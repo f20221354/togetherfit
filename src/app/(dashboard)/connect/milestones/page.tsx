@@ -14,8 +14,8 @@ interface Overview {
   progress: { total: number; streak: number; group: number };
 }
 
-async function fetchOverview(email: string): Promise<Overview | null> {
-  const res = await fetch(`/api/milestones?email=${encodeURIComponent(email)}`);
+async function fetchOverview(): Promise<Overview | null> {
+  const res = await fetch(`/api/milestones`);
   const data = await res.json();
   return data.ok ? { achieved: data.achieved, progress: data.progress } : null;
 }
@@ -38,7 +38,7 @@ export default function MilestonesPage() {
     let cancelled = false;
     async function load() {
       try {
-        const data = await fetchOverview(user!.email);
+        const data = await fetchOverview();
         if (!cancelled) setOverview(data);
       } catch {
         if (!cancelled) setError("Couldn't reach the server — is DATABASE_URL configured?");
@@ -54,7 +54,7 @@ export default function MilestonesPage() {
     if (!user) return;
     const result = await logActivityAndCelebrate(user, { sport });
     setNotice(result.ok ? (result.newMilestones.length > 0 ? null : "Activity logged ✅") : (result.error ?? "Couldn't log it."));
-    const data = await fetchOverview(user.email);
+    const data = await fetchOverview();
     if (data) setOverview(data);
   }
 

@@ -1,7 +1,7 @@
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <h1 className="sr-only">Welcome to togetherfit</h1>

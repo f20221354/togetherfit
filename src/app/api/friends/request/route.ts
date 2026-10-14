@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendFriendRequest } from "@/lib/network/friendsDb";
+import { requireUser } from "@/lib/auth/server/session";
+import { rateLimit } from "@/lib/auth/server/rateLimit";
+import { bad, readBody, serverError } from "@/lib/network/apiHelpers";
 
 const REASON_MESSAGES: Record<string, string> = {
   self: "That's your own code.",
@@ -9,18 +12,21 @@ const REASON_MESSAGES: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
-  const { fromEmail, fromName, toCode } = await req.json();
-  if (typeof fromEmail !== "string" || typeof fromName !== "string" || typeof toCode !== "string" || !toCode.trim()) {
-    return NextResponse.json({ ok: false, error: "fromEmail, fromName and toCode are required" }, { status: 400 });
-  }
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
+  const { toCode } = await readBody(req);
+  if (typeof toCode !== "string" || !toCode.trim() || toCode.length > 20) return bad("Enter a friend code");
+  // Also stops friend codes from being guessed by brute force.
+  const limited = await rateLimit({ key: `friendreq:${user.id}`, limit: 20, windowSeconds: 3600 });
+  if (limited) return limited;
   try {
-    const result = await sendFriendRequest(fromEmail.trim().toLowerCase(), fromName.trim(), toCode);
+    const result = await sendFriendRequest(user.email, user.name, toCode);
     if (!result.ok) {
       const status = result.reason === "not_found" ? 404 : result.reason === "self" ? 400 : 409;
-      return NextResponse.json({ ok: false, error: REASON_MESSAGES[result.reason] }, { status });
+      return bad(REASON_MESSAGES[result.reason], status);
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 500 });
+    return serverError(err);
   }
 }

@@ -195,3 +195,51 @@ create table if not exists winter_arc_events (
 
 create index if not exists winter_arc_events_event_idx on winter_arc_events(event, occurred_at);
 create index if not exists winter_arc_events_user_idx on winter_arc_events(user_email, event);
+
+-- ============================================================
+-- Server-side auth: email + password, email OTP, sessions
+-- ============================================================
+
+-- Rows created before real auth have no password; their owner claims the
+-- account by signing up (or resetting the password) and proving the email
+-- with an OTP.
+alter table app_users add column if not exists password_hash text;
+alter table app_users add column if not exists email_verified_at timestamptz;
+alter table app_users add column if not exists onboarding_completed_at timestamptz;
+alter table app_users add column if not exists wellness_setup jsonb;
+
+-- One row per emailed code. Only an HMAC of the code is stored. `payload`
+-- carries a pending signup (name + password hash) until the code is verified.
+create table if not exists auth_otps (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  purpose text not null check (purpose in ('signup', 'login', 'reset')),
+  code_hash text not null,
+  payload jsonb,
+  attempts int not null default 0,
+  expires_at timestamptz not null,
+  consumed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists auth_otps_email_idx on auth_otps(email, purpose, created_at desc);
+
+-- The cookie holds a random token; only its SHA-256 is stored here.
+create table if not exists auth_sessions (
+  id text primary key,
+  user_id uuid not null references app_users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  user_agent text,
+  ip text
+);
+
+create index if not exists auth_sessions_user_idx on auth_sessions(user_id);
+
+-- Fixed-window rate limits, shared by every app instance.
+create table if not exists rate_limits (
+  key text primary key,
+  window_start timestamptz not null default now(),
+  count int not null default 0
+);

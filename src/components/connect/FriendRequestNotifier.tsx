@@ -55,7 +55,7 @@ export function FriendRequestNotifier() {
     let cancelled = false;
     async function poll() {
       try {
-        const res = await fetch(`/api/friends/list?email=${encodeURIComponent(user!.email)}`);
+        const res = await fetch(`/api/friends/list`);
         const data = await res.json();
         if (cancelled || !data.ok) return;
         const incoming: IncomingRequest[] = data.incoming ?? [];
@@ -105,7 +105,6 @@ export function FriendRequestNotifier() {
           </div>
           <IncomingRequestActions
             request={req}
-            email={user.email}
             onDone={(outcome) => {
               dismiss(req);
               if (outcome === "accepted") router.push(`/connect/messages/${req.id}?new=1`); // open the chat automatically

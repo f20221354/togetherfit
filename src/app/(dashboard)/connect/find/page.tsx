@@ -42,7 +42,7 @@ export default function FindAFriendPage() {
     let cancelled = false;
     async function checkActive() {
       try {
-        const res = await fetch(`/api/find/intent?email=${encodeURIComponent(user!.email)}`);
+        const res = await fetch(`/api/find/intent`);
         const data = await res.json();
         if (!cancelled && data.ok) setActive(data.active);
       } catch {

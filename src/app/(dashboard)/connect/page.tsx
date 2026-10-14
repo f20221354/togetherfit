@@ -34,7 +34,7 @@ export default function ConnectDashboardPage() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch(`/api/friends/list?email=${encodeURIComponent(user!.email)}`);
+        const res = await fetch(`/api/friends/list`);
         const data = await res.json();
         if (!cancelled && data.ok) setFriends(data.friends);
       } catch {

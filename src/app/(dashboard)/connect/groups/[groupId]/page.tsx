@@ -17,8 +17,8 @@ interface GroupChatResponse {
 
 const POLL_MS = 3_000;
 
-async function fetchGroupChat(groupId: string, email: string): Promise<GroupChatResponse> {
-  const res = await fetch(`/api/groups/${groupId}/messages?email=${encodeURIComponent(email)}`);
+async function fetchGroupChat(groupId: string): Promise<GroupChatResponse> {
+  const res = await fetch(`/api/groups/${groupId}/messages`);
   return res.json();
 }
 
@@ -38,7 +38,7 @@ export default function GroupChatPage() {
     if (!user) return;
     async function tick() {
       try {
-        const data = await fetchGroupChat(groupId, user!.email);
+        const data = await fetchGroupChat(groupId);
         if (data.ok) {
           setChat(data);
           setError(null);
@@ -67,11 +67,11 @@ export default function GroupChatPage() {
       const res = await fetch(`/api/groups/${groupId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, body: text }),
+        body: JSON.stringify({ body: text }),
       });
       const data = await res.json();
       if (data.ok) {
-        const refreshed = await fetchGroupChat(groupId, user.email);
+        const refreshed = await fetchGroupChat(groupId);
         if (refreshed.ok) setChat(refreshed);
       } else {
         setError(data.error ?? "Message failed to send.");

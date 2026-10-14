@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createIntent, getActiveIntent } from "@/lib/network/findDb";
-import { bad, normEmail, serverError } from "@/lib/network/apiHelpers";
+import { requireUser } from "@/lib/auth/server/session";
+import { rateLimit } from "@/lib/auth/server/rateLimit";
+import { bad, readBody, serverError } from "@/lib/network/apiHelpers";
 
 /** Your current live search, if any. */
 export async function GET(req: NextRequest) {
-  const email = normEmail(req.nextUrl.searchParams.get("email"));
-  if (!email) return bad("email is required");
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
   try {
-    return NextResponse.json({ ok: true, active: await getActiveIntent(email) });
+    return NextResponse.json({ ok: true, active: await getActiveIntent(user.email) });
   } catch (err) {
     return serverError(err);
   }
@@ -15,17 +17,19 @@ export async function GET(req: NextRequest) {
 
 /** Starts a Find a Friend search: area (coarse), when, and sport. */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = normEmail(body.email);
-  if (!email || typeof body.name !== "string") return bad("email and name are required");
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
+  const body = await readBody(req);
+  const limited = await rateLimit({ key: `intent:${user.id}`, limit: 30, windowSeconds: 3600 });
+  if (limited) return limited;
   try {
-    const result = await createIntent(email, body.name.trim(), {
-      sport: body.sport,
+    const result = await createIntent(user.email, user.name, {
+      sport: typeof body.sport === "string" ? body.sport : "",
       lat: Number(body.lat),
       lng: Number(body.lng),
       areaLabel: typeof body.areaLabel === "string" ? body.areaLabel : null,
       radiusKm: Number(body.radiusKm),
-      mode: body.mode,
+      mode: body.mode as "now" | "scheduled",
       startTime: typeof body.startTime === "string" ? body.startTime : null,
     });
     if (!result.ok) return bad(result.error);

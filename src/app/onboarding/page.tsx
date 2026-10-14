@@ -17,8 +17,8 @@ type CameraStepResult = "granted" | "denied" | "skipped" | null;
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const currentUserEmail = useAuthStore((s) => s.currentUserEmail);
-  const onboardingComplete = useAuthStore((s) => s.onboardingComplete);
+  const loaded = useAuthStore((s) => s.loaded);
+  const refresh = useAuthStore((s) => s.refresh);
   const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
   const setPermission = useCameraStore((s) => s.setPermission);
   const user = useCurrentUser();
@@ -33,15 +33,17 @@ export default function OnboardingPage() {
     preferredWalkMinutes: 15,
   });
 
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | undefined>();
+
   useEffect(() => {
-    if (!currentUserEmail) {
-      router.replace("/login");
+    if (!loaded) {
+      refresh();
       return;
     }
-    if (onboardingComplete[currentUserEmail]) {
-      router.replace("/");
-    }
-  }, [currentUserEmail, onboardingComplete, router]);
+    if (!user) router.replace("/login");
+    else if (user.onboardingComplete) router.replace("/");
+  }, [loaded, user, refresh, router]);
 
   async function requestCamera() {
     setCameraRequesting(true);
@@ -63,15 +65,22 @@ export default function OnboardingPage() {
     }
   }
 
-  function finish() {
-    if (!currentUserEmail) return;
-    completeOnboarding(currentUserEmail, prefs, cameraResult === "granted");
+  async function finish() {
+    if (!user || saving) return;
+    setSaving(true);
+    setSaveError(undefined);
+    const ok = await completeOnboarding(prefs, cameraResult === "granted");
+    setSaving(false);
+    if (!ok) {
+      setSaveError("Couldn't save your setup. Check your connection and try again.");
+      return;
+    }
     router.push("/");
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-surface p-8">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-surface p-5 sm:p-8">
         <div className="mb-6 flex items-center justify-center gap-1.5">
           {[1, 2, 3, 4].map((s) => (
             <span
@@ -246,11 +255,13 @@ export default function OnboardingPage() {
             <p className="text-sm text-muted">
               togetherfit is set up. Your Global Wellness Score and all five modules are ready to go.
             </p>
+            {saveError && <p className="text-xs text-danger">{saveError}</p>}
             <button
               onClick={finish}
-              className="rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-black hover:opacity-90"
+              disabled={saving}
+              className="rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
             >
-              Enter togetherfit
+              {saving ? "Saving…" : "Enter togetherfit"}
             </button>
           </div>
         )}

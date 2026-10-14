@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logActivity } from "@/lib/network/milestonesDb";
-import { bad, normEmail, serverError } from "@/lib/network/apiHelpers";
+import { requireUser } from "@/lib/auth/server/session";
+import { rateLimit } from "@/lib/auth/server/rateLimit";
+import { bad, readBody, serverError } from "@/lib/network/apiHelpers";
 
 /** Logs a completed activity and returns any milestones it just unlocked. */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = normEmail(body.email);
-  if (!email || typeof body.name !== "string" || typeof body.sport !== "string") {
-    return bad("email, name and sport are required");
-  }
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
+  const body = await readBody(req);
+  if (typeof body.sport !== "string") return bad("sport is required");
+  const limited = await rateLimit({ key: `activities:${user.id}`, limit: 30, windowSeconds: 3600 });
+  if (limited) return limited;
   try {
-    const result = await logActivity(email, body.name.trim(), {
+    const result = await logActivity(user.email, user.name, {
       sport: body.sport,
       connectionId: typeof body.connectionId === "string" ? body.connectionId : null,
       groupId: typeof body.groupId === "string" ? body.groupId : null,

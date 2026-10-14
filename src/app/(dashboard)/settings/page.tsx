@@ -87,9 +87,9 @@ export default function SettingsPage() {
             👤 My Profile &amp; Modules
           </button>
           <button
-            onClick={() => {
-              logOut();
-              router.push("/login");
+            onClick={async () => {
+              await logOut();
+              router.replace("/login");
             }}
             className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
           >

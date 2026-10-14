@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { getPool } from "@/lib/db";
 
 export interface NetworkUser {
@@ -20,7 +21,7 @@ const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars:
 
 function generateCode(): string {
   let code = "";
-  for (let i = 0; i < 6; i++) code += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+  for (let i = 0; i < 6; i++) code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
   return `SB-${code}`;
 }
 

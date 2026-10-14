@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listFriends } from "@/lib/network/friendsDb";
+import { requireUser } from "@/lib/auth/server/session";
+import { serverError } from "@/lib/network/apiHelpers";
 
 export async function GET(req: NextRequest) {
-  const email = req.nextUrl.searchParams.get("email");
-  if (!email) {
-    return NextResponse.json({ ok: false, error: "email query param is required" }, { status: 400 });
-  }
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
   try {
-    const list = await listFriends(email.trim().toLowerCase());
-    return NextResponse.json({ ok: true, ...list });
+    return NextResponse.json({ ok: true, ...(await listFriends(user.email)) });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 500 });
+    return serverError(err);
   }
 }

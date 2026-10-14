@@ -36,10 +36,10 @@ export default function ConnectMessagesPage() {
     if (!user) return;
     async function refresh() {
       try {
-        const res = await fetch(`/api/connections?email=${encodeURIComponent(user!.email)}`);
+        const res = await fetch(`/api/connections`);
         const data = await res.json();
         if (data.ok) setConversations(data.conversations);
-        const groupsRes = await fetch(`/api/groups?email=${encodeURIComponent(user!.email)}`);
+        const groupsRes = await fetch(`/api/groups`);
         const groupsData = await groupsRes.json();
         if (groupsData.ok) setGroups(groupsData.groups);
       } catch {

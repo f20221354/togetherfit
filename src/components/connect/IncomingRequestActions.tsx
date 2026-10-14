@@ -29,11 +29,9 @@ function toLocalInput(d: Date): string {
  */
 export function IncomingRequestActions({
   request,
-  email,
   onDone,
 }: {
   request: IncomingRequestView;
-  email: string;
   onDone: (outcome: Outcome) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -52,7 +50,7 @@ export function IncomingRequestActions({
       const res = await fetch("/api/friends/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId: request.id, respondingEmail: email, status, proposedTime }),
+        body: JSON.stringify({ requestId: request.id, status, proposedTime }),
       });
       const data = await res.json();
       if (!data.ok) {

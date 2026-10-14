@@ -90,9 +90,9 @@ export function Sidebar() {
         <NavLink href="/settings" icon="⚙️" label="Settings" active={pathname === "/settings"} />
         {user && (
           <button
-            onClick={() => {
-              logOut();
-              router.push("/login");
+            onClick={async () => {
+              await logOut();
+              router.replace("/login");
             }}
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted hover:bg-surface-2 hover:text-foreground"
           >

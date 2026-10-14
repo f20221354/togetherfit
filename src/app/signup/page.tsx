@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { useAuthStore } from "@/lib/auth/authStore";
+import { OtpStep } from "@/components/auth/OtpStep";
+import { CurrentUser, useAuthStore } from "@/lib/auth/authStore";
+import { authPost } from "@/lib/auth/authApi";
 import { isValidEmail, checkPassword } from "@/lib/auth/validation";
 
 interface FieldErrors {
@@ -18,7 +20,7 @@ interface FieldErrors {
 
 export default function SignupPage() {
   const router = useRouter();
-  const signUp = useAuthStore((s) => s.signUp);
+  const setUser = useAuthStore((s) => s.setUser);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,7 +29,7 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -44,15 +46,32 @@ export default function SignupPage() {
     if (Object.keys(nextErrors).length > 0) return;
 
     setLoading(true);
-    const result = await signUp(name.trim(), email, password);
+    const result = await authPost<{ challengeId: string }>("/api/auth/signup", { name: name.trim(), email, password });
     setLoading(false);
 
     if (!result.ok) {
       setFormError(result.error);
       return;
     }
-    setSuccess(true);
-    router.push("/onboarding");
+    setChallengeId(result.data.challengeId);
+  }
+
+  if (challengeId) {
+    return (
+      <AuthLayout>
+        <OtpStep<{ user: CurrentUser }>
+          email={email.trim().toLowerCase()}
+          challengeId={challengeId}
+          purpose="signup"
+          onChallengeChange={setChallengeId}
+          onVerified={({ user }) => {
+            setUser(user);
+            router.replace("/onboarding");
+          }}
+          onBack={() => setChallengeId(null)}
+        />
+      </AuthLayout>
+    );
   }
 
   return (
@@ -100,18 +119,13 @@ export default function SignupPage() {
         {formError && (
           <div className="rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">{formError}</div>
         )}
-        {success && (
-          <div className="rounded-lg bg-success/10 px-3 py-2 text-xs text-success">
-            Account created — let&apos;s get you set up…
-          </div>
-        )}
 
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="mt-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {loading ? "Creating account…" : "Create Account"}
+          {loading ? "Sending code…" : "Create Account"}
         </button>
 
         <p className="text-center text-xs text-muted">

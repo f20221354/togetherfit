@@ -20,7 +20,7 @@ export function TextField({ label, error, className, id, ...props }: TextFieldPr
       <input
         id={inputId}
         className={clsx(
-          "rounded-xl border bg-surface-2 px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors",
+          "rounded-xl border bg-surface-2 px-3.5 py-2.5 text-base text-foreground md:text-sm outline-none transition-colors",
           "placeholder:text-muted focus:border-accent",
           error ? "border-danger" : "border-border",
           className

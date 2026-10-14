@@ -62,7 +62,7 @@ function WinterArcContent() {
   useEffect(() => {
     if (!email) return;
     let cancelled = false;
-    fetch(`/api/milestones?email=${encodeURIComponent(email)}`)
+    fetch(`/api/milestones`)
       .then((res) => res.json())
       .then((data) => {
         if (cancelled || !data.ok) return;

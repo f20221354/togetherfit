@@ -2,11 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS, PROFILE_ITEM } from "./navItems";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 import { WinterArcNavBadge } from "@/components/winterArc/WinterArcNavBadge";
+import { useAuthStore } from "@/lib/auth/authStore";
 
 const DRAWER_ID = "mobile-nav-drawer";
 
@@ -49,6 +50,8 @@ export function MobileDrawer({
   triggerRef: React.RefObject<HTMLButtonElement | null>;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const logOut = useAuthStore((s) => s.logOut);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll, move focus in, restore focus to the hamburger on close.
@@ -138,6 +141,18 @@ export function MobileDrawer({
             active={pathname.startsWith(PROFILE_ITEM.href)}
             onNavigate={onClose}
           />
+          <DrawerLink href="/settings" icon="⚙️" label="Settings" active={pathname === "/settings"} onNavigate={onClose} />
+          <button
+            onClick={async () => {
+              onClose();
+              await logOut();
+              router.replace("/login");
+            }}
+            className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted hover:bg-surface-2 hover:text-foreground"
+          >
+            <span className="text-base">↩</span>
+            Log Out
+          </button>
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ export function useUnreadConnectionsCount(): number {
     let cancelled = false;
     async function poll() {
       try {
-        const res = await fetch(`/api/friends/list?email=${encodeURIComponent(user!.email)}`);
+        const res = await fetch(`/api/friends/list`);
         const data = await res.json();
         if (!cancelled && data.ok) setCount(data.totalUnread ?? 0);
       } catch {

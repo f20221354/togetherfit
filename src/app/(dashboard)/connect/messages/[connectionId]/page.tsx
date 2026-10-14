@@ -36,8 +36,8 @@ function expiresLabel(expiresAt: string | null | undefined): string {
   return hours <= 1 ? "Disappears within the hour" : `Disappears in ${hours}h`;
 }
 
-async function fetchMessages(connectionId: string, email: string) {
-  const res = await fetch(`/api/connections/${connectionId}/messages?email=${encodeURIComponent(email)}`);
+async function fetchMessages(connectionId: string) {
+  const res = await fetch(`/api/connections/${connectionId}/messages`);
   return res.json();
 }
 
@@ -59,7 +59,7 @@ export default function ConnectionChatPage() {
     if (!user) return;
     async function tick() {
       try {
-        const data = await fetchMessages(connectionId, user!.email);
+        const data = await fetchMessages(connectionId);
         if (data.ok) {
           setMessages(data.messages);
           setError(null);
@@ -88,11 +88,11 @@ export default function ConnectionChatPage() {
       const res = await fetch(`/api/connections/${connectionId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, body: text }),
+        body: JSON.stringify({ body: text }),
       });
       const data = await res.json();
       if (data.ok) {
-        const refreshed = await fetchMessages(connectionId, user.email);
+        const refreshed = await fetchMessages(connectionId);
         if (refreshed.ok) setMessages(refreshed.messages);
       } else {
         setError(data.error ?? "Message failed to send.");
@@ -114,7 +114,7 @@ export default function ConnectionChatPage() {
     const res = await fetch(`/api/connections/${connectionId}/messages/${messageId}/react`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email, emoji }),
+      body: JSON.stringify({ emoji }),
     });
     const data = await res.json();
     if (data.ok) setMessages((current) => current?.map((m) => (m.id === messageId ? { ...m, reaction: emoji } : m)) ?? null);

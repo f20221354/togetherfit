@@ -12,9 +12,9 @@ milestone.
 
 🔗 **Live demo:** [vitaos-jd8j.vercel.app](https://vitaos-jd8j.vercel.app)
 
-> Create an account first (**Create Account** on the login page), then log
-> in. Accounts are saved in the browser you create them in — on a new
-> device or browser, sign up there too.
+> Create an account (**Create Account** on the login page) and confirm the
+> 6-digit code we email you. Accounts live on the server, so the same login
+> works on any device.
 
 ---
 
@@ -54,6 +54,36 @@ across every tab.
 - **[Recharts](https://recharts.org)** — wellness trend charts
 - **[Leaflet](https://leafletjs.com)** + OpenStreetMap / Nominatim — the Find a Friend area picker and radar map
 - **[pg](https://node-postgres.com)** (Postgres) — the real backend behind Connect: friends, Find a Friend, groups, chat, and milestones
+
+## Authentication
+
+Email + password, with a one-time code emailed on signup, on every login and
+for password resets. Passwords are hashed with scrypt; sessions are random
+tokens in an httpOnly cookie, stored hashed in Postgres; every API route
+takes the user from the session (`requireUser`), never from the request.
+Auth, chat, friend requests, the AI coach and analytics are rate-limited
+(Postgres-backed, so limits hold across instances).
+
+Environment variables:
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `DATABASE_URL` | yes | Postgres connection string |
+| `AUTH_SECRET` | in production | ≥ 32 random characters; keys the OTP hashes (`openssl rand -base64 48`) |
+| `SES_REGION` | in production (or SMTP) | AWS region where the sending domain is verified in Amazon SES, e.g. `ap-south-1`. With neither SES nor SMTP set in development, emails are printed to the server console |
+| `EMAIL_FROM` | with SES | Sender, e.g. `togetherfit <no-reply@yourdomain.com>` (a verified SES identity). Optional with SMTP |
+| `SMTP_USER` / `SMTP_PASS` | in production (or SES) | Interim email before SES: for Gmail, the address and an app password. Used only when SES isn't configured |
+| `SMTP_HOST` / `SMTP_PORT` | no | Defaults to `smtp.gmail.com` / `465` |
+| `SES_ACCESS_KEY_ID` / `SES_SECRET_ACCESS_KEY` | when not on AWS | IAM user with only `ses:SendEmail`. Omit when the app runs on AWS with an IAM role |
+| `SES_CONFIGURATION_SET` | no | SES configuration set, for bounce/complaint tracking |
+| `DATABASE_SSL` | no | `false` for a local database without SSL |
+| `GROQ_API_KEY` | no | AI Coach answers |
+| `WINTER_ARC_ADMIN_KEY` | no | Unlocks `/admin/winter-arc` |
+
+Check the email setup on its own with `npm run email:test -- you@example.com`.
+
+Accounts created before server-side auth have no password: their owners
+use **Forgot password** to set one (proving the email with a code).
 
 ## Getting started
 

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendRadarRequest } from "@/lib/network/findDb";
-import { bad, normEmail, serverError } from "@/lib/network/apiHelpers";
+import { requireUser } from "@/lib/auth/server/session";
+import { rateLimit } from "@/lib/auth/server/rateLimit";
+import { bad, readBody, serverError } from "@/lib/network/apiHelpers";
 
 const MESSAGES: Record<string, string> = {
   self: "That's you.",
@@ -12,13 +14,14 @@ const MESSAGES: Record<string, string> = {
 
 /** Sends a connection request from the radar (source = find_a_friend, activity_id = your search). */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = normEmail(body.email);
-  if (!email || typeof body.name !== "string" || typeof body.intentId !== "string" || typeof body.toUserId !== "string") {
-    return bad("email, name, intentId and toUserId are required");
-  }
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
+  const body = await readBody(req);
+  if (typeof body.intentId !== "string" || typeof body.toUserId !== "string") return bad("intentId and toUserId are required");
+  const limited = await rateLimit({ key: `connreq:${user.id}`, limit: 30, windowSeconds: 3600 });
+  if (limited) return limited;
   try {
-    const result = await sendRadarRequest(email, body.name.trim(), body.intentId, body.toUserId);
+    const result = await sendRadarRequest(user.email, user.name, body.intentId, body.toUserId);
     if (!result.ok) return bad(MESSAGES[result.reason] ?? "Request failed", 409);
     return NextResponse.json({ ok: true, connectionId: result.connectionId });
   } catch (err) {

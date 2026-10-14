@@ -35,8 +35,8 @@ export function RealFriendNetwork() {
   const [message, setMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const refresh = useCallback(async (email: string) => {
-    const res = await fetch(`/api/friends/list?email=${encodeURIComponent(email)}`);
+  const refresh = useCallback(async () => {
+    const res = await fetch(`/api/friends/list`);
     const data: FriendsListResponse = await res.json();
     if (data.ok) setList(data);
   }, []);
@@ -50,7 +50,7 @@ export function RealFriendNetwork() {
         const res = await fetch("/api/friends/identity", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email, name: user.name }),
+          body: JSON.stringify({ name: user.name }),
         });
         const data = await res.json();
         if (cancelled) return;
@@ -60,7 +60,7 @@ export function RealFriendNetwork() {
           return;
         }
         setCode(data.identity.code);
-        await refresh(user.email);
+        await refresh();
         setStatus("idle");
       } catch {
         if (!cancelled) {
@@ -82,13 +82,13 @@ export function RealFriendNetwork() {
     const res = await fetch("/api/friends/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fromEmail: user.email, fromName: user.name, toCode: codeInput.trim() }),
+      body: JSON.stringify({ toCode: codeInput.trim() }),
     });
     const data = await res.json();
     if (data.ok) {
       setMessage("Request sent!");
       setCodeInput("");
-      await refresh(user.email);
+      await refresh();
     } else {
       setMessage(data.error ?? "Something went wrong.");
     }
@@ -154,10 +154,9 @@ export function RealFriendNetwork() {
                 <div className="text-sm font-medium text-foreground">{req.from.name}</div>
                 <IncomingRequestActions
                   request={req}
-                  email={user.email}
                   onDone={(outcome) => {
                     if (outcome === "accepted") router.push(`/connect/messages/${req.id}?new=1`); // open the chat automatically
-                    else refresh(user.email);
+                    else refresh();
                   }}
                 />
               </div>

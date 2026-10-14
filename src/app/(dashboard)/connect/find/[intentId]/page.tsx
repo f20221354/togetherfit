@@ -108,7 +108,7 @@ export default function RadarPage() {
   const load = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/find/radar?email=${encodeURIComponent(user.email)}&intentId=${intentId}`);
+      const res = await fetch(`/api/find/radar?intentId=${intentId}`);
       const json = await res.json();
       if (json.ok) {
         setData(json);
@@ -127,7 +127,7 @@ export default function RadarPage() {
     let cancelled = false;
     async function poll() {
       try {
-        const res = await fetch(`/api/find/radar?email=${encodeURIComponent(user!.email)}&intentId=${intentId}`);
+        const res = await fetch(`/api/find/radar?intentId=${intentId}`);
         const json = await res.json();
         if (cancelled) return;
         if (json.ok) {
@@ -155,7 +155,7 @@ export default function RadarPage() {
       fetch("/api/find/heartbeat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user!.email, intentId }),
+        body: JSON.stringify({ intentId }),
       }).catch(() => {});
     }
     beat();
@@ -167,7 +167,7 @@ export default function RadarPage() {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user!.email, ...body }),
+      body: JSON.stringify({ ...body }),
     });
     return res.json();
   }
