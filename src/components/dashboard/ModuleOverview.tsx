@@ -1,6 +1,7 @@
 "use client";
 
 import { useWellnessStore } from "@/lib/store/wellnessStore";
+import { minutesAgoLabel, useNow } from "@/lib/useNow";
 import { useFriendCount } from "@/lib/network/useUnreadCount";
 import { useMoveStore } from "@/lib/store/moveStore";
 import { ModuleStatusCard } from "./ModuleStatusCard";
@@ -10,7 +11,8 @@ export function ModuleOverview() {
   const roomBrightness = useWellnessStore((s) => s.roomBrightness);
   const events = useWellnessStore((s) => s.events);
   const urgeSurferResetsToday = useWellnessStore((s) => s.urgeSurferResetsToday);
-  const lastResetMinutesAgo = useWellnessStore((s) => s.lastResetMinutesAgo);
+  const lastResetAt = useWellnessStore((s) => s.lastResetAt);
+  const now = useNow();
   const circadianMorningLightDone = useWellnessStore((s) => s.circadianMorningLightDone);
   const friendCount = useFriendCount();
   const goals = useMoveStore((s) => s.goals);
@@ -65,7 +67,7 @@ export function ModuleOverview() {
         title="UrgeSurfer"
         metricLabel="Resets Today"
         metricValue={urgeSurferResetsToday}
-        detail={`Last reset ${lastResetMinutesAgo}m ago`}
+        detail={lastResetAt ? `Last reset ${minutesAgoLabel(lastResetAt, now)}` : "No resets yet"}
         href="/urgesurfer"
       />
     </div>

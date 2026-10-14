@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
+import { minutesAgoLabel, useNow } from "@/lib/useNow";
 import { useCameraStore } from "@/lib/store/cameraStore";
 import { usePostureMonitor } from "@/components/camera/PostureMonitorProvider";
 import { PageHeader } from "@/components/shell/PageHeader";
@@ -21,7 +22,8 @@ function formatDuration(startedAt: number | null): string {
 
 export default function PosturePage() {
   const scores = useWellnessStore((s) => s.scores);
-  const minutesSincePostureCorrection = useWellnessStore((s) => s.minutesSincePostureCorrection);
+  const lastPostureCorrectionAt = useWellnessStore((s) => s.lastPostureCorrectionAt);
+  const now = useNow();
   const prolongedGaze = useWellnessStore((s) => s.prolongedGaze);
   const logEvent = useWellnessStore((s) => s.logEvent);
 
@@ -195,7 +197,7 @@ export default function PosturePage() {
       </div>
 
       <div className="text-xs text-muted">
-        Minutes since last correction: {minutesSincePostureCorrection}m
+        {lastPostureCorrectionAt ? `Last correction ${minutesAgoLabel(lastPostureCorrectionAt, now)}` : "No corrections yet"}
       </div>
 
       <ActivityExplorer />

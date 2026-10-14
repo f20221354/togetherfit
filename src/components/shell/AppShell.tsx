@@ -9,10 +9,12 @@ import { PostureMonitorProvider } from "@/components/camera/PostureMonitorProvid
 import { PostureNudgeToast } from "@/components/camera/PostureNudgeToast";
 import { WinterArcPopup } from "@/components/winterArc/WinterArcPopup";
 import { useRealtimeConnection } from "@/lib/realtime/client";
+import { useWellnessDayRollover } from "@/lib/store/wellnessStore";
 import { RestrictionBanner } from "@/components/safety/RestrictionBanner";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   useRealtimeConnection();
+  useWellnessDayRollover();
   return (
     <PostureMonitorProvider>
     <div className="flex min-h-dvh bg-background text-foreground">

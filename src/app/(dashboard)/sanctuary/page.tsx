@@ -25,6 +25,7 @@ export default function SanctuaryPage() {
   const roomBrightness = useWellnessStore((s) => s.roomBrightness);
   const plantGrowth = useWellnessStore((s) => s.plantGrowth);
   const globalScore = useWellnessStore((s) => s.globalScore);
+  const activeToday = useWellnessStore((s) => s.activeToday);
   const habits = useWellnessStore((s) => s.habits);
   const toggleHabit = useWellnessStore((s) => s.toggleHabit);
   const sunlightExposureMinutes = useWellnessStore((s) => s.sunlightExposureMinutes);
@@ -91,7 +92,9 @@ export default function SanctuaryPage() {
           <div className="text-sm text-muted">
             Room brightness {roomBrightness}% · Plant growth {plantGrowth}%
           </div>
-          <div className="text-xs text-muted">Global Wellness Score {globalScore}/100 is powering this room.</div>
+          <div className="text-xs text-muted">
+            {activeToday ? `Today's score (${globalScore}/100) is powering this room.` : "The room brightens as you complete actions today."}
+          </div>
         </div>
       </div>
 

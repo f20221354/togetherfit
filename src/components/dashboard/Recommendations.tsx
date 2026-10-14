@@ -6,14 +6,16 @@ import { getRecommendations } from "@/lib/recommendations";
 
 export function Recommendations() {
   const scores = useWellnessStore((s) => s.scores);
-  const minutesSincePostureCorrection = useWellnessStore((s) => s.minutesSincePostureCorrection);
+  const started = useWellnessStore((s) => s.started);
+  const activeToday = useWellnessStore((s) => s.activeToday);
   const eveningLightHigh = useWellnessStore((s) => s.eveningLightHigh);
   const prolongedGaze = useWellnessStore((s) => s.prolongedGaze);
   const router = useRouter();
 
   const cards = getRecommendations({
     scores,
-    minutesSincePostureCorrection,
+    started,
+    activeToday,
     eveningLightHigh,
     prolongedGaze,
   });
@@ -21,7 +23,7 @@ export function Recommendations() {
   if (cards.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-surface p-5 text-sm text-muted">
-        Everything looks balanced right now. togetherfit will recommend a module here when a score needs attention.
+        You&apos;ve covered the basics today. Suggestions appear here when one area needs attention.
       </div>
     );
   }
