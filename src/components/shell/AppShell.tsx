@@ -2,6 +2,7 @@
 
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { BottomTabBar } from "./BottomTabBar";
 import { FriendRequestNotifier } from "@/components/connect/FriendRequestNotifier";
 import { CelebrationOverlay } from "@/components/connect/CelebrationOverlay";
 import { PostureMonitorProvider } from "@/components/camera/PostureMonitorProvider";
@@ -15,8 +16,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
         <Header />
-        <main className="flex-1 overflow-y-auto px-4 pb-6 pt-6 md:px-8 md:pb-8">{children}</main>
+        <main className="flex-1 overflow-y-auto px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-6 md:px-8 md:pb-8">{children}</main>
       </div>
+      <BottomTabBar />
       <FriendRequestNotifier />
       <CelebrationOverlay />
       <PostureNudgeToast />

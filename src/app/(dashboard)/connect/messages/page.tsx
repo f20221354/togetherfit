@@ -9,7 +9,7 @@ import { timeSlotLabel } from "@/lib/connect/timeSlot";
 
 interface ConversationSummary {
   connectionId: string;
-  with: { email: string; name: string; code: string };
+  with: { name: string; code: string };
   lastMessage: string | null;
   lastMessageAt: string | null;
   unreadCount: number;

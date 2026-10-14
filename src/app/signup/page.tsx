@@ -127,6 +127,11 @@ export default function SignupPage() {
         >
           {loading ? "Sending code…" : "Create Account"}
         </button>
+        <p className="text-center text-xs text-muted">
+          By creating an account you agree to the{" "}
+          <Link href="/terms" className="underline hover:text-foreground">Terms of Service</Link> and{" "}
+          <Link href="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
+        </p>
 
         <p className="text-center text-xs text-muted">
           Already have an account?{" "}

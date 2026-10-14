@@ -8,27 +8,13 @@ const DESCRIPTIONS: Record<string, string> = {
   urgesurfer: "Fast recovery, breathing, and grounding resets.",
 };
 
-const EXTRA_ITEMS = [
-  { key: "profile", icon: "🎯", label: "My Profile", detail: "Your wellness profile and activity history.", href: "/connect/my-profile" },
-  { key: "settings", icon: "⚙️", label: "Settings", detail: "Account, privacy, notifications, and appearance.", href: "/settings" },
-];
+const SETTINGS_ITEM = { icon: "⚙️", label: "Account & Settings", detail: "Your friend code, privacy, data export, and account deletion.", href: "/settings" };
 
 export default function PersonalPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
-      <PageHeader icon="👤" title="Personal" subtitle="Your profile, wellness, and self-monitoring modules." />
+      <PageHeader icon="👤" title="Personal" subtitle="Your account, wellness, and self-monitoring modules." />
       <div className="flex flex-col gap-3">
-        <Link
-          href={EXTRA_ITEMS[0].href}
-          className="flex items-center gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4 hover:bg-accent/15"
-        >
-          <span className="text-2xl">{EXTRA_ITEMS[0].icon}</span>
-          <div>
-            <div className="text-sm font-medium text-accent-foreground">{EXTRA_ITEMS[0].label}</div>
-            <div className="text-xs text-muted">{EXTRA_ITEMS[0].detail}</div>
-          </div>
-        </Link>
-
         {PERSONAL_NAV_ITEMS.map((item) => (
           <Link
             key={item.key}
@@ -44,13 +30,13 @@ export default function PersonalPage() {
         ))}
 
         <Link
-          href={EXTRA_ITEMS[1].href}
+          href={SETTINGS_ITEM.href}
           className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
         >
-          <span className="text-2xl">{EXTRA_ITEMS[1].icon}</span>
+          <span className="text-2xl">{SETTINGS_ITEM.icon}</span>
           <div>
-            <div className="text-sm font-medium text-foreground">{EXTRA_ITEMS[1].label}</div>
-            <div className="text-xs text-muted">{EXTRA_ITEMS[1].detail}</div>
+            <div className="text-sm font-medium text-foreground">{SETTINGS_ITEM.label}</div>
+            <div className="text-xs text-muted">{SETTINGS_ITEM.detail}</div>
           </div>
         </Link>
       </div>

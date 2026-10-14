@@ -1,14 +1,15 @@
 import { randomInt } from "node:crypto";
 import { getPool } from "@/lib/db";
 
+/** What other people see about a user: never their email. */
 export interface NetworkUser {
-  email: string;
   name: string;
   code: string;
 }
 
 export interface UserRow extends NetworkUser {
   id: string;
+  email: string;
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -49,7 +50,7 @@ export async function getOrCreateIdentity(email: string, name: string): Promise<
     try {
       const code = generateCode();
       const inserted = await pool.query<NetworkUser>(
-        "insert into app_users (email, name, code) values ($1, $2, $3) returning email, name, code",
+        "insert into app_users (email, name, code) values ($1, $2, $3) returning name, code",
         [email, name, code]
       );
       return inserted.rows[0];
@@ -66,10 +67,10 @@ export async function getOrCreateIdentity(email: string, name: string): Promise<
   throw new Error("Could not create a unique friend code after 5 attempts");
 }
 
-export async function lookupByCode(code: string): Promise<NetworkUser | null> {
+async function lookupByCode(code: string): Promise<UserRow | null> {
   const pool = getPool();
-  const result = await pool.query<NetworkUser>(
-    "select email, name, code from app_users where code = $1",
+  const result = await pool.query<UserRow>(
+    "select id, email, name, code from app_users where code = $1",
     [code.trim().toUpperCase()]
   );
   return result.rows[0] ?? null;
@@ -131,10 +132,8 @@ export async function sendFriendRequest(
 ): Promise<SendRequestResult> {
   await getOrCreateIdentity(fromEmail, fromName); // ensure the sender has a row too
   const requester = await getUserRowByEmail(fromEmail);
-  const receiverUser = await lookupByCode(toCode);
-  if (!requester || !receiverUser) return { ok: false, reason: "not_found" };
-  const receiver = await getUserRowByEmail(receiverUser.email);
-  if (!receiver) return { ok: false, reason: "not_found" };
+  const receiver = await lookupByCode(toCode);
+  if (!requester || !receiver) return { ok: false, reason: "not_found" };
   return createConnectionRequest(requester, receiver, options);
 }
 
@@ -196,7 +195,7 @@ export async function listFriends(email: string): Promise<FriendsList> {
   if (!me) return { friends: [], incoming: [], outgoing: [], totalUnread: 0 };
 
   const friends = await pool.query<NetworkUser & { connection_id: string }>(
-    `select u.email, u.name, u.code, c.id as connection_id from connections c
+    `select u.name, u.code, c.id as connection_id from connections c
      join app_users u on u.id = (case when c.requester_id = $1 then c.receiver_id else c.requester_id end)
      where c.status = 'accepted' and (c.requester_id = $1 or c.receiver_id = $1)`,
     [me.id]
@@ -204,7 +203,6 @@ export async function listFriends(email: string): Promise<FriendsList> {
 
   const incoming = await pool.query<{
     id: string;
-    email: string;
     name: string;
     code: string;
     created_at: string;
@@ -216,7 +214,7 @@ export async function listFriends(email: string): Promise<FriendsList> {
     area_label: string | null;
     has_matching_schedule: boolean;
   }>(
-    `select c.id, u.email, u.name, u.code, c.created_at, c.source, c.proposed_time,
+    `select c.id, u.name, u.code, c.created_at, c.source, c.proposed_time,
             ai.sport, ai.mode, ai.start_time, ai.area_label,
             exists (
               select 1 from activity_intents mine
@@ -232,8 +230,8 @@ export async function listFriends(email: string): Promise<FriendsList> {
     [me.id]
   );
 
-  const outgoing = await pool.query<{ id: string; email: string; name: string; code: string; created_at: string }>(
-    `select c.id, u.email, u.name, u.code, c.created_at from connections c
+  const outgoing = await pool.query<{ id: string; name: string; code: string; created_at: string }>(
+    `select c.id, u.name, u.code, c.created_at from connections c
      join app_users u on u.id = c.receiver_id
      where c.requester_id = $1 and c.status = 'pending'`,
     [me.id]
@@ -247,10 +245,10 @@ export async function listFriends(email: string): Promise<FriendsList> {
   );
 
   return {
-    friends: friends.rows.map((r) => ({ email: r.email, name: r.name, code: r.code, connectionId: r.connection_id })),
+    friends: friends.rows.map((r) => ({ name: r.name, code: r.code, connectionId: r.connection_id })),
     incoming: incoming.rows.map((r) => ({
       id: r.id,
-      from: { email: r.email, name: r.name, code: r.code },
+      from: { name: r.name, code: r.code },
       createdAt: r.created_at,
       source: r.source,
       activity:
@@ -260,7 +258,7 @@ export async function listFriends(email: string): Promise<FriendsList> {
       proposedTime: r.proposed_time,
       hasMatchingSchedule: r.has_matching_schedule,
     })),
-    outgoing: outgoing.rows.map((r) => ({ id: r.id, to: { email: r.email, name: r.name, code: r.code }, createdAt: r.created_at })),
+    outgoing: outgoing.rows.map((r) => ({ id: r.id, to: { name: r.name, code: r.code }, createdAt: r.created_at })),
     totalUnread: Number(unread.rows[0]?.count ?? 0),
   };
 }
@@ -269,7 +267,6 @@ export async function listFriends(email: string): Promise<FriendsList> {
 
 export interface ChatMessage {
   id: string;
-  senderEmail: string;
   type: "text" | "celebration";
   body: string;
   createdAt: string;
@@ -312,7 +309,6 @@ export async function listConversations(email: string): Promise<ConversationSumm
 
   const result = await pool.query<{
     connection_id: string;
-    email: string;
     name: string;
     code: string;
     last_message: string | null;
@@ -321,7 +317,7 @@ export async function listConversations(email: string): Promise<ConversationSumm
   }>(
     `select
        c.id as connection_id,
-       u.email, u.name, u.code,
+       u.name, u.code,
        case when lm.type = 'celebration' then '🎉 Sent a celebration' else lm.body end as last_message,
        lm.created_at as last_message_at,
        (select count(*) from messages um where um.connection_id = c.id and um.sender_id != $1 and um.read_at is null) as unread_count
@@ -337,7 +333,7 @@ export async function listConversations(email: string): Promise<ConversationSumm
 
   return result.rows.map((r) => ({
     connectionId: r.connection_id,
-    with: { email: r.email, name: r.name, code: r.code },
+    with: { name: r.name, code: r.code },
     lastMessage: r.last_message,
     lastMessageAt: r.last_message_at,
     unreadCount: Number(r.unread_count),
@@ -360,15 +356,14 @@ export async function getMessages(connectionId: string, email: string): Promise<
 
   const result = await pool.query<{
     id: string;
-    email: string;
+    sender_id: string;
     type: "text" | "celebration";
     body: string;
     created_at: string;
     expires_at: string | null;
     reaction: string | null;
   }>(
-    `select m.id, u.email, m.type, m.body, m.created_at, m.expires_at, m.reaction from messages m
-     join app_users u on u.id = m.sender_id
+    `select m.id, m.sender_id, m.type, m.body, m.created_at, m.expires_at, m.reaction from messages m
      where m.connection_id = $1
      order by m.created_at asc`,
     [connectionId]
@@ -378,11 +373,10 @@ export async function getMessages(connectionId: string, email: string): Promise<
     ok: true,
     messages: result.rows.map((r) => ({
       id: r.id,
-      senderEmail: r.email,
       type: r.type,
       body: r.body,
       createdAt: r.created_at,
-      mine: r.email === email,
+      mine: r.sender_id === me.id,
       expiresAt: r.expires_at,
       reaction: r.reaction,
     })),
@@ -411,7 +405,6 @@ export async function sendMessage(
     ok: true,
     message: {
       id: inserted.rows[0].id,
-      senderEmail: email,
       type,
       body: body.trim(),
       createdAt: inserted.rows[0].created_at,

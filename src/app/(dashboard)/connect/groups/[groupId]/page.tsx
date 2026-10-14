@@ -91,7 +91,7 @@ export default function GroupChatPage() {
   const meta = group ? sportMeta(group.sport) : null;
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-160px)] max-w-2xl flex-col gap-4">
+    <div className="mx-auto flex h-[calc(100dvh-14rem-env(safe-area-inset-bottom))] min-h-[22rem] max-w-2xl flex-col gap-4 md:h-[calc(100dvh-11rem)]">
       <div className="flex items-center gap-3">
         <button onClick={() => router.push("/connect/messages")} className="text-muted hover:text-foreground">
           ← Back
@@ -117,7 +117,7 @@ export default function GroupChatPage() {
       {notice && <p className="text-xs text-muted">{notice}</p>}
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <div ref={listRef} className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-4">
+      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-4">
         {chat === null ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : chat.messages.length === 0 ? (
@@ -127,7 +127,7 @@ export default function GroupChatPage() {
             <div key={m.id} className={`flex flex-col ${m.mine ? "items-end" : "items-start"}`}>
               {!m.mine && <span className="mb-0.5 text-[11px] text-muted">{m.senderName}</span>}
               <div
-                className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm ${
+                className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm [overflow-wrap:anywhere] ${
                   m.mine ? "bg-accent text-black" : "bg-surface-2 text-foreground"
                 }`}
               >
@@ -149,12 +149,13 @@ export default function GroupChatPage() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Message the group…"
-          className="flex-1 rounded-full border border-border bg-surface-2 px-4 py-2.5 text-sm text-foreground outline-none focus:border-accent"
+          maxLength={2000}
+          className="min-w-0 flex-1 rounded-full border border-border bg-surface-2 px-4 py-2.5 text-base text-foreground outline-none focus:border-accent md:text-sm"
         />
         <button
           type="submit"
           disabled={!draft.trim() || sending || !chat}
-          className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
+          className="shrink-0 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
         >
           Send
         </button>

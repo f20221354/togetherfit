@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { registerUserScopedStore, userScopedStorage } from "./userScopedStorage";
 import { NUDGE_CONFIG, NudgeKind, NudgeState } from "@/lib/camera/postureNudges";
 
 export type CameraPermissionState =
@@ -135,6 +136,7 @@ export const useCameraStore = create<CameraState>()(
     }),
     {
       name: "vitaos-camera-store",
+      storage: userScopedStorage,
       version: 1,
       // v0 used a 3-minute one-off cooldown; reminders now repeat, so move the old default to 1 minute.
       migrate: (persisted, version) => {
@@ -154,3 +156,5 @@ export const useCameraStore = create<CameraState>()(
     }
   )
 );
+
+registerUserScopedStore(useCameraStore);

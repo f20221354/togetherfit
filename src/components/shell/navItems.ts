@@ -25,8 +25,11 @@ export const PERSONAL_NAV_ITEMS: NavItem[] = NAV_ITEMS.filter(
   (item) => item.key !== "connect" && item.key !== "move"
 );
 
-/** Single shared config — desktop Sidebar and the mobile drawer both render from these, never a second list. */
+/** Single shared config — the desktop Sidebar and the mobile BottomTabBar both render from these, never a second list. */
 export const OVERVIEW_ITEM: NavItem = { key: "overview", label: "Overview", shortLabel: "Home", href: "/", icon: "🏠" };
-export const PROFILE_ITEM: NavItem = { key: "profile", label: "My Profile", shortLabel: "Profile", href: "/connect/my-profile", icon: "🎯" };
 export const ACTION_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.key === "connect" || item.key === "move");
 export const WELLNESS_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.key !== "connect" && item.key !== "move");
+
+/** Mobile bottom tab bar. "Personal" also covers the wellness modules and Settings. */
+export const PERSONAL_TAB: NavItem = { key: "personal", label: "Personal", shortLabel: "Personal", href: "/personal", icon: "👤" };
+export const PERSONAL_TAB_PATHS = ["/personal", "/settings", ...PERSONAL_NAV_ITEMS.map((item) => item.href)];

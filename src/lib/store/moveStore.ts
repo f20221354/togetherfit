@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { registerUserScopedStore, userScopedStorage } from "./userScopedStorage";
 import { Goal, GoalType, WorkoutExercise, WorkoutSession } from "@/lib/move/types";
 import { getExerciseBySlug } from "@/lib/move/exercises";
 
@@ -40,7 +41,6 @@ interface MoveState {
   appendCoachReply: (text: string, workoutTemplateId?: string) => void;
 
   addMovementMinutes: (minutes: number) => void;
-  seedDemoWorkouts: () => void;
 }
 
 const DEFAULT_GOALS: Goal[] = [
@@ -154,22 +154,8 @@ export const useMoveStore = create<MoveState>()(
 
       addMovementMinutes: (minutes) =>
         set((state) => ({ todayMovedMinutes: state.todayMovedMinutes + minutes })),
-
-      seedDemoWorkouts: () => {
-        set((state) => {
-          if (state.workoutHistory.length > 0) return state;
-          const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
-          return {
-            workoutHistory: [
-              { id: makeId("workout"), timestamp: daysAgo(0), templateId: "full-body-25", templateName: "Full Body", durationMinutes: 25, exerciseCount: 5, setCount: 13, completed: true },
-              { id: makeId("workout"), timestamp: daysAgo(2), templateId: "lower-body-20", templateName: "Lower Body", durationMinutes: 20, exerciseCount: 4, setCount: 12, completed: true },
-              { id: makeId("workout"), timestamp: daysAgo(4), templateId: "core-15", templateName: "Core Focus", durationMinutes: 15, exerciseCount: 3, setCount: 9, completed: true },
-            ],
-          };
-        });
-      },
     }),
-    { name: "vitaos-move-store" }
+    { name: "vitaos-move-store", storage: userScopedStorage }
   )
 );
 
@@ -183,3 +169,5 @@ export const GOAL_TYPE_LABELS: Record<GoalType, string> = {
   mobility: "Mobility",
   custom: "Custom",
 };
+
+registerUserScopedStore(useMoveStore);

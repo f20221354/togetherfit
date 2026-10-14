@@ -65,7 +65,7 @@ export default function CircadianPage() {
               Start Sunlight Walk
             </Link>
             <Link
-              href="/connect/discover?activity=walking"
+              href="/connect/find?sport=walking"
               className="rounded-full border border-accent/40 px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/10"
             >
               Find Walking Partner

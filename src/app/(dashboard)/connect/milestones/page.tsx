@@ -68,15 +68,15 @@ export default function MilestonesPage() {
       {error && <p className="text-sm text-danger">{error}</p>}
 
       {overview && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {[
             { label: "Activities", value: overview.progress.total },
             { label: "Day streak", value: overview.progress.streak },
             { label: "Group sessions", value: overview.progress.group },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-border bg-surface p-4 text-center">
-              <div className="text-2xl font-bold text-foreground">{s.value}</div>
-              <div className="text-xs text-muted">{s.label}</div>
+            <div key={s.label} className="rounded-2xl border border-border bg-surface px-2 py-3 text-center sm:p-4">
+              <div className="text-xl font-bold text-foreground sm:text-2xl">{s.value}</div>
+              <div className="text-[11px] leading-tight text-muted sm:text-xs">{s.label}</div>
             </div>
           ))}
         </div>

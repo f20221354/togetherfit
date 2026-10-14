@@ -64,6 +64,13 @@ takes the user from the session (`requireUser`), never from the request.
 Auth, chat, friend requests, the AI coach and analytics are rate-limited
 (Postgres-backed, so limits hold across instances).
 
+Privacy: other members only ever see your name and friend code, never your
+email. Workouts, wellness and breathing data stay in the browser, stored
+separately per account. **Settings → Your Data** downloads everything we hold
+(`/api/account/export`) or permanently deletes the account
+(`/api/account/delete`, password required). The Privacy Policy and Terms are
+at `/privacy` and `/terms`.
+
 Environment variables:
 
 | Variable | Required | Purpose |

@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { switchStorageUser } from "@/lib/store/userScopedStorage";
 
 /**
  * Client view of the server session. The session itself lives in an
@@ -34,6 +35,12 @@ interface AuthState {
 
 let inflight: Promise<CurrentUser | null> | null = null;
 
+/** Local stores follow the signed-in account; switched before the new user is rendered. */
+function withUser(user: CurrentUser | null) {
+  switchStorageUser(user?.id ?? null);
+  return { user, loaded: true };
+}
+
 export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   loaded: false,
@@ -42,7 +49,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     inflight ??= fetch("/api/auth/me", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : { user: null }))
       .then((data: { user: CurrentUser | null }) => {
-        set({ user: data.user ?? null, loaded: true });
+        set(withUser(data.user ?? null));
         return data.user ?? null;
       })
       .catch(() => {
@@ -55,11 +62,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     return inflight;
   },
 
-  setUser: (user) => set({ user, loaded: true }),
+  setUser: (user) => set(withUser(user)),
 
   logOut: async () => {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-    set({ user: null, loaded: true });
+    set(withUser(null));
   },
 
   completeOnboarding: async (prefs, cameraAllowed) => {

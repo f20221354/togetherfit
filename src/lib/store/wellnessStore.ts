@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { registerUserScopedStore, userScopedStorage } from "./userScopedStorage";
 import { EventType, Habits, ModuleKey, ScoreKey, WellnessEvent } from "../types";
 import { applyScoreDelta, computeGlobalScore } from "../scoring";
 
@@ -187,7 +188,6 @@ interface WellnessState {
   scoreHistory: { time: string; score: number }[];
   events: WellnessEvent[];
   habits: Habits;
-  demoMode: boolean;
   dateRange: "today" | "7d" | "30d";
 
   roomBrightness: number; // 0-100, driven by wellness score
@@ -208,7 +208,6 @@ interface WellnessState {
   stretchTarget: number;
 
   logEvent: (type: EventType, extra?: { duration?: number }) => void;
-  toggleDemoMode: () => void;
   setDateRange: (range: "today" | "7d" | "30d") => void;
   toggleHabit: (habit: keyof Habits) => void;
   setHydrationGlasses: (glasses: number) => void;
@@ -242,7 +241,6 @@ export const useWellnessStore = create<WellnessState>()(
       scoreHistory: [{ time: new Date().toISOString(), score: computeGlobalScore(INITIAL_SCORES) }],
       events: [],
       habits: INITIAL_HABITS,
-      demoMode: false,
       dateRange: "today",
 
       roomBrightness: 70,
@@ -321,7 +319,6 @@ export const useWellnessStore = create<WellnessState>()(
         });
       },
 
-      toggleDemoMode: () => set((state) => ({ demoMode: !state.demoMode })),
       setDateRange: (range) => set({ dateRange: range }),
       toggleHabit: (habit) =>
         set((state) => ({ habits: { ...state.habits, [habit]: !state.habits[habit] } })),
@@ -369,10 +366,10 @@ export const useWellnessStore = create<WellnessState>()(
     }),
     {
       name: "vitaos-wellness-store",
+      storage: userScopedStorage,
       partialize: (state) => {
         const {
           logEvent,
-          toggleDemoMode,
           setDateRange,
           toggleHabit,
           setHydrationGlasses,
@@ -382,7 +379,6 @@ export const useWellnessStore = create<WellnessState>()(
           ...rest
         } = state;
         void logEvent;
-        void toggleDemoMode;
         void setDateRange;
         void toggleHabit;
         void setHydrationGlasses;
@@ -412,3 +408,5 @@ export const MODULE_ROUTES: Record<ModuleKey, string> = {
   move: "/move",
   connect: "/connect",
 };
+
+registerUserScopedStore(useWellnessStore);

@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { registerUserScopedStore, userScopedStorage } from "./userScopedStorage";
 import { BreathingPattern, SavedPattern, SessionHistoryEntry } from "@/lib/breathing/types";
 import { DEFAULT_PATTERN, DEFAULT_SESSION_DURATION } from "@/lib/breathing/presets";
 
@@ -62,6 +63,8 @@ export const useBreathingStore = create<BreathingState>()(
       setSoundEnabled: (soundEnabled) => set({ soundEnabled }),
       setHapticsEnabled: (hapticsEnabled) => set({ hapticsEnabled }),
     }),
-    { name: "vitaos-breathing-store" }
+    { name: "vitaos-breathing-store", storage: userScopedStorage }
   )
 );
+
+registerUserScopedStore(useBreathingStore);

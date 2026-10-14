@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,11 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">{children}</div>
+        <p className="mt-6 text-center text-xs text-muted">
+          <Link href="/privacy" className="hover:text-foreground hover:underline">Privacy</Link>
+          {" · "}
+          <Link href="/terms" className="hover:text-foreground hover:underline">Terms</Link>
+        </p>
       </div>
     </div>
   );

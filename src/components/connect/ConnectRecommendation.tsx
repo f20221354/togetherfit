@@ -13,7 +13,7 @@ export function ConnectRecommendation() {
   if (sunlightExposureMinutes < 15) {
     suggestion = {
       text: "Your sunlight exposure is low today.",
-      activity: "sunlightWalk",
+      activity: "walking",
       cta: "Find someone for a 15-minute sunlight walk?",
     };
   } else if (scores.movement < 65) {
@@ -39,7 +39,7 @@ export function ConnectRecommendation() {
         <div className="text-xs text-muted">{suggestion.cta}</div>
       </div>
       <button
-        onClick={() => router.push(`/connect/discover?activity=${suggestion!.activity}`)}
+        onClick={() => router.push(`/connect/find?sport=${suggestion!.activity}`)}
         className="shrink-0 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/25"
       >
         🤝 Find Partner

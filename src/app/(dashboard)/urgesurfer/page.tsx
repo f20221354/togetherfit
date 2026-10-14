@@ -279,7 +279,7 @@ export default function UrgeSurferPage() {
               <div className="flex flex-col items-center gap-4 text-center">
                 <span className="text-4xl">🥁</span>
                 <h3 className="text-lg font-semibold text-foreground">Rhythm Complete</h3>
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid w-full max-w-xs grid-cols-3 gap-2 text-center sm:gap-4">
                   <div>
                     <div className="text-lg font-semibold text-foreground">{rhythmResult.duration}s</div>
                     <div className="text-xs text-muted">Duration</div>
@@ -360,7 +360,7 @@ export default function UrgeSurferPage() {
                   onClick={() => selectMode(mode.key)}
                   aria-pressed={resetMode === mode.key}
                   className={clsx(
-                    "flex flex-col items-center gap-1 rounded-xl p-3 text-xs font-medium transition-colors",
+                    "flex flex-col items-center gap-1 rounded-xl p-2 text-center text-xs font-medium leading-tight transition-colors sm:p-3",
                     resetMode === mode.key
                       ? "bg-accent/15 text-accent-foreground ring-1 ring-accent/40"
                       : "bg-surface-2 text-foreground hover:bg-border"
@@ -434,18 +434,18 @@ export default function UrgeSurferPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-surface p-5 text-center">
+      <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border bg-surface p-4 text-center sm:gap-3 sm:p-5">
         <div>
-          <div className="text-xl font-semibold text-foreground">{urgeSurferResetsToday}</div>
-          <div className="text-xs text-muted">Resets</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{urgeSurferResetsToday}</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Resets</div>
         </div>
         <div>
-          <div className="text-xl font-semibold text-foreground">{totalMinutesToday}m</div>
-          <div className="text-xs text-muted">Total</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{totalMinutesToday}m</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Total</div>
         </div>
         <div>
-          <div className="text-xl font-semibold text-foreground">{streak}</div>
-          <div className="text-xs text-muted">Day Streak</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{streak}</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Day Streak</div>
         </div>
       </div>
 

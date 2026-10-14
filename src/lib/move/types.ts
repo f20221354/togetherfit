@@ -76,35 +76,3 @@ export interface WorkoutSession {
   setCount: number;
   completed: boolean;
 }
-
-export type TrainerFormat = "online" | "in-person" | "both";
-
-export interface Trainer {
-  id: string;
-  name: string;
-  avatar: string;
-  title: string;
-  specialties: string[];
-  experienceYears: number;
-  rating: number;
-  format: TrainerFormat;
-  availability: string;
-  languages: string[];
-  pricePerSession: number;
-  bio: string;
-  isDemo: true;
-}
-
-export type TrainerSessionStatus = "requested" | "confirmed" | "completed" | "declined";
-
-export interface TrainerSessionRequest {
-  id: string;
-  trainerId: string;
-  date: string;
-  time: string;
-  format: "online" | "in-person";
-  goal: string;
-  status: TrainerSessionStatus;
-  conversationId: string;
-  createdAt: string;
-}

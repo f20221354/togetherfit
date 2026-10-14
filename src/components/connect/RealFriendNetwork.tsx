@@ -7,7 +7,6 @@ import { useCurrentUser } from "@/lib/auth/authStore";
 import { IncomingRequestActions, IncomingRequestView } from "./IncomingRequestActions";
 
 interface NetworkUser {
-  email: string;
   name: string;
   code: string;
 }
@@ -190,7 +189,7 @@ export function RealFriendNetwork() {
           <div className="flex flex-wrap gap-2">
             {list.friends.map((f) => (
               <Link
-                key={f.email}
+                key={f.code}
                 href={`/connect/messages/${f.connectionId}`}
                 className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
               >

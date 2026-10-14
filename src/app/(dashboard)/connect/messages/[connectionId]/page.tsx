@@ -11,7 +11,6 @@ import { CelebrationCardView } from "@/components/connect/CelebrationCardView";
 
 interface ChatMessage {
   id: string;
-  senderEmail: string;
   type: "text" | "celebration";
   body: string;
   createdAt: string;
@@ -148,7 +147,7 @@ export default function ConnectionChatPage() {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-160px)] max-w-2xl flex-col gap-4">
+    <div className="mx-auto flex h-[calc(100dvh-14rem-env(safe-area-inset-bottom))] min-h-[22rem] max-w-2xl flex-col gap-4 md:h-[calc(100dvh-11rem)]">
       <div className="flex items-center gap-3">
         <button onClick={() => router.push("/connect/messages")} className="text-muted hover:text-foreground">
           ← Back
@@ -194,7 +193,7 @@ export default function ConnectionChatPage() {
         {notice && <p className="text-xs text-muted">{notice}</p>}
       </div>
 
-      <div ref={listRef} className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-4">
+      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-4">
         {messages === null ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : messages.length === 0 ? (
@@ -206,7 +205,7 @@ export default function ConnectionChatPage() {
                 renderCelebration(m)
               ) : (
                 <div
-                  className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm ${
+                  className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm [overflow-wrap:anywhere] ${
                     m.mine ? "bg-accent text-black" : "bg-surface-2 text-foreground"
                   }`}
                 >
@@ -229,12 +228,13 @@ export default function ConnectionChatPage() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Type a message…"
-          className="flex-1 rounded-full border border-border bg-surface-2 px-4 py-2.5 text-sm text-foreground outline-none focus:border-accent"
+          maxLength={2000}
+          className="min-w-0 flex-1 rounded-full border border-border bg-surface-2 px-4 py-2.5 text-base text-foreground outline-none focus:border-accent md:text-sm"
         />
         <button
           type="submit"
           disabled={!draft.trim() || sending}
-          className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
+          className="shrink-0 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
         >
           Send
         </button>

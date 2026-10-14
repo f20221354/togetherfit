@@ -1,7 +1,7 @@
 "use client";
 
 import { useWellnessStore } from "@/lib/store/wellnessStore";
-import { useConnectStore } from "@/lib/store/connectStore";
+import { useFriendCount } from "@/lib/network/useUnreadCount";
 import { useMoveStore } from "@/lib/store/moveStore";
 import { ModuleStatusCard } from "./ModuleStatusCard";
 
@@ -12,9 +12,7 @@ export function ModuleOverview() {
   const urgeSurferResetsToday = useWellnessStore((s) => s.urgeSurferResetsToday);
   const lastResetMinutesAgo = useWellnessStore((s) => s.lastResetMinutesAgo);
   const circadianMorningLightDone = useWellnessStore((s) => s.circadianMorningLightDone);
-  const connections = useConnectStore((s) => s.connections);
-  const plans = useConnectStore((s) => s.plans);
-  const upcomingPlans = plans.filter((p) => p.status === "upcoming").length;
+  const friendCount = useFriendCount();
   const goals = useMoveStore((s) => s.goals);
   const workoutHistory = useMoveStore((s) => s.workoutHistory);
 
@@ -27,9 +25,9 @@ export function ModuleOverview() {
       <ModuleStatusCard
         icon="🤝"
         title="Connect"
-        metricLabel="Connections"
-        metricValue={connections.length}
-        detail={upcomingPlans > 0 ? `${upcomingPlans} upcoming` : "Find a partner"}
+        metricLabel="Friends"
+        metricValue={friendCount}
+        detail="Find a partner"
         href="/connect"
       />
       <ModuleStatusCard

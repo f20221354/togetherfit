@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import clsx from "clsx";
@@ -8,6 +9,7 @@ import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
 import { useCameraStore } from "@/lib/store/cameraStore";
 import { usePreferencesStore } from "@/lib/store/preferencesStore";
 import { useIsClient } from "@/lib/useIsClient";
+import { AccountDataSection } from "@/components/settings/AccountDataSection";
 
 function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -68,7 +70,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="⚙️" title="Settings" subtitle="Account, privacy, notifications and appearance." />
+      <PageHeader icon="⚙️" title="Settings" subtitle="Account, your data, privacy, notifications and appearance." />
 
       <SettingsSection title="Account">
         <div className="flex flex-col gap-1 text-sm">
@@ -77,15 +79,14 @@ export default function SettingsPage() {
         </div>
         <div className="flex flex-col gap-1 text-sm">
           <span className="text-muted">Email</span>
-          <span className="text-foreground">{user?.email ?? "—"}</span>
+          <span className="break-all text-foreground">{user?.email ?? "—"}</span>
+        </div>
+        <div className="flex flex-col gap-1 text-sm">
+          <span className="text-muted">Friend code</span>
+          <span className="font-mono text-foreground">{user?.code ?? "—"}</span>
+          <span className="text-xs text-muted">Share this so friends can add you. Your email is never shown to other people.</span>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => router.push("/personal")}
-            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
-          >
-            👤 My Profile &amp; Modules
-          </button>
           <button
             onClick={async () => {
               await logOut();
@@ -97,6 +98,8 @@ export default function SettingsPage() {
           </button>
         </div>
       </SettingsSection>
+
+      <AccountDataSection />
 
       <SettingsSection title="Camera & Privacy">
         <div className="grid grid-cols-2 gap-3 text-sm">
@@ -177,6 +180,12 @@ export default function SettingsPage() {
           ))}
         </div>
       </SettingsSection>
+
+      <p className="text-center text-xs text-muted">
+        <Link href="/privacy" className="hover:text-foreground hover:underline">Privacy Policy</Link>
+        {" · "}
+        <Link href="/terms" className="hover:text-foreground hover:underline">Terms of Service</Link>
+      </p>
     </div>
   );
 }

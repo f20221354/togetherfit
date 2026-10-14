@@ -10,6 +10,7 @@ import { PasswordField } from "@/components/ui/PasswordField";
 import { CurrentUser, useAuthStore } from "@/lib/auth/authStore";
 import { authPost } from "@/lib/auth/authApi";
 import { isValidEmail } from "@/lib/auth/validation";
+import { useIsClient } from "@/lib/useIsClient";
 
 /** Where to go after signing in: the page the user was sent away from, if it's one of ours. */
 function nextPath(user: CurrentUser): string {
@@ -29,6 +30,8 @@ export default function LoginPage() {
   const [formError, setFormError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [challengeId, setChallengeId] = useState<string | null>(null);
+  const isClient = useIsClient();
+  const accountDeleted = isClient && new URLSearchParams(window.location.search).has("deleted");
 
   // Already signed in (e.g. opened /login in a new tab) → skip the form.
   useEffect(() => {
@@ -82,6 +85,11 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+        {accountDeleted && (
+          <div role="status" className="rounded-lg bg-surface-2 px-3 py-2 text-xs text-foreground">
+            Your account and its data have been deleted.
+          </div>
+        )}
         <TextField
           label="Email Address"
           type="email"

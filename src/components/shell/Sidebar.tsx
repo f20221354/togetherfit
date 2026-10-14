@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
-import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS, PROFILE_ITEM } from "./navItems";
+import { OVERVIEW_ITEM, ACTION_ITEMS, WELLNESS_ITEMS } from "./navItems";
 import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
 import { useUnreadConnectionsCount } from "@/lib/network/useUnreadCount";
 import { TogetherfitLogo } from "@/components/brand/TogetherfitLogo";
@@ -81,12 +81,6 @@ export function Sidebar() {
       </nav>
 
       <div className="flex flex-col gap-1 border-t border-border pt-3">
-        <NavLink
-          href={PROFILE_ITEM.href}
-          icon={PROFILE_ITEM.icon}
-          label={PROFILE_ITEM.label}
-          active={pathname.startsWith(PROFILE_ITEM.href)}
-        />
         <NavLink href="/settings" icon="⚙️" label="Settings" active={pathname === "/settings"} />
         {user && (
           <button

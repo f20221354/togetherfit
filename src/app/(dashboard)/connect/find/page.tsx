@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { AreaPicker, AreaPoint } from "@/components/connect/AreaPicker";
-import { SPORTS, sportMeta } from "@/lib/connect/sports";
+import { SPORTS, SPORT_KEYS, sportMeta } from "@/lib/connect/sports";
 import { useCurrentUser } from "@/lib/auth/authStore";
 
 const RADIUS_OPTIONS = [1, 2, 5, 10, 25];
@@ -15,6 +15,13 @@ const STEPS = ["Area", "When", "Activity"] as const;
 function toLocalInput(d: Date): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** Links like /connect/find?sport=walking preselect the activity. Rendered client-only behind AuthGuard. */
+function sportFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const sport = new URLSearchParams(window.location.search).get("sport");
+  return sport && SPORT_KEYS.has(sport) ? sport : null;
 }
 
 function defaultScheduleTime(): string {
@@ -32,7 +39,7 @@ export default function FindAFriendPage() {
   const [radiusKm, setRadiusKm] = useState(5);
   const [mode, setMode] = useState<"now" | "scheduled">("now");
   const [scheduledFor, setScheduledFor] = useState(defaultScheduleTime);
-  const [sport, setSport] = useState<string | null>(null);
+  const [sport, setSport] = useState<string | null>(sportFromUrl);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<{ intentId: string; sport: string; mode: string } | null>(null);
@@ -66,8 +73,6 @@ export default function FindAFriendPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
-          name: user.name,
           sport,
           lat: area.lat,
           lng: area.lng,

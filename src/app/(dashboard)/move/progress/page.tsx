@@ -38,18 +38,18 @@ export default function ProgressPage() {
     <div className="flex flex-col gap-6">
       <PageHeader icon="📈" title="My Progress" subtitle="Weekly activity, consistency, and goal completion." />
 
-      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-surface p-5 text-center">
+      <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border bg-surface p-4 text-center sm:gap-3 sm:p-5">
         <div>
-          <div className="text-xl font-semibold text-foreground">{weekSessions.length}</div>
-          <div className="text-xs text-muted">Workouts this week</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{weekSessions.length}</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Workouts this week</div>
         </div>
         <div>
-          <div className="text-xl font-semibold text-foreground">{weekWorkoutMinutes}m</div>
-          <div className="text-xs text-muted">Workout duration</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{weekWorkoutMinutes}m</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Workout duration</div>
         </div>
         <div>
-          <div className="text-xl font-semibold text-foreground">{streak}</div>
-          <div className="text-xs text-muted">Day streak</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{streak}</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Day streak</div>
         </div>
       </div>
 
