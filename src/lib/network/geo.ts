@@ -48,6 +48,26 @@ export function geohash(lat: number, lng: number, precision = 6): string {
 }
 
 /** Distances shown to other users are rounded to 0.5 km so nobody can be pinpointed. */
+/**
+ * Distance shown to other people, in coarse bands so repeated searches can't
+ * be combined to narrow down where someone is: under 1 km, then whole km up
+ * to 5, then steps of 5 km.
+ */
 export function approxDistanceKm(km: number): number {
-  return Math.max(0.5, Math.round(km * 2) / 2);
+  if (km < 1) return 1;
+  if (km < 5) return Math.ceil(km);
+  return Math.ceil(km / 5) * 5;
+}
+
+/**
+ * Moves a (already grid-rounded) search location by a random distance of up
+ * to `maxMeters`, fresh for every search, so the stored point isn't the
+ * user's exact grid cell either.
+ */
+export function jitter(lat: number, lng: number, maxMeters = 250): { lat: number; lng: number } {
+  const r = maxMeters * Math.sqrt(Math.random());
+  const theta = Math.random() * 2 * Math.PI;
+  const dLat = (r * Math.cos(theta)) / 111_320;
+  const dLng = (r * Math.sin(theta)) / (111_320 * Math.cos((lat * Math.PI) / 180) || 1);
+  return { lat: Number((lat + dLat).toFixed(4)), lng: Number((lng + dLng).toFixed(4)) };
 }

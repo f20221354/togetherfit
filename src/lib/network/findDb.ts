@@ -1,6 +1,6 @@
 import { getPool } from "@/lib/db";
 import { SPORT_KEYS } from "@/lib/connect/sports";
-import { approxDistanceKm, coarsen, geohash } from "./geo";
+import { approxDistanceKm, coarsen, geohash, jitter } from "./geo";
 import { mutualMatchSql } from "@/lib/trust/matching";
 import { evaluateAfterReport } from "@/lib/safety/restrictions";
 import {
@@ -77,8 +77,9 @@ export async function createIntent(email: string, name: string, input: IntentInp
   const me = await getUserRowByEmail(email);
   if (!me) return { ok: false, error: "Account not found" };
 
-  // Never trust the client to have rounded: coarsen again before storing.
-  const { lat, lng } = coarsen(input.lat, input.lng);
+  // Never trust the client to have rounded: coarsen again, then offset randomly for this search.
+  const rounded = coarsen(input.lat, input.lng);
+  const { lat, lng } = jitter(rounded.lat, rounded.lng);
   const pool = getPool();
 
   // One live search per person keeps matching simple and prevents duplicate cards.

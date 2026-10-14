@@ -61,7 +61,7 @@ const POLL_MS = 5_000;
 const HEARTBEAT_MS = 30_000;
 
 function distanceLabel(km: number): string {
-  return km <= 0.5 ? "< 1 km away" : `~${km} km away`;
+  return km <= 1 ? "Under 1 km away" : `About ${km} km away`;
 }
 
 /** Stable pseudo-random angle per user, so dots don't jump around between polls. */

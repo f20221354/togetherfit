@@ -140,17 +140,21 @@ Environment variables:
 | `SES_REGION` | in production (or SMTP) | AWS region where the sending domain is verified in Amazon SES, e.g. `ap-south-1`. With neither SES nor SMTP set in development, emails are printed to the server console |
 | `EMAIL_FROM` | with SES | Sender, e.g. `togetherfit <no-reply@yourdomain.com>` (a verified SES identity). Optional with SMTP |
 | `SMTP_USER` / `SMTP_PASS` | in production (or SES) | Interim email before SES: for Gmail, the address and an app password. Used only when SES isn't configured |
-| `SMTP_HOST` / `SMTP_PORT` | no | Defaults to `smtp.gmail.com` / `465` |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` | no | Defaults to `smtp.gmail.com` / `465` with implicit TLS; `SMTP_SECURE=true\|false` for other ports |
 | `SES_ACCESS_KEY_ID` / `SES_SECRET_ACCESS_KEY` | when not on AWS | IAM user with only `ses:SendEmail`. Omit when the app runs on AWS with an IAM role |
 | `SES_CONFIGURATION_SET` | no | SES configuration set, for bounce/complaint tracking |
-| `DATABASE_SSL` | no | `false` for a local database without SSL |
+| `DATABASE_SSL` | no | TLS is verified by default. `false` for a local database without TLS; `no-verify` to skip the certificate check (not recommended) |
+| `DATABASE_CA_CERT` | no | PEM of your database provider's CA, if it doesn't use a publicly trusted certificate |
+| `CAPTCHA` | in production | `turnstile` turns on the bot check for sign-up and password reset |
+| `TURNSTILE_SECRET_KEY` / `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | with `CAPTCHA=turnstile` | Cloudflare Turnstile keys (free). The site key is read at build time |
+| `TRUSTED_PROXY_HOPS` | when self-hosting | Number of proxies in front of the app that append to `X-Forwarded-For` (default `1`). Used for rate limiting |
+| `CLIENT_IP_HEADER` | no | A header your proxy sets with the client IP (e.g. `cf-connecting-ip`), used instead of `X-Forwarded-For` |
 | `VERIFICATION` | no | Selfie verification and photo checks: `mock` (default) or `off`. **`mock` badges are not real — switch to a real provider before launch** |
 | `MOCK_VERIFICATION_OUTCOME` | no | With `VERIFICATION=mock`: `pass` (default), `unsure` or `fail`, to test each path |
 | `REALTIME` | no | How chat updates are delivered: `poll` (default) or `ably`. See [Friend chat](#friend-chat) |
 | `ABLY_API_KEY` | with `REALTIME=ably` | Ably API key; check it with `npm run realtime:test` |
 | `CRON_SECRET` | in production | Protects `/api/cron/cleanup-messages`; Vercel Cron sends it automatically (see `vercel.json`) |
-| `GROQ_API_KEY` | no | AI Coach answers |
-| `WINTER_ARC_ADMIN_KEY` | no | Unlocks `/admin/winter-arc` |
+| `GROQ_API_KEY` | no | AI Coach answers. Crisis and emergency messages never reach the model (`src/lib/move/coachSafety.ts`) |
 
 Check the email setup on its own with `npm run email:test -- you@example.com`.
 
@@ -162,3 +166,9 @@ use **Forgot password** to set one (proving the email with a code).
 ```bash
 npm install
 npm run dev
+
+## Tests
+
+- `npm test`: unit tests (scoring, distance privacy, client IP, AI coach safety).
+- `npm run test:api`: API tests against a running production build, using
+  real email codes through a fake mail server. See `tests/README.md`.

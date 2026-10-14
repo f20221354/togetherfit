@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SESSION_COOKIE = "tf_session";
-const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/privacy", "/terms", "/admin"];
+const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/privacy", "/terms"];
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 /**

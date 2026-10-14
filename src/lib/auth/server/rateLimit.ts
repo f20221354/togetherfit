@@ -24,10 +24,24 @@ export async function hit(key: string, limit: number, windowSeconds: number): Pr
   return { ok: row.count <= limit, retryAfter: row.retry_after };
 }
 
+/**
+ * The client's IP, for rate limiting. Anyone can send their own
+ * X-Forwarded-For, so we never trust its first entry: each trusted proxy
+ * appends the address it saw, so the real client is TRUSTED_PROXY_HOPS
+ * entries from the right (default 1: one proxy, e.g. Vercel, Caddy or Nginx).
+ * CLIENT_IP_HEADER can name a header your proxy sets on its own instead
+ * (e.g. "cf-connecting-ip" behind Cloudflare, or "x-real-ip").
+ */
 export function clientIp(req: NextRequest): string {
-  // The first X-Forwarded-For entry is the client when the app sits behind
-  // one trusted proxy/load balancer (Vercel, Nginx, a cloud LB).
-  return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || "unknown";
+  const custom = process.env.CLIENT_IP_HEADER?.toLowerCase();
+  if (custom) return req.headers.get(custom)?.trim() || "unknown";
+  const hops = Math.max(1, Number(process.env.TRUSTED_PROXY_HOPS ?? 1) || 1);
+  const chain = (req.headers.get("x-forwarded-for") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (chain.length > 0) return chain[Math.max(0, chain.length - hops)];
+  return req.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
 export interface Limit {

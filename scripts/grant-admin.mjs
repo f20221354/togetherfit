@@ -25,7 +25,13 @@ if (!email || !process.env.DATABASE_URL) {
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
+  // Same rules as src/lib/db.ts: verified TLS unless DATABASE_SSL=false (local) or no-verify.
+  ssl:
+    process.env.DATABASE_SSL === "false"
+      ? false
+      : process.env.DATABASE_SSL === "no-verify"
+        ? { rejectUnauthorized: false }
+        : { rejectUnauthorized: true, ...(process.env.DATABASE_CA_CERT ? { ca: process.env.DATABASE_CA_CERT.replace(/\\n/g, "\n") } : {}) },
 });
 const result = await pool.query("update app_users set role = $2 where email = $1 returning name", [email, revoke ? "user" : "admin"]);
 await pool.end();

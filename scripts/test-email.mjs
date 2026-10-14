@@ -30,11 +30,12 @@ if (!(SES_REGION && EMAIL_FROM)) {
     process.exit(1);
   }
   const port = Number(SMTP_PORT ?? 465);
+  const secure = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465;
   const transport = nodemailer.createTransport({
     host: SMTP_HOST ?? "smtp.gmail.com",
     port,
-    secure: port === 465,
-    requireTLS: port !== 465,
+    secure,
+    requireTLS: !secure,
     auth: { user: SMTP_USER, pass: SMTP_PASS.replace(/\s+/g, "") },
   });
   try {
