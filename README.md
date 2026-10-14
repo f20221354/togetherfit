@@ -71,6 +71,29 @@ separately per account. **Settings → Your Data** downloads everything we hold
 (`/api/account/delete`, password required). The Privacy Policy and Terms are
 at `/privacy` and `/terms`.
 
+## Trust & safety
+
+- **Profile photos** (Settings → Profile, or onboarding): cropped in the
+  browser, then re-encoded on the server with `sharp`, which strips EXIF data
+  such as GPS location. Stored in Postgres (`profile_photos`, ~30 KB each).
+  Served only through `/api/photos/<id>`, which checks on every request that
+  the viewer is the owner, an accepted friend, or someone who can see them on
+  Find a Friend *and* the owner turned on "show my photo on Find a Friend".
+- **Gender (optional) and comfort preferences**: Anyone / Women only / Men
+  only, plus "only match verified people". Matching is **mutual**: both
+  people's preferences must fit each other (`src/lib/trust/matching.ts`),
+  enforced in the radar query and when sending a radar request. Gender is
+  never shown to others and can change once every 30 days.
+- **Verification (✓ badge)**: a live selfie compared automatically with the
+  profile photo. Clear passes are verified, clear fails rejected, unsure
+  results ask to retry; 3 tries a day. Only scores and the decision are
+  stored. Changing your photo removes the badge. Provider set by
+  `VERIFICATION`: `mock` (default, for development/UAT), `off`, and later
+  `aws` (Amazon Rekognition).
+- **Moderation** (`/moderation`, admins only): open reports (with categories)
+  and people stuck in verification. Make someone an admin with
+  `npm run admin:grant -- their@email.com`.
+
 ## Friend chat
 
 Postgres holds every message. Opening a chat loads the newest 50; older ones
@@ -111,6 +134,8 @@ Environment variables:
 | `SES_ACCESS_KEY_ID` / `SES_SECRET_ACCESS_KEY` | when not on AWS | IAM user with only `ses:SendEmail`. Omit when the app runs on AWS with an IAM role |
 | `SES_CONFIGURATION_SET` | no | SES configuration set, for bounce/complaint tracking |
 | `DATABASE_SSL` | no | `false` for a local database without SSL |
+| `VERIFICATION` | no | Selfie verification and photo checks: `mock` (default) or `off`. **`mock` badges are not real — switch to a real provider before launch** |
+| `MOCK_VERIFICATION_OUTCOME` | no | With `VERIFICATION=mock`: `pass` (default), `unsure` or `fail`, to test each path |
 | `REALTIME` | no | How chat updates are delivered: `poll` (default) or `ably`. See [Friend chat](#friend-chat) |
 | `ABLY_API_KEY` | with `REALTIME=ably` | Ably API key; check it with `npm run realtime:test` |
 | `CRON_SECRET` | in production | Protects `/api/cron/cleanup-messages`; Vercel Cron sends it automatically (see `vercel.json`) |

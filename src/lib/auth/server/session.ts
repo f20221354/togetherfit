@@ -14,6 +14,7 @@ export interface SessionUser {
   name: string;
   code: string;
   onboardingComplete: boolean;
+  isAdmin: boolean;
 }
 
 function tokenId(token: string): string {
@@ -49,12 +50,14 @@ export async function endAllSessions(userId: string): Promise<void> {
 }
 
 export async function getSessionUserById(userId: string): Promise<SessionUser | null> {
-  const result = await getPool().query<{ id: string; email: string; name: string; code: string; onboarding_completed_at: string | null }>(
-    "select id, email, name, code, onboarding_completed_at from app_users where id = $1",
+  const result = await getPool().query<{ id: string; email: string; name: string; code: string; onboarding_completed_at: string | null; role: string }>(
+    "select id, email, name, code, onboarding_completed_at, role from app_users where id = $1",
     [userId]
   );
   const row = result.rows[0];
-  return row ? { id: row.id, email: row.email, name: row.name, code: row.code, onboardingComplete: !!row.onboarding_completed_at } : null;
+  return row
+    ? { id: row.id, email: row.email, name: row.name, code: row.code, onboardingComplete: !!row.onboarding_completed_at, isAdmin: row.role === "admin" }
+    : null;
 }
 
 /** The signed-in user for this request, or null. */
@@ -69,9 +72,10 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
     name: string;
     code: string;
     onboarding_completed_at: string | null;
+    role: string;
     stale: boolean;
   }>(
-    `select u.id, u.email, u.name, u.code, u.onboarding_completed_at,
+    `select u.id, u.email, u.name, u.code, u.onboarding_completed_at, u.role,
             s.last_seen_at < now() - make_interval(mins => $2) as stale
      from auth_sessions s join app_users u on u.id = s.user_id
      where s.id = $1 and s.expires_at > now()`,
@@ -86,7 +90,14 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
       [id, SESSION_DAYS]
     );
   }
-  return { id: row.id, email: row.email, name: row.name, code: row.code, onboardingComplete: !!row.onboarding_completed_at };
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    code: row.code,
+    onboardingComplete: !!row.onboarding_completed_at,
+    isAdmin: row.role === "admin",
+  };
 }
 
 /**
@@ -96,4 +107,11 @@ export async function getSessionUser(req: NextRequest): Promise<SessionUser | nu
 export async function requireUser(req: NextRequest): Promise<SessionUser | NextResponse> {
   const user = await getSessionUser(req);
   return user ?? NextResponse.json({ ok: false, error: "Please log in again." }, { status: 401 });
+}
+
+/** For admin-only routes: the signed-in admin, or a 401/403 response to return as-is. */
+export async function requireAdmin(req: NextRequest): Promise<SessionUser | NextResponse> {
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
+  return user.isAdmin ? user : NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
 }

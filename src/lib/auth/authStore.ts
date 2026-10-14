@@ -14,6 +14,7 @@ export interface CurrentUser {
   name: string;
   code: string;
   onboardingComplete: boolean;
+  isAdmin: boolean;
 }
 
 export interface WellnessSetupPrefs {

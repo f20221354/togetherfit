@@ -1,6 +1,7 @@
 import { getPool } from "@/lib/db";
 import { SPORT_KEYS } from "@/lib/connect/sports";
 import { approxDistanceKm, coarsen, geohash } from "./geo";
+import { mutualMatchSql } from "@/lib/trust/matching";
 import {
   createConnectionRequest,
   getOrCreateIdentity,
@@ -163,6 +164,9 @@ export interface RadarPerson {
   approxDistanceKm: number;
   connection: ConnectionState;
   connectionId: string | null;
+  /** Only when they chose to show their photo on Find a Friend, or you're already friends (Option A). */
+  photoId: string | null;
+  verified: boolean;
 }
 
 export interface RadarGroup {
@@ -237,13 +241,19 @@ export async function radar(email: string, intentId: string): Promise<RadarResul
     conn_status: string | null;
     conn_requester: string | null;
     conn_id: string | null;
+    photo_id: string | null;
+    verified: boolean;
   }>(
     `select o.user_id, u.name, o.mode, ${SLOT_START("o")} as start_time,
+            case when u.photo_on_radar or conn.status = 'accepted' then ph.id end as photo_id,
+            u.verified_at is not null as verified,
             ${HAVERSINE_KM("me", "o")} as distance_km,
             conn.status as conn_status, conn.requester_id as conn_requester, conn.id as conn_id
      from activity_intents me
      join activity_intents o on o.sport = me.sport and o.user_id <> me.user_id
      join app_users u on u.id = o.user_id
+     join app_users meu on meu.id = me.user_id
+     left join profile_photos ph on ph.user_id = u.id
      left join lateral (
        select c.id, c.status, c.requester_id from connections c
        where (c.requester_id = o.user_id and c.receiver_id = me.user_id)
@@ -253,6 +263,7 @@ export async function radar(email: string, intentId: string): Promise<RadarResul
      where me.id = $1
        and o.status = 'active' and o.hidden = false
        and (conn.status is null or conn.status <> 'blocked')
+       and ${mutualMatchSql("meu", "u")}
        and ${HAVERSINE_KM("me", "o")} <= me.radius_km
        and ${SLOT_START("o")} < ${SLOT_START("me")} + interval '${SLOT_MINUTES} minutes'
        and ${SLOT_START("me")} < ${SLOT_START("o")} + interval '${SLOT_MINUTES} minutes'
@@ -272,6 +283,8 @@ export async function radar(email: string, intentId: string): Promise<RadarResul
       approxDistanceKm: approxDistanceKm(Number(row.distance_km)),
       connection,
       connectionId: row.conn_status === "accepted" ? row.conn_id : null,
+      photoId: row.photo_id,
+      verified: row.verified,
     };
     (row.mode === "now" ? base.now : base.scheduled).push(person);
   }
@@ -326,11 +339,15 @@ export async function sendRadarRequest(
   const target = await getUserRowById(toUserId);
   if (!target) return { ok: false, reason: "not_found" };
 
-  // Only people who are actually visible on your radar can be requested from here.
+  // Only people who are actually visible on your radar can be requested from here —
+  // including the mutual comfort rule, so the API can't be used to get around it.
   const visible = await getPool().query(
     `select 1 from activity_intents me
      join activity_intents o on o.sport = me.sport and o.user_id = $2
-     where me.id = $1 and o.status = 'active' and o.hidden = false`,
+     join app_users meu on meu.id = me.user_id
+     join app_users u on u.id = o.user_id
+     where me.id = $1 and o.status = 'active' and o.hidden = false
+       and ${mutualMatchSql("meu", "u")}`,
     [intentId, target.id]
   );
   if (visible.rows.length === 0) return { ok: false, reason: "not_on_radar" };
@@ -485,13 +502,17 @@ export async function blockUser(email: string, targetUserId: string): Promise<{ 
   return { ok: true };
 }
 
-export async function reportUser(email: string, targetUserId: string, reason: string): Promise<{ ok: boolean }> {
+export const REPORT_CATEGORIES = ["harassment", "photo", "gender", "safety", "spam", "other"] as const;
+export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
+
+export async function reportUser(email: string, targetUserId: string, category: ReportCategory, reason: string): Promise<{ ok: boolean }> {
   const me = await getUserRowByEmail(email);
   const target = await getUserRowById(targetUserId);
   if (!me || !target || me.id === target.id) return { ok: false };
-  await getPool().query("insert into reports (reporter_id, reported_id, reason) values ($1, $2, $3)", [
+  await getPool().query("insert into reports (reporter_id, reported_id, category, reason) values ($1, $2, $3, $4)", [
     me.id,
     target.id,
+    category,
     reason.trim().slice(0, 500) || "No reason given",
   ]);
   return blockUser(email, targetUserId);

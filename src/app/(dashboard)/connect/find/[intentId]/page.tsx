@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { sportMeta } from "@/lib/connect/sports";
 import { timeSlotLabel } from "@/lib/connect/timeSlot";
+import { Avatar } from "@/components/profile/Avatar";
 
 interface RadarPerson {
   userId: string;
@@ -16,7 +17,18 @@ interface RadarPerson {
   approxDistanceKm: number;
   connection: "none" | "requested" | "incoming" | "connected";
   connectionId: string | null;
+  photoId: string | null;
+  verified: boolean;
 }
+
+const REPORT_CATEGORIES = [
+  { key: "harassment", label: "Harassment or threats" },
+  { key: "photo", label: "Fake or inappropriate photo" },
+  { key: "gender", label: "Misrepresented their gender" },
+  { key: "safety", label: "Felt unsafe meeting them" },
+  { key: "spam", label: "Spam or scam" },
+  { key: "other", label: "Something else" },
+] as const;
 
 interface RadarGroup {
   groupId: string;
@@ -103,6 +115,7 @@ export default function RadarPage() {
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState("");
+  const [reportCategory, setReportCategory] = useState<string>("harassment");
   const [groupName, setGroupName] = useState("");
 
   const load = useCallback(async () => {
@@ -217,7 +230,11 @@ export default function RadarPage() {
   }
 
   async function report(person: RadarPerson) {
-    const json = await post("/api/connections/report", { targetUserId: person.userId, reason: reportReason });
+    const json = await post("/api/connections/report", {
+      targetUserId: person.userId,
+      category: reportCategory,
+      reason: reportReason,
+    });
     setReportFor(null);
     setReportReason("");
     setNotice(json.ok ? `Thanks — ${person.name} was reported and blocked.` : json.error);
@@ -273,11 +290,12 @@ export default function RadarPage() {
     return (
       <div key={person.userId} className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 text-sm font-bold text-accent-foreground">
-            {person.name.charAt(0).toUpperCase()}
-          </span>
+          <Avatar name={person.name} photoId={person.photoId} verified={person.verified} />
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-foreground">{person.name}</div>
+            <div className="truncate text-sm font-semibold text-foreground">
+              {person.name}
+              {person.verified && <span className="ml-1.5 text-xs font-medium text-sky-500">Verified</span>}
+            </div>
             <div className="text-xs text-muted">
               {meta.icon} {meta.label} · {timeSlotLabel(person.mode, person.startTime)} · {distanceLabel(person.approxDistanceKm)}
             </div>
@@ -310,6 +328,18 @@ export default function RadarPage() {
 
         {reportFor === person.userId && (
           <div className="flex flex-col gap-2">
+            <select
+              value={reportCategory}
+              onChange={(e) => setReportCategory(e.target.value)}
+              aria-label="Reason for report"
+              className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-base text-foreground outline-none focus:border-accent md:text-xs"
+            >
+              {REPORT_CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
             <input
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}

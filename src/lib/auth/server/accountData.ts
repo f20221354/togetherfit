@@ -10,9 +10,10 @@ export async function exportAccountData(userId: string) {
   const pool = getPool();
   const q = async <T extends Record<string, unknown>>(sql: string) => (await pool.query<T>(sql, [userId])).rows;
 
-  const [profile, connections, messages, searches, groups, groupMessages, activities, milestones, winterArc, sessions] =
+  const [profile, connections, messages, searches, groups, groupMessages, activities, milestones, winterArc, sessions, photo, verification, reportsMade] =
     await Promise.all([
-      q(`select name, email, code, created_at, email_verified_at, onboarding_completed_at, wellness_setup
+      q(`select name, email, code, created_at, email_verified_at, onboarding_completed_at, wellness_setup,
+                gender, gender_changed_at, match_preference, verified_only, photo_on_radar, verified_at
          from app_users where id = $1`),
       q(`select c.status, c.source, c.created_at, case when c.requester_id = $1 then 'sent' else 'received' end as direction,
                 u.name as other_name, u.code as other_code
@@ -36,6 +37,10 @@ export async function exportAccountData(userId: string) {
       q(`select e.event, e.props, e.occurred_at from winter_arc_events e
          join app_users u on u.email = e.user_email where u.id = $1 order by e.occurred_at`),
       q(`select created_at, last_seen_at, expires_at, user_agent, ip from auth_sessions where user_id = $1 order by created_at`),
+      q(`select created_at, encode(large, 'base64') as webp_base64 from profile_photos where user_id = $1`),
+      q(`select created_at, provider, status, liveness_confidence, similarity from verification_attempts where user_id = $1 order by created_at`),
+      q(`select r.created_at, r.category, r.reason, u.name as reported_name from reports r
+         join app_users u on u.id = r.reported_id where r.reporter_id = $1 order by r.created_at`),
     ]);
 
   return {
@@ -50,6 +55,10 @@ export async function exportAccountData(userId: string) {
     milestones,
     winterArcEvents: winterArc,
     signedInDevices: sessions,
+    profilePhoto: photo[0] ?? null,
+    // Scores and decisions only: selfies are never stored.
+    verificationAttempts: verification,
+    reportsYouMade: reportsMade,
   };
 }
 

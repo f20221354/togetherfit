@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { IncomingRequestActions, IncomingRequestView } from "./IncomingRequestActions";
+import { Avatar } from "@/components/profile/Avatar";
 
 interface NetworkUser {
   name: string;
@@ -13,7 +14,7 @@ interface NetworkUser {
 
 interface FriendsListResponse {
   ok: boolean;
-  friends: (NetworkUser & { connectionId: string })[];
+  friends: (NetworkUser & { connectionId: string; photoId: string | null; verified: boolean })[];
   incoming: (IncomingRequestView & { createdAt: string })[];
   outgoing: { id: string; to: NetworkUser; createdAt: string }[];
 }
@@ -150,7 +151,10 @@ export function RealFriendNetwork() {
           <div className="flex flex-col gap-2">
             {list.incoming.map((req) => (
               <div key={req.id} className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3">
-                <div className="text-sm font-medium text-foreground">{req.from.name}</div>
+                <div className="text-sm font-medium text-foreground">
+                  {req.from.name}
+                  {req.from.verified && <span className="ml-1.5 text-xs font-medium text-sky-500">✓ Verified</span>}
+                </div>
                 <IncomingRequestActions
                   request={req}
                   onDone={(outcome) => {
@@ -191,9 +195,10 @@ export function RealFriendNetwork() {
               <Link
                 key={f.code}
                 href={`/connect/messages/${f.connectionId}`}
-                className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
+                className="flex min-w-0 max-w-full items-center gap-2 rounded-full border border-border bg-surface py-1 pl-1 pr-3 text-sm text-foreground hover:bg-surface-2"
               >
-                {f.name} <span aria-hidden="true">💬</span>
+                <Avatar name={f.name} photoId={f.photoId} verified={f.verified} size="sm" />
+                <span className="truncate">{f.name}</span> <span aria-hidden="true">💬</span>
               </Link>
             ))}
           </div>

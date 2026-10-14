@@ -28,6 +28,21 @@ export default function PrivacyPage() {
             readable form) and a friend code we generate for you.
           </li>
           <li>
+            <b>Profile photo (optional):</b> re-saved by our servers so that hidden data in the original file, such as
+            the GPS location where it was taken, is removed. Only your accepted friends see it, unless you turn on
+            &quot;Show my photo on Find a Friend&quot;. It&apos;s checked automatically for a clear face and
+            inappropriate content.
+          </li>
+          <li>
+            <b>Gender and matching preference (optional):</b> used only so that matching respects both people&apos;s
+            comfort preferences. Your gender is never shown to other members.
+          </li>
+          <li>
+            <b>Verification (optional):</b> to earn the ✓ badge you take a live selfie, which is compared
+            automatically with your profile photo. The selfie is deleted immediately after the check; we keep only
+            the result, the date and the match scores. We never use it to guess your gender or anything else.
+          </li>
+          <li>
             <b>Wellness setup:</b> the answers you give during onboarding, such as wake and sleep times, work hours,
             preferred walk length and whether you allow the camera.
           </li>
@@ -90,6 +105,7 @@ export default function PrivacyPage() {
           <li><b>Hosting and database providers</b> that run togetherfit and store its data on our behalf.</li>
           <li><b>Email delivery:</b> Google (Gmail) or Amazon Web Services (SES) send our one-time codes and account emails.</li>
           <li><b>Live notifications:</b> Ably delivers &quot;you have a new message&quot; signals to your open app, identified by your account id. They never contain the message text, which stays on our servers.</li>
+          <li><b>Identity checks:</b> when automatic verification is enabled, your live selfie and profile photo are processed by Amazon Web Services (Amazon Rekognition) only to confirm they show the same real person, then deleted.</li>
           <li><b>AI Coach:</b> the question you type is sent to Groq, Inc. to generate an answer. Don&apos;t include personal details you don&apos;t want to share.</li>
           <li><b>Maps:</b> place searches are sent from our server to OpenStreetMap&apos;s Nominatim service, and your browser loads map tiles from OpenStreetMap, which sees your IP address.</li>
           <li><b>Legal requirements:</b> we may disclose data when required by law or a valid order from an authority.</li>

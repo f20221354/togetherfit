@@ -82,6 +82,7 @@ export function Sidebar() {
 
       <div className="flex flex-col gap-1 border-t border-border pt-3">
         <NavLink href="/settings" icon="⚙️" label="Settings" active={pathname === "/settings"} />
+        {user?.isAdmin && <NavLink href="/moderation" icon="🛡️" label="Moderation" active={pathname === "/moderation"} />}
         {user && (
           <button
             onClick={async () => {

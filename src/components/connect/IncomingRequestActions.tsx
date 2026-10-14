@@ -6,7 +6,7 @@ import { formatWhen, timeSlotLabel } from "@/lib/connect/timeSlot";
 
 export interface IncomingRequestView {
   id: string;
-  from: { name: string; code: string };
+  from: { name: string; code: string; verified?: boolean };
   source?: "search" | "find_a_friend";
   activity?: { sport: string; mode: "now" | "scheduled"; startTime: string; areaLabel: string | null } | null;
   proposedTime?: string | null;

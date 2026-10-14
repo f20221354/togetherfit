@@ -32,4 +32,4 @@ export const WELLNESS_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.key !==
 
 /** Mobile bottom tab bar. "Personal" also covers the wellness modules and Settings. */
 export const PERSONAL_TAB: NavItem = { key: "personal", label: "Personal", shortLabel: "Personal", href: "/personal", icon: "👤" };
-export const PERSONAL_TAB_PATHS = ["/personal", "/settings", ...PERSONAL_NAV_ITEMS.map((item) => item.href)];
+export const PERSONAL_TAB_PATHS = ["/personal", "/settings", "/moderation", ...PERSONAL_NAV_ITEMS.map((item) => item.href)];

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:migrate": "node db/migrate.mjs",
     "email:test": "node scripts/test-email.mjs",
-    "realtime:test": "node scripts/test-realtime.mjs"
+    "realtime:test": "node scripts/test-realtime.mjs",
+    "admin:grant": "node scripts/grant-admin.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "3.1140.0",
@@ -25,6 +26,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
+    "sharp": "0.35.5",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

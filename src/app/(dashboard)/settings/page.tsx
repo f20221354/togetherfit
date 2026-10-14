@@ -10,6 +10,7 @@ import { useCameraStore } from "@/lib/store/cameraStore";
 import { usePreferencesStore } from "@/lib/store/preferencesStore";
 import { useIsClient } from "@/lib/useIsClient";
 import { AccountDataSection } from "@/components/settings/AccountDataSection";
+import { ProfileSection } from "@/components/profile/ProfileSection";
 
 function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -98,6 +99,8 @@ export default function SettingsPage() {
           </button>
         </div>
       </SettingsSection>
+
+      <ProfileSection />
 
       <AccountDataSection />
 

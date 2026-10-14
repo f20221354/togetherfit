@@ -261,3 +261,53 @@ create index if not exists messages_connection_updated_idx on messages(connectio
 drop index if exists messages_connection_idx;
 -- For the scheduled cleanup of expired celebration cards.
 create index if not exists messages_expires_idx on messages(expires_at) where expires_at is not null;
+
+-- ============================================================
+-- Trust & profile: photos, gender + mutual comfort preferences, verification
+-- ============================================================
+
+-- Self-declared and optional (null = not set / prefer not to say). Used only
+-- for matching preferences; never shown to other users.
+alter table app_users add column if not exists gender text check (gender in ('woman', 'man', 'nonbinary'));
+-- Gender can change at most once every 30 days, so it can't be flipped to slip into women-only matching.
+alter table app_users add column if not exists gender_changed_at timestamptz;
+-- Who this user is comfortable being matched with. Matching is mutual: both sides must fit.
+alter table app_users add column if not exists match_preference text not null default 'anyone'
+  check (match_preference in ('anyone', 'women', 'men'));
+-- Only match with verified people (mutual: if either side wants it, both must be verified).
+alter table app_users add column if not exists verified_only boolean not null default false;
+-- Set by automatic selfie verification; cleared when the profile photo changes.
+alter table app_users add column if not exists verified_at timestamptz;
+-- Option A: by default only accepted friends see your photo; opt in to show it on Find a Friend.
+alter table app_users add column if not exists photo_on_radar boolean not null default false;
+alter table app_users add column if not exists role text not null default 'user' check (role in ('user', 'admin'));
+
+-- One current profile photo per user, already cleaned (re-encoded WebP, no EXIF/GPS).
+-- Stored in Postgres for now (~30 KB each); object storage comes with chat photos.
+create table if not exists profile_photos (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references app_users(id) on delete cascade,
+  large bytea not null,
+  small bytea not null,
+  created_at timestamptz not null default now()
+);
+
+-- Outcome of each verification attempt. No selfies or face data are stored —
+-- only scores and the decision.
+create table if not exists verification_attempts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references app_users(id) on delete cascade,
+  provider text not null,
+  status text not null check (status in ('verified', 'rejected', 'retry')),
+  liveness_confidence real,
+  similarity real,
+  reason text,
+  created_at timestamptz not null default now()
+);
+create index if not exists verification_attempts_user_idx on verification_attempts(user_id, created_at desc);
+
+-- Reports get a category and a review state for the admin page.
+alter table reports add column if not exists category text not null default 'other'
+  check (category in ('other', 'photo', 'gender', 'harassment', 'spam', 'safety'));
+alter table reports add column if not exists resolved_at timestamptz;
+alter table reports add column if not exists resolution text;

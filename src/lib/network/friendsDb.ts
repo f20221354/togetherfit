@@ -7,6 +7,12 @@ export interface NetworkUser {
   code: string;
 }
 
+/** Shown about people you're connected with: their photo (friends can always see it) and ✓ badge. */
+export interface TrustInfo {
+  photoId: string | null;
+  verified: boolean;
+}
+
 export interface UserRow extends NetworkUser {
   id: string;
   email: string;
@@ -173,7 +179,7 @@ export async function respondToRequest(
 
 export interface IncomingRequest {
   id: string;
-  from: NetworkUser;
+  from: NetworkUser & { verified: boolean };
   createdAt: string;
   source: ConnectionSource;
   activity: { sport: string; mode: "now" | "scheduled"; startTime: string; areaLabel: string | null } | null;
@@ -183,7 +189,7 @@ export interface IncomingRequest {
 }
 
 export interface FriendsList {
-  friends: (NetworkUser & { connectionId: string })[];
+  friends: (NetworkUser & TrustInfo & { connectionId: string })[];
   incoming: IncomingRequest[];
   outgoing: { id: string; to: NetworkUser; createdAt: string }[];
   totalUnread: number;
@@ -194,9 +200,10 @@ export async function listFriends(email: string): Promise<FriendsList> {
   const me = await getUserRowByEmail(email);
   if (!me) return { friends: [], incoming: [], outgoing: [], totalUnread: 0 };
 
-  const friends = await pool.query<NetworkUser & { connection_id: string }>(
-    `select u.name, u.code, c.id as connection_id from connections c
+  const friends = await pool.query<NetworkUser & { connection_id: string; photo_id: string | null; verified: boolean }>(
+    `select u.name, u.code, c.id as connection_id, ph.id as photo_id, u.verified_at is not null as verified from connections c
      join app_users u on u.id = (case when c.requester_id = $1 then c.receiver_id else c.requester_id end)
+     left join profile_photos ph on ph.user_id = u.id
      where c.status = 'accepted' and (c.requester_id = $1 or c.receiver_id = $1)`,
     [me.id]
   );
@@ -213,8 +220,9 @@ export async function listFriends(email: string): Promise<FriendsList> {
     start_time: string | null;
     area_label: string | null;
     has_matching_schedule: boolean;
+    verified: boolean;
   }>(
-    `select c.id, u.name, u.code, c.created_at, c.source, c.proposed_time,
+    `select c.id, u.name, u.code, c.created_at, c.source, c.proposed_time, u.verified_at is not null as verified,
             ai.sport, ai.mode, ai.start_time, ai.area_label,
             exists (
               select 1 from activity_intents mine
@@ -246,10 +254,16 @@ export async function listFriends(email: string): Promise<FriendsList> {
   );
 
   return {
-    friends: friends.rows.map((r) => ({ name: r.name, code: r.code, connectionId: r.connection_id })),
+    friends: friends.rows.map((r) => ({
+      name: r.name,
+      code: r.code,
+      connectionId: r.connection_id,
+      photoId: r.photo_id,
+      verified: r.verified,
+    })),
     incoming: incoming.rows.map((r) => ({
       id: r.id,
-      from: { name: r.name, code: r.code },
+      from: { name: r.name, code: r.code, verified: r.verified },
       createdAt: r.created_at,
       source: r.source,
       activity:
@@ -268,7 +282,7 @@ export async function listFriends(email: string): Promise<FriendsList> {
 
 export interface ConversationSummary {
   connectionId: string;
-  with: NetworkUser;
+  with: NetworkUser & TrustInfo;
   lastMessage: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
@@ -283,19 +297,22 @@ export async function listConversations(email: string): Promise<ConversationSumm
     connection_id: string;
     name: string;
     code: string;
+    photo_id: string | null;
+    verified: boolean;
     last_message: string | null;
     last_message_at: string | null;
     unread_count: string;
   }>(
     `select
        c.id as connection_id,
-       u.name, u.code,
+       u.name, u.code, ph.id as photo_id, u.verified_at is not null as verified,
        case when lm.type = 'celebration' then '🎉 Sent a celebration' else lm.body end as last_message,
        lm.created_at as last_message_at,
        (select count(*) from messages um where um.connection_id = c.id and um.sender_id != $1 and um.read_at is null
           and (um.expires_at is null or um.expires_at > now())) as unread_count
      from connections c
      join app_users u on u.id = (case when c.requester_id = $1 then c.receiver_id else c.requester_id end)
+     left join profile_photos ph on ph.user_id = u.id
      left join lateral (
        select type, body, created_at from messages m
        where m.connection_id = c.id and (m.expires_at is null or m.expires_at > now())
@@ -308,7 +325,7 @@ export async function listConversations(email: string): Promise<ConversationSumm
 
   return result.rows.map((r) => ({
     connectionId: r.connection_id,
-    with: { name: r.name, code: r.code },
+    with: { name: r.name, code: r.code, photoId: r.photo_id, verified: r.verified },
     lastMessage: r.last_message,
     lastMessageAt: r.last_message_at,
     unreadCount: Number(r.unread_count),

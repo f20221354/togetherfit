@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore, useCurrentUser, WellnessSetupPrefs } from "@/lib/auth/authStore";
 import { useCameraStore } from "@/lib/store/cameraStore";
+import { ProfileSection } from "@/components/profile/ProfileSection";
 
 const CAPABILITIES = [
   { icon: "🤝", label: "Connect", detail: "Find real people for running, gym, and walking" },
@@ -82,7 +83,7 @@ export default function OnboardingPage() {
     <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-lg rounded-2xl border border-border bg-surface p-5 sm:p-8">
         <div className="mb-6 flex items-center justify-center gap-1.5">
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <span
               key={s}
               className={`h-1.5 w-8 rounded-full transition-colors ${
@@ -249,6 +250,32 @@ export default function OnboardingPage() {
         )}
 
         {step === 4 && (
+          <div className="flex flex-col gap-5">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-foreground">About you</h2>
+              <p className="mt-1 text-sm text-muted">
+                Optional. Helps people you meet through Find a Friend feel safe. You can change it any time in Settings.
+              </p>
+            </div>
+            <ProfileSection compact />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setStep(5)}
+                className="flex-1 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-black hover:opacity-90"
+              >
+                Continue
+              </button>
+              <button
+                onClick={() => setStep(5)}
+                className="rounded-xl border border-border px-4 py-2.5 text-sm text-muted hover:text-foreground"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 5 && (
           <div className="flex flex-col items-center gap-5 text-center">
             <span className="text-4xl">✓</span>
             <h2 className="text-xl font-semibold text-foreground">You&apos;re ready.</h2>

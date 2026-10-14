@@ -7,10 +7,11 @@ import { useCurrentUser } from "@/lib/auth/authStore";
 import { useChatSignals, useRealtimeStatus } from "@/lib/realtime/client";
 import { sportMeta } from "@/lib/connect/sports";
 import { timeSlotLabel } from "@/lib/connect/timeSlot";
+import { Avatar } from "@/components/profile/Avatar";
 
 interface ConversationSummary {
   connectionId: string;
-  with: { name: string; code: string };
+  with: { name: string; code: string; photoId: string | null; verified: boolean };
   lastMessage: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
@@ -104,8 +105,9 @@ export default function ConnectMessagesPage() {
               href={`/connect/messages/${c.connectionId}`}
               className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
             >
+              <Avatar name={c.with.name} photoId={c.with.photoId} verified={c.with.verified} />
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-foreground">{c.with.name}</div>
+                <div className="truncate text-sm font-medium text-foreground">{c.with.name}</div>
                 <div className="truncate text-xs text-muted">{c.lastMessage ?? "Say hi 👋"}</div>
               </div>
               {c.unreadCount > 0 && (
