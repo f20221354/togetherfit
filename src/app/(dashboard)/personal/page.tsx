@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import { PageHeader } from "@/components/shell/PageHeader";
 import { PERSONAL_NAV_ITEMS } from "@/components/shell/navItems";
+import { useCurrentUser } from "@/lib/auth/authStore";
+import { useMyProfile } from "@/lib/profile/profileStore";
+import { Avatar } from "@/components/profile/Avatar";
+import { Icon } from "@/components/ui/Icon";
 
 const DESCRIPTIONS: Record<string, string> = {
   sanctuary: "Your environment, plus light, sleep, and daily rhythm.",
@@ -8,52 +13,62 @@ const DESCRIPTIONS: Record<string, string> = {
   urgesurfer: "Fast recovery, breathing, and grounding resets.",
 };
 
-const EXTRA_ITEMS = [
-  { key: "profile", icon: "🎯", label: "My Profile", detail: "Your wellness profile and activity history.", href: "/connect/my-profile" },
-  { key: "settings", icon: "⚙️", label: "Settings", detail: "Account, privacy, notifications, and appearance.", href: "/settings" },
-];
+/** The phone's "Me" tab: your profile at the top, then the wellness modules and Settings. */
+export default function MePage() {
+  const user = useCurrentUser();
+  const { profile } = useMyProfile();
+  if (!user) return null;
+  const verified = !!profile?.verifiedAt;
 
-export default function PersonalPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
-      <PageHeader icon="👤" title="Personal" subtitle="Your profile, wellness, and self-monitoring modules." />
-      <div className="flex flex-col gap-3">
-        <Link
-          href={EXTRA_ITEMS[0].href}
-          className="flex items-center gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4 hover:bg-accent/15"
-        >
-          <span className="text-2xl">{EXTRA_ITEMS[0].icon}</span>
-          <div>
-            <div className="text-sm font-medium text-accent-foreground">{EXTRA_ITEMS[0].label}</div>
-            <div className="text-xs text-muted">{EXTRA_ITEMS[0].detail}</div>
+      <Link href="/profile" className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2">
+        <Avatar name={user.name} photoId={profile?.photoId} verified={verified} size="lg" large />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-lg font-semibold text-foreground">{user.name}</div>
+          <div className="text-xs text-muted">
+            {verified ? <span className="font-medium text-sky-500">✓ Verified</span> : "Not verified yet"} · {user.code}
           </div>
-        </Link>
+          <div className="mt-1 text-xs font-medium text-accent-foreground">View my profile →</div>
+        </div>
+      </Link>
 
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Wellness</h2>
         {PERSONAL_NAV_ITEMS.map((item) => (
           <Link
             key={item.key}
             href={item.href}
             className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
           >
-            <span className="text-2xl">{item.icon}</span>
+            <Icon name={item.icon} size={26} className="text-accent-foreground" />
             <div>
               <div className="text-sm font-medium text-foreground">{item.label}</div>
               <div className="text-xs text-muted">{DESCRIPTIONS[item.key]}</div>
             </div>
           </Link>
         ))}
+      </section>
 
-        <Link
-          href={EXTRA_ITEMS[1].href}
-          className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2"
-        >
-          <span className="text-2xl">{EXTRA_ITEMS[1].icon}</span>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Account</h2>
+        <Link href="/settings" className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2">
+          <Icon name="nav.settings" size={26} className="text-accent-foreground" />
           <div>
-            <div className="text-sm font-medium text-foreground">{EXTRA_ITEMS[1].label}</div>
-            <div className="text-xs text-muted">{EXTRA_ITEMS[1].detail}</div>
+            <div className="text-sm font-medium text-foreground">Settings</div>
+            <div className="text-xs text-muted">Privacy &amp; safety, notifications, appearance, your data.</div>
           </div>
         </Link>
-      </div>
+        {user.isAdmin && (
+          <Link href="/moderation" className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 hover:bg-surface-2">
+            <Icon name="nav.moderation" size={26} className="text-accent-foreground" />
+            <div>
+              <div className="text-sm font-medium text-foreground">Moderation</div>
+              <div className="text-xs text-muted">Reports and verification appeals (admins only).</div>
+            </div>
+          </Link>
+        )}
+      </section>
     </div>
   );
 }

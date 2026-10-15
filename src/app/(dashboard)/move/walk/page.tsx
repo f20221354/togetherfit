@@ -6,6 +6,7 @@ import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
+import { Icon } from "@/components/ui/Icon";
 
 const DURATION = 15 * 60;
 
@@ -47,13 +48,13 @@ export default function MicroStrollWalkPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <PageHeader
-        icon="🚶"
+        icon="sport.walking"
         title="15-Minute Micro-Stroll"
         subtitle="A short sunlight walk matched to your schedule — boosts Movement and Circadian scores."
       />
 
       <div className="flex flex-col items-center gap-5 rounded-3xl border border-border bg-surface p-10">
-        <span className="text-6xl">🚶</span>
+        <Icon name="sport.walking" size={64} className="text-accent-foreground" />
         <div className="flex gap-6 text-center text-sm text-muted">
           <div>
             <div className="text-xs">Duration</div>
@@ -82,7 +83,7 @@ export default function MicroStrollWalkPage() {
         >
           {running ? "Cancel Walk" : "Start Walk"}
         </button>
-        <Link href="/connect/discover?activity=walking" className="text-xs font-medium text-accent-foreground hover:underline">
+        <Link href="/connect/find?sport=walking" className="text-xs font-medium text-accent-foreground hover:underline">
           Find Someone to Join
         </Link>
         <button
@@ -103,7 +104,7 @@ export default function MicroStrollWalkPage() {
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4">
           <div className="text-sm text-foreground">Nice walk! Want company next time?</div>
           <Link
-            href="/connect/discover?activity=walking"
+            href="/connect/find?sport=walking"
             className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
           >
             Find a Walking Partner

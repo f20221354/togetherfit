@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { registerUserScopedStore, userScopedStorage } from "./userScopedStorage";
 import { EventType, Habits, ModuleKey, ScoreKey, WellnessEvent } from "../types";
-import { applyScoreDelta, computeGlobalScore } from "../scoring";
+import { computeDayScore, dayKey, trimHistory } from "../wellness/dailyScore";
 
 interface EventConfig {
   module: ModuleKey;
@@ -181,92 +183,109 @@ export function getEnvironmentalLight(roomBrightness: number): EnvironmentalLigh
   return "optimal";
 }
 
-interface WellnessState {
-  scores: Record<ScoreKey, number>;
-  globalScore: number;
-  scoreHistory: { time: string; score: number }[];
-  events: WellnessEvent[];
-  habits: Habits;
-  demoMode: boolean;
-  dateRange: "today" | "7d" | "30d";
-
-  roomBrightness: number; // 0-100, driven by wellness score
-  plantGrowth: number; // 0-100, driven by movement/circadian
-  sunlightExposureMinutes: number; // today's total sunlight/light exposure
-
-  minutesSincePostureCorrection: number;
-  eveningLightHigh: boolean;
-  prolongedGaze: boolean;
+interface DailyCounters {
+  sunlightExposureMinutes: number;
   urgeSurferResetsToday: number;
-  lastResetMinutesAgo: number;
   circadianMorningLightDone: boolean;
   microStrollMinutesToday: number;
-
   hydrationGlasses: number;
-  hydrationTarget: number;
   stretchMinutes: number;
+  eveningLightHigh: boolean;
+  prolongedGaze: boolean;
+  habits: Habits;
+}
+
+interface WellnessState extends DailyCounters {
+  /** The local day the counters and scores below belong to (see dailyScore.ts). */
+  day: string;
+  /** Today's scores, built only from today's actions. */
+  scores: Record<ScoreKey, number>;
+  started: Record<ScoreKey, boolean>;
+  globalScore: number;
+  /** Did the user do anything today? False means show an empty state, not a number. */
+  activeToday: boolean;
+  /** One global score per active day, for the trend chart and 7-day average. */
+  history: Record<string, number>;
+  events: WellnessEvent[];
+
+  roomBrightness: number; // 0-100, driven by today's score
+  plantGrowth: number; // 0-100, driven by movement/circadian
+
+  lastPostureCorrectionAt: string | null;
+  lastResetAt: string | null;
+
+  hydrationTarget: number;
   stretchTarget: number;
 
   logEvent: (type: EventType, extra?: { duration?: number }) => void;
-  toggleDemoMode: () => void;
-  setDateRange: (range: "today" | "7d" | "30d") => void;
   toggleHabit: (habit: keyof Habits) => void;
   setHydrationGlasses: (glasses: number) => void;
   setStretchMinutes: (minutes: number) => void;
-  tickPostureClock: () => void;
-  resetAll: () => void;
+  /** Starts a fresh day if the date changed since the last action. */
+  rollover: () => void;
 }
-
-const INITIAL_SCORES: Record<ScoreKey, number> = {
-  posture: 82,
-  focus: 91,
-  movement: 76,
-  circadian: 88,
-  recovery: 80,
-};
 
 const INITIAL_HABITS: Habits = {
   sunlightWalk: false,
-  noDoomscroll: true,
+  noDoomscroll: false,
 };
+
+const FRESH_COUNTERS: DailyCounters = {
+  sunlightExposureMinutes: 0,
+  urgeSurferResetsToday: 0,
+  circadianMorningLightDone: false,
+  microStrollMinutesToday: 0,
+  hydrationGlasses: 0,
+  stretchMinutes: 0,
+  eveningLightHigh: false,
+  prolongedGaze: false,
+  habits: INITIAL_HABITS,
+};
+
+const MAX_EVENTS = 500;
 
 function makeId() {
   return `evt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/** Everything derived from the event log for `day`. */
+function derived(events: WellnessEvent[], day: string, history: Record<string, number>) {
+  const today = computeDayScore(events, day);
+  return {
+    scores: today.scores,
+    started: today.started,
+    globalScore: today.global,
+    activeToday: today.active,
+    history: today.active ? trimHistory({ ...history, [day]: today.global }) : history,
+    roomBrightness: Math.round(20 + today.global * 0.8),
+    plantGrowth: Math.round(10 + ((today.scores.movement + today.scores.circadian) / 2) * 0.9),
+  };
+}
+
+function freshDay(events: WellnessEvent[], history: Record<string, number>) {
+  const day = dayKey();
+  return { day, ...FRESH_COUNTERS, ...derived(events, day, history) };
+}
+
 export const useWellnessStore = create<WellnessState>()(
   persist(
     (set, get) => ({
-      scores: INITIAL_SCORES,
-      globalScore: computeGlobalScore(INITIAL_SCORES),
-      scoreHistory: [{ time: new Date().toISOString(), score: computeGlobalScore(INITIAL_SCORES) }],
+      ...freshDay([], {}),
       events: [],
-      habits: INITIAL_HABITS,
-      demoMode: false,
-      dateRange: "today",
-
-      roomBrightness: 70,
-      plantGrowth: 55,
-      sunlightExposureMinutes: 15,
-
-      minutesSincePostureCorrection: 6,
-      eveningLightHigh: false,
-      prolongedGaze: false,
-      urgeSurferResetsToday: 3,
-      lastResetMinutesAgo: 14,
-      circadianMorningLightDone: true,
-      microStrollMinutesToday: 15,
-
-      hydrationGlasses: 0,
+      lastPostureCorrectionAt: null,
+      lastResetAt: null,
       hydrationTarget: 8,
-      stretchMinutes: 0,
       stretchTarget: 10,
 
-      logEvent: (type, extra) => {
-        const config = EVENT_CATALOG[type];
-        const nextScores = applyScoreDelta(get().scores, config.scoreImpact);
-        const nextGlobal = computeGlobalScore(nextScores);
+      rollover: () => {
+        const state = get();
+        if (state.day === dayKey()) return;
+        set(freshDay(state.events, state.history));
+      },
 
+      logEvent: (type, extra) => {
+        get().rollover();
+        const config = EVENT_CATALOG[type];
         const event: WellnessEvent = {
           id: makeId(),
           timestamp: new Date().toISOString(),
@@ -279,29 +298,15 @@ export const useWellnessStore = create<WellnessState>()(
         };
 
         set((state) => {
-          const patch: Partial<WellnessState> = {
-            scores: nextScores,
-            globalScore: nextGlobal,
-            scoreHistory: [...state.scoreHistory, { time: event.timestamp, score: nextGlobal }].slice(-50),
-            events: [event, ...state.events].slice(0, 200),
-            roomBrightness: Math.max(20, Math.min(100, Math.round((nextGlobal / 100) * 90 + 10))),
-            plantGrowth: Math.max(
-              10,
-              Math.min(100, Math.round((nextScores.movement + nextScores.circadian) / 2))
-            ),
-          };
+          const events = [event, ...state.events].slice(0, MAX_EVENTS);
+          const patch: Partial<WellnessState> = { events, ...derived(events, state.day, state.history) };
 
-          if (type === "posture_corrected" || type === "posture_alignment_restored") {
-            patch.minutesSincePostureCorrection = 0;
-          }
-          if (type === "slouch_detected") patch.prolongedGaze = true;
-          if (type === "doomscroll_detected") patch.prolongedGaze = true;
-          if (type === "eye_level_warning") patch.prolongedGaze = true;
+          if (type === "posture_corrected" || type === "posture_alignment_restored") patch.lastPostureCorrectionAt = event.timestamp;
+          if (type === "slouch_detected" || type === "doomscroll_detected" || type === "eye_level_warning") patch.prolongedGaze = true;
           if (type === "urge_reset_completed" || type === "breathing_completed") {
             patch.urgeSurferResetsToday = state.urgeSurferResetsToday + 1;
-            patch.lastResetMinutesAgo = 0;
+            patch.lastResetAt = event.timestamp;
             patch.prolongedGaze = false;
-            patch.minutesSincePostureCorrection = 0;
           }
           if (type === "walk_completed") {
             const minutes = Math.round((extra?.duration ?? 900) / 60);
@@ -313,20 +318,18 @@ export const useWellnessStore = create<WellnessState>()(
             patch.circadianMorningLightDone = true;
             patch.sunlightExposureMinutes = state.sunlightExposureMinutes + 15;
           }
-          if (type === "evening_dim_recommended") {
-            patch.eveningLightHigh = true;
-          }
-
+          if (type === "evening_dim_recommended") patch.eveningLightHigh = true;
           return patch;
         });
       },
 
-      toggleDemoMode: () => set((state) => ({ demoMode: !state.demoMode })),
-      setDateRange: (range) => set({ dateRange: range }),
-      toggleHabit: (habit) =>
-        set((state) => ({ habits: { ...state.habits, [habit]: !state.habits[habit] } })),
+      toggleHabit: (habit) => {
+        get().rollover();
+        set((state) => ({ habits: { ...state.habits, [habit]: !state.habits[habit] } }));
+      },
 
       setHydrationGlasses: (glasses) => {
+        get().rollover();
         const clamped = Math.max(0, Math.min(20, Math.round(glasses)));
         const increased = clamped > get().hydrationGlasses;
         set({ hydrationGlasses: clamped });
@@ -334,66 +337,55 @@ export const useWellnessStore = create<WellnessState>()(
       },
 
       setStretchMinutes: (minutes) => {
+        get().rollover();
         const clamped = Math.max(0, Math.min(120, Math.round(minutes)));
         const increased = clamped > get().stretchMinutes;
         set({ stretchMinutes: clamped });
         if (increased) get().logEvent("stretch_logged");
       },
-
-      tickPostureClock: () =>
-        set((state) => ({
-          minutesSincePostureCorrection: state.minutesSincePostureCorrection + 1,
-          lastResetMinutesAgo: state.lastResetMinutesAgo + 1,
-        })),
-
-      resetAll: () =>
-        set({
-          scores: INITIAL_SCORES,
-          globalScore: computeGlobalScore(INITIAL_SCORES),
-          scoreHistory: [{ time: new Date().toISOString(), score: computeGlobalScore(INITIAL_SCORES) }],
-          events: [],
-          habits: INITIAL_HABITS,
-          roomBrightness: 70,
-          plantGrowth: 55,
-          sunlightExposureMinutes: 0,
-          minutesSincePostureCorrection: 6,
-          eveningLightHigh: false,
-          prolongedGaze: false,
-          urgeSurferResetsToday: 0,
-          lastResetMinutesAgo: 0,
-          circadianMorningLightDone: false,
-          microStrollMinutesToday: 0,
-          hydrationGlasses: 0,
-          stretchMinutes: 0,
-        }),
     }),
     {
       name: "vitaos-wellness-store",
+      storage: userScopedStorage,
+      version: 1,
+      // v0 seeded made-up scores and counters (83/100, "3 resets today"…). Keep only the
+      // real event log and rebuild today and the history from it.
+      migrate: (persisted) => {
+        const old = (persisted ?? {}) as { events?: WellnessEvent[] };
+        const events = Array.isArray(old.events) ? old.events.slice(0, MAX_EVENTS) : [];
+        const history: Record<string, number> = {};
+        for (const day of new Set(events.map((e) => dayKey(new Date(e.timestamp))))) {
+          const d = computeDayScore(events, day);
+          if (d.active) history[day] = d.global;
+        }
+        return { ...freshDay(events, trimHistory(history)), events, lastPostureCorrectionAt: null, lastResetAt: null } as unknown as WellnessState;
+      },
       partialize: (state) => {
-        const {
-          logEvent,
-          toggleDemoMode,
-          setDateRange,
-          toggleHabit,
-          setHydrationGlasses,
-          setStretchMinutes,
-          tickPostureClock,
-          resetAll,
-          ...rest
-        } = state;
+        const { logEvent, toggleHabit, setHydrationGlasses, setStretchMinutes, rollover, ...rest } = state;
         void logEvent;
-        void toggleDemoMode;
-        void setDateRange;
         void toggleHabit;
         void setHydrationGlasses;
         void setStretchMinutes;
-        void tickPostureClock;
-        void resetAll;
+        void rollover;
         return rest;
       },
     }
   )
 );
+
+/** Mounted once in the app shell: starts a new day at midnight, even if the app stays open. */
+export function useWellnessDayRollover() {
+  useEffect(() => {
+    const check = () => useWellnessStore.getState().rollover();
+    check();
+    const interval = setInterval(check, 60_000);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, []);
+}
 
 export const MODULE_LABELS: Record<ModuleKey, string> = {
   sanctuary: "Sanctuary",
@@ -412,3 +404,5 @@ export const MODULE_ROUTES: Record<ModuleKey, string> = {
   move: "/move",
   connect: "/connect",
 };
+
+registerUserScopedStore(useWellnessStore);

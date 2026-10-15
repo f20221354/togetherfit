@@ -25,7 +25,7 @@ export default function CircadianPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <PageHeader
-        icon="☀️"
+        icon="module.circadian"
         title="Circadian Arc"
         subtitle="Your light and sleep architecture. Sunlight exposure logged anywhere in togetherfit updates this timeline."
       />
@@ -65,7 +65,7 @@ export default function CircadianPage() {
               Start Sunlight Walk
             </Link>
             <Link
-              href="/connect/discover?activity=walking"
+              href="/connect/find?sport=walking"
               className="rounded-full border border-accent/40 px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/10"
             >
               Find Walking Partner

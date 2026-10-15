@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
 const TABS = [
-  { label: "🌿 Sanctuary", href: "/sanctuary" },
-  { label: "☀️ Circadian Arc", href: "/sanctuary/circadian" },
+  { label: "Sanctuary", href: "/sanctuary" },
+  { label: "Circadian Arc", href: "/sanctuary/circadian" },
 ];
 
 export function SanctuarySubNav() {

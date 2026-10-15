@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { useMoveStore } from "@/lib/store/moveStore";
 import { getCoachSuggestions, respondToCoachPrompt } from "@/lib/move/aiCoach";
+import { COACH_DISCLAIMER, SAFETY_REPLIES, detectSafetyConcern } from "@/lib/move/coachSafety";
 import { getWorkoutTemplate } from "@/lib/move/workoutTemplates";
 
 const SUGGESTED_PROMPTS = [
@@ -53,8 +54,13 @@ export default function AiCoachPage() {
       const data = await res.json();
       appendCoachReply(data.text, data.workoutTemplateId);
     } catch {
-      const reply = respondToCoachPrompt(text);
-      appendCoachReply(reply.text, reply.workoutTemplateId);
+      // Offline fallback: still never answers a crisis message with workout tips.
+      const concern = detectSafetyConcern(text);
+      if (concern) appendCoachReply(SAFETY_REPLIES[concern]);
+      else {
+        const reply = respondToCoachPrompt(text);
+        appendCoachReply(reply.text, reply.workoutTemplateId);
+      }
     } finally {
       setSending(false);
     }
@@ -63,7 +69,7 @@ export default function AiCoachPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icon="🤖"
+        icon="object.coach"
         title="AI Coach"
         subtitle="Suggestions based on your activity history — not medical advice."
       />
@@ -88,9 +94,12 @@ export default function AiCoachPage() {
       </div>
 
       <div className="flex flex-col rounded-2xl border border-border bg-surface">
+        <p className="border-b border-border px-4 py-2 text-[11px] text-muted">
+          {COACH_DISCLAIMER} For pain, injury or a health condition, check with a doctor first.
+        </p>
         <div ref={listRef} className="flex max-h-96 flex-col gap-2 overflow-y-auto p-4">
           {coachChat.length === 0 && (
-            <p className="text-center text-xs text-muted">Ask your coach anything about training, goals, or today&apos;s plan.</p>
+            <p className="text-center text-xs text-muted">Ask your coach about training, goals, posture, breathing or sleep habits.</p>
           )}
           {coachChat.map((m) => (
             <div key={m.id} className={clsx("flex flex-col", m.sender === "me" ? "items-end" : "items-start")}>

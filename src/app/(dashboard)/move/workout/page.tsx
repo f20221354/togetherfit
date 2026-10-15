@@ -11,6 +11,7 @@ import { getExerciseBySlug } from "@/lib/move/exercises";
 import { WorkoutTemplate } from "@/lib/move/types";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
+import { Icon } from "@/components/ui/Icon";
 
 type Stage = "select" | "player" | "complete";
 
@@ -118,7 +119,7 @@ export default function WorkoutPage() {
   if (stage === "select") {
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader icon="🏋️" title="Workout" subtitle="Today's workout, or pick a template to get moving." />
+        <PageHeader icon="sport.gym" title="Workout" subtitle="Today's workout, or pick a template to get moving." />
 
         {customWorkoutDraft.length > 0 && (
           <div className="rounded-2xl border border-accent/30 bg-accent/5 p-5">
@@ -256,7 +257,7 @@ export default function WorkoutPage() {
 
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-5">
-        <PageHeader icon="🏋️" title="Today's Workout" subtitle={`Exercise ${exerciseIndex + 1} / ${template.exercises.length}`} />
+        <PageHeader icon="sport.gym" title="Today's Workout" subtitle={`Exercise ${exerciseIndex + 1} / ${template.exercises.length}`} />
 
         <div className="text-lg font-semibold uppercase tracking-wide text-foreground">{exercise?.name}</div>
         {exercise && <ExerciseAnimation motionType={exercise.motion} size={110} />}
@@ -304,7 +305,7 @@ export default function WorkoutPage() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-4 text-center">
-      <span className="text-4xl">🎉</span>
+      <Icon name="status.celebrate" size={44} className="text-accent-foreground" />
       <h2 className="text-lg font-semibold text-foreground">Workout Complete</h2>
       <div className="text-sm text-muted">
         {finalStats.durationMinutes} minutes · {finalStats.exerciseCount} exercises · {finalStats.setCount} sets

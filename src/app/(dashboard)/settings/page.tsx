@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import clsx from "clsx";
@@ -8,10 +9,15 @@ import { useAuthStore, useCurrentUser } from "@/lib/auth/authStore";
 import { useCameraStore } from "@/lib/store/cameraStore";
 import { usePreferencesStore } from "@/lib/store/preferencesStore";
 import { useIsClient } from "@/lib/useIsClient";
+import { AccountDataSection } from "@/components/settings/AccountDataSection";
+import { AccountEditor } from "@/components/settings/AccountEditor";
+import { MatchingSettings } from "@/components/profile/MatchingSettings";
+import { Avatar } from "@/components/profile/Avatar";
+import { useMyProfile } from "@/lib/profile/profileStore";
 
-function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+function SettingsSection({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-border bg-surface p-5">
+    <section id={id} className="scroll-mt-20 rounded-2xl border border-border bg-surface p-5">
       <h2 className="mb-4 text-sm font-semibold text-foreground">{title}</h2>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
@@ -49,6 +55,7 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const mounted = useIsClient();
 
+  const { profile } = useMyProfile();
   const permission = useCameraStore((s) => s.permission);
   const monitoring = useCameraStore((s) => s.monitoring);
   const alertsEnabled = useCameraStore((s) => s.alertsEnabled);
@@ -68,28 +75,23 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="⚙️" title="Settings" subtitle="Account, privacy, notifications and appearance." />
+      <PageHeader icon="nav.settings" title="Settings" subtitle="Account, privacy & safety, notifications, appearance and your data." />
 
       <SettingsSection title="Account">
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Name</span>
-          <span className="text-foreground">{user?.name ?? "—"}</span>
-        </div>
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Email</span>
-          <span className="text-foreground">{user?.email ?? "—"}</span>
-        </div>
+        <AccountEditor />
+        <Link href="/profile" className="flex items-center gap-3 rounded-xl bg-surface-2 p-3 hover:bg-border">
+          <Avatar name={user?.name ?? "?"} photoId={profile?.photoId} verified={!!profile?.verifiedAt} size="sm" />
+          <span className="flex-1 text-sm">
+            <span className="block text-foreground">My Profile</span>
+            <span className="block text-xs text-muted">Photo, verification and your friend code</span>
+          </span>
+          <span className="text-muted" aria-hidden="true">→</span>
+        </Link>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => router.push("/personal")}
-            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
-          >
-            👤 My Profile &amp; Modules
-          </button>
-          <button
-            onClick={() => {
-              logOut();
-              router.push("/login");
+            onClick={async () => {
+              await logOut();
+              router.replace("/login");
             }}
             className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
           >
@@ -98,7 +100,11 @@ export default function SettingsPage() {
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Camera & Privacy">
+      <SettingsSection title="Privacy & safety" id="privacy">
+        <MatchingSettings />
+      </SettingsSection>
+
+      <SettingsSection title="Camera">
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-xl bg-surface-2 p-3">
             <div className="text-xs text-muted">Camera Monitoring</div>
@@ -177,6 +183,14 @@ export default function SettingsPage() {
           ))}
         </div>
       </SettingsSection>
+
+      <AccountDataSection />
+
+      <p className="text-center text-xs text-muted">
+        <Link href="/privacy" className="hover:text-foreground hover:underline">Privacy Policy</Link>
+        {" · "}
+        <Link href="/terms" className="hover:text-foreground hover:underline">Terms of Service</Link>
+      </p>
     </div>
   );
 }

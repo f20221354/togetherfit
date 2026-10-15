@@ -2,60 +2,72 @@ import { RecommendationCard, ScoreKey } from "./types";
 
 interface RecommendationInputs {
   scores: Record<ScoreKey, number>;
-  minutesSincePostureCorrection: number;
+  started: Record<ScoreKey, boolean>;
+  activeToday: boolean;
   eveningLightHigh: boolean;
   prolongedGaze: boolean;
 }
 
 /**
- * togetherfit recommends the module most likely to move the metric that is
- * currently dragging the Global Wellness Score down.
+ * Suggests the module most likely to help today, using only what actually
+ * happened today: nothing is claimed that the app didn't observe.
  */
 export function getRecommendations(inputs: RecommendationInputs): RecommendationCard[] {
   const cards: RecommendationCard[] = [];
-  const { scores, minutesSincePostureCorrection, eveningLightHigh, prolongedGaze } = inputs;
+  const { scores, started, activeToday, eveningLightHigh, prolongedGaze } = inputs;
 
-  if (scores.posture < 70 || minutesSincePostureCorrection >= 25) {
+  if (prolongedGaze) {
     cards.push({
-      id: "rec_posture",
-      reason: `Your posture has declined for ${minutesSincePostureCorrection} minutes.`,
-      metric: `Posture score: ${scores.posture}`,
-      action: "Take a 90-second UrgeSurfer reset to release tension and reset your posture.",
+      id: "rec_gaze",
+      reason: "Posture Guard noticed a long stretch of slouching or screen time without a break.",
+      metric: `Focus today: ${scores.focus}`,
+      action: "Take a 90-second reset or a short walk to break the loop.",
       ctaLabel: "Start 90s Reset",
       destination: "urgesurfer",
     });
   }
 
-  if (scores.movement < 70) {
+  if (started.posture && scores.posture < 50) {
     cards.push({
-      id: "rec_sunlight",
-      reason: "You haven't reached your morning sunlight target.",
-      metric: `Movement score: ${scores.movement}`,
-      action: "Try a 15-minute walk from Move & Coach to raise your sunlight and movement scores together.",
-      ctaLabel: "Start Sunlight Walk",
+      id: "rec_posture",
+      reason: "Your posture score is low today.",
+      metric: `Posture today: ${scores.posture}`,
+      action: "Run a posture check and correct your position when it nudges you.",
+      ctaLabel: "Check Posture",
+      destination: "posture",
+    });
+  }
+
+  if (scores.movement < 50) {
+    cards.push({
+      id: "rec_move",
+      reason: started.movement ? "You've moved a little today. A bit more fills your movement score." : "You haven't logged any movement today.",
+      metric: started.movement ? `Movement today: ${scores.movement}` : "Movement: not started",
+      action: "A 15-minute walk raises movement and daylight together.",
+      ctaLabel: "Start a Walk",
       destination: "move",
+    });
+  }
+
+  if (!activeToday && !started.recovery) {
+    cards.push({
+      id: "rec_reset",
+      reason: "Your day starts with one small action.",
+      metric: "Recovery: not started",
+      action: "Try a 90-second breathing reset. It counts towards recovery and focus.",
+      ctaLabel: "Start 90s Reset",
+      destination: "urgesurfer",
     });
   }
 
   if (eveningLightHigh) {
     cards.push({
       id: "rec_dim",
-      reason: "Your Circadian Arc suggests dimming your environment.",
-      metric: `Circadian score: ${scores.circadian}`,
-      action: "Lower evening light exposure to protect tonight's sleep window.",
+      reason: "It's evening and your light exposure is still high.",
+      metric: `Circadian today: ${scores.circadian}`,
+      action: "Dim your screens and lights to protect tonight's sleep window.",
       ctaLabel: "View Circadian Plan",
       destination: "circadian",
-    });
-  }
-
-  if (prolongedGaze) {
-    cards.push({
-      id: "rec_gaze",
-      reason: "Prolonged screen gaze detected without a break.",
-      metric: `Focus score: ${scores.focus}`,
-      action: "Take a short walk from Move & Coach or start a 90-second reset to break the doomscroll loop.",
-      ctaLabel: "Check Posture",
-      destination: "posture",
     });
   }
 

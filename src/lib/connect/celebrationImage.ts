@@ -8,6 +8,44 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" });
 }
 
+/** A medal drawn with shapes (no emoji, so it looks the same on every device). */
+function drawMedal(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
+  ctx.fillStyle = "#34d399";
+  ctx.beginPath();
+  ctx.moveTo(cx - 110, cy - 250);
+  ctx.lineTo(cx - 30, cy - 250);
+  ctx.lineTo(cx + 20, cy - 80);
+  ctx.lineTo(cx - 60, cy - 80);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#10b981";
+  ctx.beginPath();
+  ctx.moveTo(cx + 110, cy - 250);
+  ctx.lineTo(cx + 30, cy - 250);
+  ctx.lineTo(cx - 20, cy - 80);
+  ctx.lineTo(cx + 60, cy - 80);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#fbbf24";
+  ctx.beginPath();
+  ctx.arc(cx, cy, 130, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#fde68a";
+  ctx.lineWidth = 14;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 98, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#78350f";
+  ctx.lineWidth = 22;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx - 48, cy + 4);
+  ctx.lineTo(cx - 12, cy + 40);
+  ctx.lineTo(cx + 52, cy - 34);
+  ctx.stroke();
+}
+
 /** Draws the shareable celebration card as a PNG — plain canvas, no extra dependencies. */
 export function renderCelebrationImage(card: CelebrationCard): Promise<Blob> {
   const canvas = document.createElement("canvas");
@@ -30,10 +68,10 @@ export function renderCelebrationImage(card: CelebrationCard): Promise<Blob> {
   }
   ctx.globalAlpha = 1;
 
+  drawMedal(ctx, W / 2, 440);
+
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
-  ctx.font = "260px system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif";
-  ctx.fillText(card.icon, W / 2, 560);
 
   ctx.font = "bold 92px system-ui, sans-serif";
   ctx.fillText(card.title, W / 2, 740);
@@ -45,8 +83,8 @@ export function renderCelebrationImage(card: CelebrationCard): Promise<Blob> {
   if (card.sport) {
     const sport = sportMeta(card.sport);
     ctx.fillStyle = "#34d399";
-    ctx.font = "bold 52px system-ui, 'Segoe UI Emoji', sans-serif";
-    ctx.fillText(`${sport.icon} ${sport.label}`, W / 2, 930);
+    ctx.font = "bold 52px system-ui, sans-serif";
+    ctx.fillText(sport.label, W / 2, 930);
   }
 
   ctx.fillStyle = "#ffffff";
@@ -71,7 +109,7 @@ export async function shareCelebrationImage(card: CelebrationCard): Promise<"sha
   const file = new File([blob], `togetherfit-${card.key}.png`, { type: "image/png" });
   if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: card.title, text: `${card.icon} ${card.title} — ${card.description}` });
+      await navigator.share({ files: [file], title: card.title, text: `${card.title}: ${card.description}` });
       return "shared";
     } catch (err) {
       if ((err as Error).name === "AbortError") return "cancelled";

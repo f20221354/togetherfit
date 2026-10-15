@@ -7,6 +7,8 @@ import clsx from "clsx";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { sportMeta } from "@/lib/connect/sports";
 import { timeSlotLabel } from "@/lib/connect/timeSlot";
+import { Avatar } from "@/components/profile/Avatar";
+import { Icon, type IconName } from "@/components/ui/Icon";
 
 interface RadarPerson {
   userId: string;
@@ -16,7 +18,18 @@ interface RadarPerson {
   approxDistanceKm: number;
   connection: "none" | "requested" | "incoming" | "connected";
   connectionId: string | null;
+  photoId: string | null;
+  verified: boolean;
 }
+
+const REPORT_CATEGORIES = [
+  { key: "harassment", label: "Harassment or threats" },
+  { key: "photo", label: "Fake or inappropriate photo" },
+  { key: "gender", label: "Misrepresented their gender" },
+  { key: "safety", label: "Felt unsafe meeting them" },
+  { key: "spam", label: "Spam or scam" },
+  { key: "other", label: "Something else" },
+] as const;
 
 interface RadarGroup {
   groupId: string;
@@ -48,7 +61,7 @@ const POLL_MS = 5_000;
 const HEARTBEAT_MS = 30_000;
 
 function distanceLabel(km: number): string {
-  return km <= 0.5 ? "< 1 km away" : `~${km} km away`;
+  return km <= 1 ? "Under 1 km away" : `About ${km} km away`;
 }
 
 /** Stable pseudo-random angle per user, so dots don't jump around between polls. */
@@ -58,7 +71,7 @@ function angleFor(id: string): number {
   return (h % 360) * (Math.PI / 180);
 }
 
-function RadarVisual({ people, radiusKm, icon }: { people: RadarPerson[]; radiusKm: number; icon: string }) {
+function RadarVisual({ people, radiusKm, icon }: { people: RadarPerson[]; radiusKm: number; icon: IconName }) {
   return (
     <div className="relative mx-auto aspect-square w-64 max-w-full">
       <div className="absolute inset-0 rounded-full border border-accent/30 bg-accent/5" />
@@ -83,8 +96,8 @@ function RadarVisual({ people, radiusKm, icon }: { people: RadarPerson[]; radius
           </span>
         );
       })}
-      <span className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-xl shadow">
-        {icon}
+      <span className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-accent-foreground shadow">
+        <Icon name={icon} size={22} />
       </span>
     </div>
   );
@@ -103,12 +116,13 @@ export default function RadarPage() {
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState("");
+  const [reportCategory, setReportCategory] = useState<string>("harassment");
   const [groupName, setGroupName] = useState("");
 
   const load = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/find/radar?email=${encodeURIComponent(user.email)}&intentId=${intentId}`);
+      const res = await fetch(`/api/find/radar?intentId=${intentId}`);
       const json = await res.json();
       if (json.ok) {
         setData(json);
@@ -127,7 +141,7 @@ export default function RadarPage() {
     let cancelled = false;
     async function poll() {
       try {
-        const res = await fetch(`/api/find/radar?email=${encodeURIComponent(user!.email)}&intentId=${intentId}`);
+        const res = await fetch(`/api/find/radar?intentId=${intentId}`);
         const json = await res.json();
         if (cancelled) return;
         if (json.ok) {
@@ -155,7 +169,7 @@ export default function RadarPage() {
       fetch("/api/find/heartbeat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user!.email, intentId }),
+        body: JSON.stringify({ intentId }),
       }).catch(() => {});
     }
     beat();
@@ -167,7 +181,7 @@ export default function RadarPage() {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user!.email, ...body }),
+      body: JSON.stringify({ ...body }),
     });
     return res.json();
   }
@@ -217,7 +231,11 @@ export default function RadarPage() {
   }
 
   async function report(person: RadarPerson) {
-    const json = await post("/api/connections/report", { targetUserId: person.userId, reason: reportReason });
+    const json = await post("/api/connections/report", {
+      targetUserId: person.userId,
+      category: reportCategory,
+      reason: reportReason,
+    });
     setReportFor(null);
     setReportReason("");
     setNotice(json.ok ? `Thanks — ${person.name} was reported and blocked.` : json.error);
@@ -253,7 +271,7 @@ export default function RadarPage() {
   if (data.intent.status !== "active") {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-3 text-center">
-        <span className="text-4xl">{meta.icon}</span>
+        <Icon name={meta.icon} size={44} className="text-accent-foreground" />
         <h1 className="text-lg font-semibold text-foreground">This search has ended</h1>
         <p className="text-sm text-muted">
           {data.intent.status === "cancelled"
@@ -273,13 +291,14 @@ export default function RadarPage() {
     return (
       <div key={person.userId} className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 text-sm font-bold text-accent-foreground">
-            {person.name.charAt(0).toUpperCase()}
-          </span>
+          <Avatar name={person.name} photoId={person.photoId} verified={person.verified} />
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-foreground">{person.name}</div>
+            <div className="truncate text-sm font-semibold text-foreground">
+              {person.name}
+              {person.verified && <span className="ml-1.5 text-xs font-medium text-sky-500">Verified</span>}
+            </div>
             <div className="text-xs text-muted">
-              {meta.icon} {meta.label} · {timeSlotLabel(person.mode, person.startTime)} · {distanceLabel(person.approxDistanceKm)}
+              <Icon name={meta.icon} size={14} className="inline-block align-[-0.2em]" /> {meta.label} · {timeSlotLabel(person.mode, person.startTime)} · {distanceLabel(person.approxDistanceKm)}
             </div>
           </div>
           <button
@@ -310,6 +329,18 @@ export default function RadarPage() {
 
         {reportFor === person.userId && (
           <div className="flex flex-col gap-2">
+            <select
+              value={reportCategory}
+              onChange={(e) => setReportCategory(e.target.value)}
+              aria-label="Reason for report"
+              className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-base text-foreground outline-none focus:border-accent md:text-xs"
+            >
+              {REPORT_CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
             <input
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
@@ -332,7 +363,8 @@ export default function RadarPage() {
             href={`/connect/messages/${person.connectionId}`}
             className="rounded-full border border-border px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-surface-2"
           >
-            💬 Connected — chat
+            <Icon name="action.chat" size={14} className="mr-1 inline-block align-[-0.15em]" />
+            Connected: chat
           </Link>
         ) : person.connection === "requested" ? (
           <button disabled className="rounded-full bg-surface-2 px-4 py-2 text-sm text-muted">
@@ -408,13 +440,13 @@ export default function RadarPage() {
           )}
           {data.now.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">⚡ Free now</h2>
+              <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted"><Icon name="status.energy" size={14} /> Free now</h2>
               {data.now.map(renderPerson)}
             </section>
           )}
           {data.scheduled.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">📅 Scheduled</h2>
+              <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted"><Icon name="object.calendar" size={14} /> Scheduled</h2>
               {data.scheduled.map(renderPerson)}
             </section>
           )}
@@ -423,7 +455,7 @@ export default function RadarPage() {
         <div className="flex flex-col gap-3">
           {data.groups.map((g) => (
             <div key={g.groupId} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
-              <span className="text-2xl">{meta.icon}</span>
+              <Icon name={meta.icon} size={28} className="text-accent-foreground" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-foreground">{g.name}</div>
                 <div className="text-xs text-muted">

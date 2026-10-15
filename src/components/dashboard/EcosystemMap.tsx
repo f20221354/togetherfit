@@ -6,13 +6,14 @@ import Link from "next/link";
 import { ModuleKey } from "@/lib/types";
 import { MODULE_ROUTES } from "@/lib/store/wellnessStore";
 import { TogetherfitIcon } from "@/components/brand/TogetherfitIcon";
+import { Icon, type IconName } from "@/components/ui/Icon";
 
-const NODES: { key: ModuleKey; label: string; x: number; y: number; icon: string }[] = [
-  { key: "sanctuary", label: "Sanctuary", x: 50, y: 6, icon: "🌿" },
-  { key: "posture", label: "Posture & Gaze", x: 10, y: 35, icon: "👁" },
-  { key: "move", label: "Move & Coach", x: 90, y: 35, icon: "🏋️" },
-  { key: "urgesurfer", label: "UrgeSurfer", x: 20, y: 88, icon: "🫁" },
-  { key: "connect", label: "Connect", x: 80, y: 88, icon: "🤝" },
+const NODES: { key: ModuleKey; label: string; x: number; y: number; icon: IconName }[] = [
+  { key: "sanctuary", label: "Sanctuary", x: 50, y: 6, icon: "module.sanctuary" },
+  { key: "posture", label: "Posture & Gaze", x: 10, y: 35, icon: "module.posture" },
+  { key: "move", label: "Move & Coach", x: 90, y: 35, icon: "nav.move" },
+  { key: "urgesurfer", label: "UrgeSurfer", x: 20, y: 88, icon: "module.reset" },
+  { key: "connect", label: "Connect", x: 80, y: 88, icon: "nav.connect" },
 ];
 
 const CORE = { x: 50, y: 45 };
@@ -87,7 +88,7 @@ export function EcosystemMap() {
             )}
             style={{ left: `${n.x}%`, top: `${n.y}%` }}
           >
-            <span className="text-base">{n.icon}</span>
+            <Icon name={n.icon} size={18} />
             {n.label}
           </Link>
         ))}

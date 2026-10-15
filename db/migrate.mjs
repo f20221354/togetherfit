@@ -29,12 +29,18 @@ if (!process.env.DATABASE_URL) {
 const schema = fs.readFileSync(path.join(here, "schema.sql"), "utf8");
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
+  // Same rules as src/lib/db.ts: verified TLS unless DATABASE_SSL=false (local) or no-verify.
+  ssl:
+    process.env.DATABASE_SSL === "false"
+      ? false
+      : process.env.DATABASE_SSL === "no-verify"
+        ? { rejectUnauthorized: false }
+        : { rejectUnauthorized: true, ...(process.env.DATABASE_CA_CERT ? { ca: process.env.DATABASE_CA_CERT.replace(/\\n/g, "\n") } : {}) },
 });
 
 try {
   await pool.query(schema);
-  console.log("Migration applied: app_users, connections, messages, activity_intents, groups, group_members, reports, activity_sessions, milestones, winter_arc_events ready.");
+  console.log("Migration applied: app_users, connections, messages, activity_intents, groups, group_members, reports, activity_sessions, milestones, winter_arc_events, auth_otps, auth_sessions, rate_limits ready.");
 } catch (err) {
   console.error("Migration failed:", err.message);
   process.exit(1);

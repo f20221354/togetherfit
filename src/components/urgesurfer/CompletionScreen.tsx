@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { BreathingPattern, formatPattern } from "@/lib/breathing/types";
+import { Icon } from "@/components/ui/Icon";
 
 export function CompletionScreen({
   pattern,
@@ -30,7 +31,7 @@ export function CompletionScreen({
       transition={{ duration: 0.4 }}
       className="flex flex-col items-center gap-4 text-center"
     >
-      <span className="text-4xl">🌊</span>
+      <Icon name="object.waves" size={44} className="text-accent" />
       <h3 className="text-lg font-semibold text-foreground">Reset Complete</h3>
       <p className="text-sm text-muted">You completed {sessionDuration} seconds</p>
 

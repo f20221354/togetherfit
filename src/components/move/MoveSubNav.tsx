@@ -21,11 +21,11 @@ export function MoveSubNav() {
   // Seasonal tab, only while the event is live (client-only to avoid a hydration mismatch).
   const tabs =
     isClient && isWinterArcActive()
-      ? [...TABS, { label: `❄️ ${WINTER_ARC_COPY.title}`, href: WINTER_ARC_PAGE_PATH }]
+      ? [...TABS, { label: WINTER_ARC_COPY.title, href: WINTER_ARC_PAGE_PATH }]
       : TABS;
 
   return (
-    <nav className="-mx-4 mb-6 flex gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
+    <nav aria-label="Move & Coach" className="mb-6 flex flex-wrap gap-1.5">
       {tabs.map((tab) => {
         const active = tab.href === "/move" ? pathname === "/move" : pathname.startsWith(tab.href);
         return (

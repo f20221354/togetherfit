@@ -10,6 +10,21 @@ declare global {
   var _pgPool: Pool | undefined;
 }
 
+/**
+ * TLS to the database. Verified by default: hosted Postgres (Neon, Supabase,
+ * RDS…) uses publicly trusted certificates. DATABASE_CA_CERT can hold a
+ * provider's CA (PEM) if it uses its own. DATABASE_SSL=false only for a
+ * local database without TLS; DATABASE_SSL=no-verify encrypts without
+ * checking the certificate (not recommended).
+ */
+export function sslConfig() {
+  const mode = process.env.DATABASE_SSL;
+  if (mode === "false") return false;
+  if (mode === "no-verify") return { rejectUnauthorized: false };
+  const ca = process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n");
+  return ca ? { rejectUnauthorized: true, ca } : { rejectUnauthorized: true };
+}
+
 export function getPool(): Pool {
   if (!process.env.DATABASE_URL) {
     throw new Error(
@@ -20,9 +35,7 @@ export function getPool(): Pool {
   if (!global._pgPool) {
     global._pgPool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      // Hosted Postgres providers (Neon, Supabase, etc.) require SSL; set
-      // DATABASE_SSL=false only for a local/test database that doesn't support it.
-      ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
+      ssl: sslConfig(),
     });
   }
   return global._pgPool;

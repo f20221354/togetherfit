@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useIsClient } from "@/lib/useIsClient";
 import { WINTER_ARC_COPY, WINTER_ARC_PAGE_PATH, isWinterArcActive } from "@/lib/winterArc/config";
+import { Icon } from "@/components/ui/Icon";
 
 /**
- * "❄️ Limited Time" pill for the Move & Coach nav item. Renders only while
+ * "Limited Time" pill (snowflake icon) for the Move & Coach nav item. Renders only while
  * the event is live (date check lives in winterArc/config), and only on the
  * client so server and browser clocks can't disagree during hydration.
  * Render it as a sibling of the nav link — it's a link itself.
@@ -23,7 +24,7 @@ export function WinterArcNavBadge({ onNavigate, className }: { onNavigate?: () =
         (className ?? "")
       }
     >
-      <span aria-hidden="true">❄️</span>
+      <Icon name="season.winter" size={11} weight="bold" />
       {WINTER_ARC_COPY.navBadge}
     </Link>
   );

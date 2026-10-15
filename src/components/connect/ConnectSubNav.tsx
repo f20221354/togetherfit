@@ -3,22 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import { useIncomingRequests } from "@/lib/network/useUnreadCount";
 
 const TABS = [
-  { label: "Find Partners", href: "/connect" },
+  { label: "Overview", href: "/connect" },
   { label: "Friends", href: "/connect/friends" },
   { label: "Messages", href: "/connect/messages" },
   { label: "Milestones", href: "/connect/milestones" },
-  { label: "Discover", href: "/connect/discover" },
-  { label: "Trainers", href: "/connect/trainers" },
-  { label: "My Profile", href: "/connect/my-profile" },
 ];
 
 export function ConnectSubNav() {
   const pathname = usePathname();
+  const requests = useIncomingRequests().length;
 
   return (
-    <nav className="-mx-4 mb-6 flex gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
+    <nav aria-label="Connect" className="mb-6 grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap">
       {TABS.map((tab) => {
         const active = tab.href === "/connect" ? pathname === "/connect" : pathname.startsWith(tab.href);
         return (
@@ -26,11 +25,16 @@ export function ConnectSubNav() {
             key={tab.href}
             href={tab.href}
             className={clsx(
-              "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
+              "inline-flex items-center justify-center rounded-full px-2 py-1.5 text-center text-xs font-medium transition-colors sm:px-3.5",
               active ? "bg-accent/15 text-accent-foreground" : "bg-surface-2 text-muted hover:text-foreground"
             )}
           >
             {tab.label}
+            {tab.href === "/connect/friends" && requests > 0 && (
+              <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-black">
+                {requests}
+              </span>
+            )}
           </Link>
         );
       })}

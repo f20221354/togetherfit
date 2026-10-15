@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
+import { Icon, type IconName } from "@/components/ui/Icon";
 
-const STEPS = [
-  { count: 5, label: "things you can see", icon: "👁" },
-  { count: 4, label: "things you can touch", icon: "✋" },
-  { count: 3, label: "things you can hear", icon: "👂" },
-  { count: 2, label: "things you can smell", icon: "👃" },
-  { count: 1, label: "thing you can taste", icon: "👅" },
+const STEPS: { count: number; label: string; icon: IconName }[] = [
+  { count: 5, label: "things you can see", icon: "sense.see" },
+  { count: 4, label: "things you can touch", icon: "sense.touch" },
+  { count: 3, label: "things you can hear", icon: "sense.hear" },
+  { count: 2, label: "things you can smell", icon: "sense.smell" },
+  { count: 1, label: "thing you can taste", icon: "sense.taste" },
 ];
 
 export function GroundingReset({ onComplete }: { onComplete: () => void }) {
@@ -48,7 +49,7 @@ export function GroundingReset({ onComplete }: { onComplete: () => void }) {
         transition={{ duration: 0.3 }}
         className="flex flex-col items-center gap-4 text-center"
       >
-        <span className="text-4xl">{step.icon}</span>
+        <Icon name={step.icon} size={44} className="text-accent" />
         <div className="text-2xl font-semibold text-foreground">{step.count}</div>
         <div className="text-sm text-muted">{step.label}</div>
 

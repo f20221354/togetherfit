@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { coarsen } from "@/lib/network/geo";
 import { bad } from "@/lib/network/apiHelpers";
+import { requireUser } from "@/lib/auth/server/session";
+import { rateLimit } from "@/lib/auth/server/rateLimit";
 
 /**
  * Place search via OpenStreetMap Nominatim, following its usage policy
@@ -28,6 +30,8 @@ function throttle(): Promise<void> {
 }
 
 export async function GET(req: NextRequest) {
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim();
   if (q.length < 3) return bad("Type at least 3 characters");
   if (q.length > 120) return bad("Search is too long");
@@ -36,6 +40,8 @@ export async function GET(req: NextRequest) {
   const cached = cache.get(key);
   if (cached) return NextResponse.json({ ok: true, results: cached });
 
+  const limited = await rateLimit({ key: `geo:${user.id}`, limit: 30, windowSeconds: 600 });
+  if (limited) return limited;
   await throttle();
   try {
     const url = new URL("https://nominatim.openstreetmap.org/search");

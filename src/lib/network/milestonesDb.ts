@@ -1,7 +1,7 @@
 import { getPool } from "@/lib/db";
 import { getOrCreateIdentity, getUserRowByEmail, isUuid, UserRow } from "./friendsDb";
 import { SPORT_KEYS } from "@/lib/connect/sports";
-import { CELEBRATION_REACTIONS, CelebrationCard, MILESTONES, milestoneDef } from "@/lib/connect/milestones";
+import { isReaction, CelebrationCard, MILESTONES, milestoneDef } from "@/lib/connect/milestones";
 
 /** Streaks count calendar days in India time — the app's audience. */
 const STREAK_TZ = "Asia/Kolkata";
@@ -173,11 +173,11 @@ export async function sendCelebration(email: string, milestoneId: string, connec
 
 /** The receiver (never the sender) reacts to a celebration card with one emoji. */
 export async function reactToCelebration(email: string, connectionId: string, messageId: string, emoji: string): Promise<{ ok: boolean }> {
-  if (!CELEBRATION_REACTIONS.includes(emoji) || !isUuid(connectionId) || !isUuid(messageId)) return { ok: false };
+  if (!isReaction(emoji) || !isUuid(connectionId) || !isUuid(messageId)) return { ok: false };
   const me = await getUserRowByEmail(email);
   if (!me || !(await isAcceptedParticipant(me.id, connectionId))) return { ok: false };
   const result = await getPool().query(
-    `update messages set reaction = $1
+    `update messages set reaction = $1, updated_at = now()
      where id = $2 and connection_id = $3 and type = 'celebration' and sender_id != $4
        and (expires_at is null or expires_at > now())`,
     [emoji, messageId, connectionId, me.id]

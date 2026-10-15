@@ -2,29 +2,29 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore, useAuthHydrated } from "@/lib/auth/authStore";
+import { useAuthStore } from "@/lib/auth/authStore";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const currentUserEmail = useAuthStore((s) => s.currentUserEmail);
-  const onboardingComplete = useAuthStore((s) => s.onboardingComplete);
-  const hydrated = useAuthHydrated();
+  const user = useAuthStore((s) => s.user);
+  const loaded = useAuthStore((s) => s.loaded);
+  const refresh = useAuthStore((s) => s.refresh);
 
   useEffect(() => {
-    if (!hydrated) return;
-    if (!currentUserEmail) {
-      router.replace("/login");
-      return;
-    }
-    if (!onboardingComplete[currentUserEmail]) {
-      router.replace("/onboarding");
-    }
-  }, [hydrated, currentUserEmail, onboardingComplete, router]);
+    if (!loaded) refresh();
+  }, [loaded, refresh]);
 
-  if (!hydrated || !currentUserEmail || !onboardingComplete[currentUserEmail]) {
+  useEffect(() => {
+    if (!loaded) return;
+    if (!user) router.replace("/login");
+    else if (!user.onboardingComplete) router.replace("/onboarding");
+  }, [loaded, user, router]);
+
+  if (!loaded || !user || !user.onboardingComplete) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-muted">
-        Loading togetherfit…
+      <div className="flex min-h-dvh items-start justify-center bg-background px-4 pt-20">
+        <PageSkeleton />
       </div>
     );
   }

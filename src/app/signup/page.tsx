@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { useAuthStore } from "@/lib/auth/authStore";
+import { OtpStep } from "@/components/auth/OtpStep";
+import { CurrentUser, useAuthStore } from "@/lib/auth/authStore";
+import { authPost } from "@/lib/auth/authApi";
+import { Captcha, captchaRequired } from "@/components/auth/Captcha";
 import { isValidEmail, checkPassword } from "@/lib/auth/validation";
 
 interface FieldErrors {
@@ -18,7 +21,7 @@ interface FieldErrors {
 
 export default function SignupPage() {
   const router = useRouter();
-  const signUp = useAuthStore((s) => s.signUp);
+  const setUser = useAuthStore((s) => s.setUser);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,7 +30,9 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -42,17 +47,39 @@ export default function SignupPage() {
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+    if (captchaRequired && !captchaToken) {
+      setFormError("Please complete the quick check below first.");
+      return;
+    }
 
     setLoading(true);
-    const result = await signUp(name.trim(), email, password);
+    const result = await authPost<{ challengeId: string }>("/api/auth/signup", { name: name.trim(), email, password, captchaToken });
     setLoading(false);
 
     if (!result.ok) {
       setFormError(result.error);
+      setCaptchaReset((n) => n + 1); // tokens are single-use
       return;
     }
-    setSuccess(true);
-    router.push("/onboarding");
+    setChallengeId(result.data.challengeId);
+  }
+
+  if (challengeId) {
+    return (
+      <AuthLayout>
+        <OtpStep<{ user: CurrentUser }>
+          email={email.trim().toLowerCase()}
+          challengeId={challengeId}
+          purpose="signup"
+          onChallengeChange={setChallengeId}
+          onVerified={({ user }) => {
+            setUser(user);
+            router.replace("/onboarding");
+          }}
+          onBack={() => setChallengeId(null)}
+        />
+      </AuthLayout>
+    );
   }
 
   return (
@@ -97,22 +124,24 @@ export default function SignupPage() {
           required
         />
 
+        <Captcha onToken={setCaptchaToken} resetKey={captchaReset} />
+
         {formError && (
           <div className="rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">{formError}</div>
-        )}
-        {success && (
-          <div className="rounded-lg bg-success/10 px-3 py-2 text-xs text-success">
-            Account created — let&apos;s get you set up…
-          </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="mt-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {loading ? "Creating account…" : "Create Account"}
+          {loading ? "Sending code…" : "Create Account"}
         </button>
+        <p className="text-center text-xs text-muted">
+          By creating an account you agree to the{" "}
+          <Link href="/terms" className="underline hover:text-foreground">Terms of Service</Link> and{" "}
+          <Link href="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
+        </p>
 
         <p className="text-center text-xs text-muted">
           Already have an account?{" "}

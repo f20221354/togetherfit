@@ -23,7 +23,7 @@ export function PostureNudgeToast() {
   const message = NUDGE_MESSAGES[nudge.kind];
 
   return (
-    <div className="pointer-events-none fixed inset-x-4 bottom-4 z-[60] flex justify-center pb-[env(safe-area-inset-bottom)] md:inset-x-auto md:right-4 md:justify-end">
+    <div className="pointer-events-none fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[60] flex justify-center md:inset-x-auto md:bottom-4 md:right-4 md:justify-end">
       <div
         key={nudge.id}
         role="status"

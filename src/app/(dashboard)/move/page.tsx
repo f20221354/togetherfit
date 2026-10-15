@@ -4,13 +4,11 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useWellnessStore } from "@/lib/store/wellnessStore";
 import { useMoveStore } from "@/lib/store/moveStore";
-import { useConnectStore } from "@/lib/store/connectStore";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getCoachSuggestions } from "@/lib/move/aiCoach";
 import { getWorkoutTemplate } from "@/lib/move/workoutTemplates";
-import { MOCK_PARTNERS } from "@/lib/connect/mockPartners";
-import { TRAINERS } from "@/lib/move/trainers";
+import { Icon } from "@/components/ui/Icon";
 
 function isToday(iso: string): boolean {
   return new Date(iso).toDateString() === new Date().toDateString();
@@ -22,8 +20,6 @@ export default function MoveOverviewPage() {
   const workoutHistory = useMoveStore((s) => s.workoutHistory);
   const todayGoalMinutes = useMoveStore((s) => s.todayGoalMinutes);
   const microStrollMinutesToday = useWellnessStore((s) => s.microStrollMinutesToday);
-  const connections = useConnectStore((s) => s.connections);
-  const plans = useConnectStore((s) => s.plans);
 
   const todayWorkoutMinutes = workoutHistory
     .filter((w) => isToday(w.timestamp) && w.completed)
@@ -38,16 +34,13 @@ export default function MoveOverviewPage() {
   const topSuggestion = suggestions[0];
   const suggestedTemplate = topSuggestion?.workoutTemplateId ? getWorkoutTemplate(topSuggestion.workoutTemplateId) : null;
 
-  const upcomingPlan = plans.find((p) => p.status === "upcoming");
-  const partnerPreview = MOCK_PARTNERS.slice(0, 3);
-
   const runningGoal = goals.find((g) => g.label.toLowerCase().includes("run"));
   const gymGoal = goals.find((g) => /gym|strength/.test(g.label.toLowerCase()));
   const partnerSuggestion = runningGoal
     ? { label: "Find Running Partner", activity: "running" }
     : gymGoal
       ? { label: "Find Gym Partner", activity: "gym" }
-      : { label: "Find a Partner", activity: "running" };
+      : { label: "Find a Partner", activity: null };
 
   return (
     <div className="flex flex-col gap-6">
@@ -61,7 +54,7 @@ export default function MoveOverviewPage() {
       <div className="rounded-2xl border border-border bg-surface p-5">
         <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">Today&apos;s Goal</div>
         <div className="mb-3 flex items-center gap-2 text-lg font-semibold text-foreground">
-          🏃 {todayGoalMinutes} min movement
+          <Icon name="sport.running" size={20} className="text-accent-foreground" /> {todayGoalMinutes} min movement
         </div>
         <ProgressBar value={progressPct} tone="good" />
         <div className="mt-2 flex items-center justify-between text-xs text-muted">
@@ -94,7 +87,7 @@ export default function MoveOverviewPage() {
           <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">Next Activity</div>
           {suggestedTemplate ? (
             <>
-              <div className="text-sm font-medium text-foreground">🏋️ {suggestedTemplate.name}</div>
+              <div className="flex items-center gap-1.5 text-sm font-medium text-foreground"><Icon name="sport.gym" size={16} /> {suggestedTemplate.name}</div>
               <div className="text-xs text-muted">{suggestedTemplate.durationMinutes} minutes</div>
               <Link
                 href="/move/workout"
@@ -109,47 +102,15 @@ export default function MoveOverviewPage() {
         </div>
       </div>
 
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Activity Partners</h2>
-          {upcomingPlan && (
-            <Link href={`/connect/plan/${upcomingPlan.id}`} className="text-xs font-medium text-accent-foreground hover:underline">
-              View upcoming →
-            </Link>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {partnerPreview.map((p) => (
-            <Link
-              key={p.id}
-              href={`/connect/profile/${p.id}`}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-foreground hover:bg-surface-2"
-            >
-              <span>{p.avatar}</span>
-              {p.name}
-            </Link>
-          ))}
-          <Link
-            href={`/connect/discover?activity=${partnerSuggestion.activity}`}
-            className="rounded-full bg-accent/15 px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent/25"
-          >
-            {partnerSuggestion.label}
-          </Link>
-        </div>
-        {connections.length > 0 && (
-          <p className="mt-2 text-xs text-muted">{connections.length} connections so far.</p>
-        )}
-      </div>
-
       <div className="rounded-2xl border border-border bg-surface p-5">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">Trainer Connect</div>
-        <p className="text-sm text-foreground">Need expert guidance?</p>
-        <p className="mb-3 text-xs text-muted">{TRAINERS.length} demo trainers available for strength, running, and mobility coaching.</p>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">Activity Partners</div>
+        <p className="mb-3 text-sm text-foreground">Find real people nearby who want to move at the same time.</p>
         <Link
-          href="/connect/trainers"
-          className="inline-block rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-2"
+          href={partnerSuggestion.activity ? `/connect/find?sport=${partnerSuggestion.activity}` : "/connect/find"}
+          className="inline-block rounded-full bg-accent/15 px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/25"
         >
-          Find a Personal Trainer
+          <Icon name="action.search" size={14} className="mr-1 inline-block align-[-0.15em]" />
+          {partnerSuggestion.label}
         </Link>
       </div>
     </div>

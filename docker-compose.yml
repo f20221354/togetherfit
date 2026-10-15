@@ -1,0 +1,47 @@
+# Single-server deployment: the app behind Caddy (automatic HTTPS), plus a
+# daily cleanup job. Postgres is expected to be a managed database
+# (DATABASE_URL in .env). See docs/self-hosting.md.
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+    env_file: .env
+    environment:
+      # One proxy (Caddy) in front of the app.
+      TRUSTED_PROXY_HOPS: "1"
+      # Instant chat from our own server (see README → Chat).
+      REALTIME: ${REALTIME:-sse}
+    restart: unless-stopped
+    expose: ["3000"]
+
+  caddy:
+    image: caddy:2
+    depends_on: [app]
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env, e.g. togetherfit.in}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # Deletes expired celebration cards once a day (replaces Vercel Cron).
+  cron:
+    image: curlimages/curl:8.10.1
+    depends_on: [app]
+    restart: unless-stopped
+    env_file: .env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        while true; do
+          curl -fsS -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron/cleanup-messages || true;
+          sleep 86400;
+        done
+
+volumes:
+  caddy_data:
+  caddy_config:

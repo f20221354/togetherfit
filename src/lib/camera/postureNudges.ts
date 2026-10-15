@@ -174,7 +174,7 @@ export class NudgeTracker {
 
 /** Copy for each nudge. Supportive, short, and no medical claims. */
 export const NUDGE_MESSAGES: Record<NudgeKind | "both", { title: string; body: string }> = {
-  posture: { title: "🧘 Your posture needs a little adjustment", body: "Sit back and keep your shoulders relaxed." },
-  gaze: { title: "👀 Check your gaze", body: "Try looking straight at your screen for better alignment." },
-  both: { title: "Quick reset 👀", body: "Sit back, relax your shoulders, and bring your gaze back to the screen." },
+  posture: { title: "Your posture needs a little adjustment", body: "Sit back and keep your shoulders relaxed." },
+  gaze: { title: "Check your gaze", body: "Try looking straight at your screen for better alignment." },
+  both: { title: "Quick reset", body: "Sit back, relax your shoulders, and bring your gaze back to the screen." },
 };

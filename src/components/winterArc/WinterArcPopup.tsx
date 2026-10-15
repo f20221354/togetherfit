@@ -2,9 +2,10 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/ui/Icon";
 import { useCurrentUser } from "@/lib/auth/authStore";
 import { useIsClient } from "@/lib/useIsClient";
-import { useWinterArcJoined, useWinterArcStore } from "@/lib/winterArc/store";
+import { useWinterArcJoined, useWinterArcPopupDue, useWinterArcStore } from "@/lib/winterArc/store";
 import { markWinterArcDailyActive, trackWinterArc } from "@/lib/winterArc/analytics";
 import {
   WINTER_ARC_COPY,
@@ -15,18 +16,15 @@ import {
 } from "@/lib/winterArc/config";
 
 /**
- * Winter Arc event popup, mounted once in AppShell.
- *
- * Intentionally shown on EVERY fresh page load/refresh while the event is
- * live: the open state lives only in this component's memory (no persisted
- * "has seen" flag), so a reload brings it back and client-side navigation
- * doesn't. Only the opt-in (`winterArcJoined`) is persisted.
+ * Winter Arc event popup, mounted once in AppShell. Not joined: asked again
+ * 3 days after "Maybe later". Joined: progress shown at most once a day.
  */
 export function WinterArcPopup() {
   const user = useCurrentUser();
   const isClient = useIsClient();
+  const due = useWinterArcPopupDue(user?.email);
   const [open, setOpen] = useState(true);
-  if (!isClient || !open || !user || !isWinterArcActive()) return null;
+  if (!isClient || !open || !due || !user || !isWinterArcActive()) return null;
   return <WinterArcDialog email={user.email} onClose={() => setOpen(false)} />;
 }
 
@@ -34,6 +32,8 @@ function WinterArcDialog({ email, onClose }: { email: string; onClose: () => voi
   const router = useRouter();
   const joined = useWinterArcJoined(email);
   const join = useWinterArcStore((s) => s.join);
+  const snooze = useWinterArcStore((s) => s.snooze);
+  const markShown = useWinterArcStore((s) => s.markShown);
   const dialogRef = useRef<HTMLDivElement>(null);
   const variant = joined ? "joined" : "join";
 
@@ -48,6 +48,8 @@ function WinterArcDialog({ email, onClose }: { email: string; onClose: () => voi
 
   function dismiss(method: string) {
     trackWinterArc("winter_arc_dismissed", email, { variant, method });
+    if (joined) markShown(email);
+    else snooze(email);
     onClose();
   }
   const onEscape = useEffectEvent(() => dismiss("escape"));
@@ -86,6 +88,7 @@ function WinterArcDialog({ email, onClose }: { email: string; onClose: () => voi
 
   function handleJoin() {
     join(email);
+    markShown(email);
     trackWinterArc("winter_arc_joined", email);
     markWinterArcDailyActive(email);
     onClose();
@@ -94,6 +97,7 @@ function WinterArcDialog({ email, onClose }: { email: string; onClose: () => voi
 
   function handleGoTo() {
     markWinterArcDailyActive(email);
+    markShown(email);
     onClose();
     router.push(WINTER_ARC_PAGE_PATH);
   }
@@ -124,8 +128,8 @@ function WinterArcDialog({ email, onClose }: { email: string; onClose: () => voi
           ✕
         </button>
 
-        <div className="mb-3 text-4xl" aria-hidden="true">
-          ❄️
+        <div className="mb-3 text-winter">
+          <Icon name="season.winter" size={40} />
         </div>
 
         {joined ? (

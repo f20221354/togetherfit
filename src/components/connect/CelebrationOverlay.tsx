@@ -51,7 +51,7 @@ function CelebrationDialog({ card, onClose }: { card: CelebrationCard; onClose: 
     setPicking(true);
     if (friends || !user) return;
     try {
-      const res = await fetch(`/api/friends/list?email=${encodeURIComponent(user.email)}`);
+      const res = await fetch(`/api/friends/list`);
       const data = await res.json();
       setFriends(data.ok ? data.friends.map((f: Friend) => ({ connectionId: f.connectionId, name: f.name })) : []);
     } catch {
@@ -66,7 +66,7 @@ function CelebrationDialog({ card, onClose }: { card: CelebrationCard; onClose: 
       const res = await fetch(`/api/milestones/${card.milestoneId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, connectionId: friend.connectionId }),
+        body: JSON.stringify({ connectionId: friend.connectionId }),
       });
       const data = await res.json();
       if (data.ok) setSentTo((s) => [...s, friend.connectionId]);

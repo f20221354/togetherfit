@@ -1,95 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { WinterArcStats } from "@/lib/network/winterArcDb";
-import { useIsClient } from "@/lib/useIsClient";
-
-const KEY_STORAGE = "vitaos-winter-arc-admin-key";
-
-function readSavedKey(): string {
-  try {
-    return sessionStorage.getItem(KEY_STORAGE) ?? "";
-  } catch {
-    return "";
-  }
-}
+import { Icon } from "@/components/ui/Icon";
 
 /**
- * Internal Winter Arc metrics. Not linked anywhere in the app; the data comes
- * from /api/winter-arc/stats, which requires WINTER_ARC_ADMIN_KEY.
+ * Internal Winter Arc metrics, for admins (npm run admin:grant). Signed-out
+ * visitors are sent to login by the proxy; signed-in non-admins see a notice.
  */
 export default function WinterArcAdminPage() {
-  const isClient = useIsClient();
-  // The saved key comes from sessionStorage, so render in the browser only.
-  return isClient ? <AdminView /> : null;
-}
-
-function AdminView() {
-  const [key, setKey] = useState(readSavedKey);
   const [stats, setStats] = useState<WinterArcStats | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  async function load() {
-    if (!key.trim()) return;
-    setLoading(true);
+  const apply = useCallback((res: { status: number; data: { ok: boolean; error?: string; stats?: WinterArcStats } }) => {
+    setLoading(false);
+    if (res.status === 403) return setError("This page is for togetherfit admins.");
+    if (!res.data.ok || !res.data.stats) return setError(res.data.error ?? "Couldn't load stats.");
     setError(null);
-    try {
-      const res = await fetch("/api/winter-arc/stats", { headers: { "x-admin-key": key.trim() } });
-      const data = await res.json();
-      if (!data.ok) {
-        setError(data.error ?? "Couldn't load stats.");
-        setStats(null);
-        return;
-      }
-      setStats(data.stats);
-      try {
-        sessionStorage.setItem(KEY_STORAGE, key.trim());
-      } catch {
-        // Convenience only.
-      }
-    } catch {
-      setError("Couldn't reach the server.");
-    } finally {
-      setLoading(false);
-    }
-  }
+    setStats(res.data.stats);
+  }, []);
+
+  const fetchStats = useCallback(
+    () =>
+      fetch("/api/winter-arc/stats", { cache: "no-store" })
+        .then(async (r) => ({ status: r.status, data: await r.json() }))
+        .then(apply)
+        .catch(() => {
+          setLoading(false);
+          setError("Couldn't reach the server.");
+        }),
+    [apply]
+  );
+
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <div>
-        <div className="flex items-center gap-2 text-2xl font-semibold">❄️ Winter Arc analytics</div>
-        <p className="mt-1 text-sm text-muted">
-          Internal view.{" "}
-          {stats && `${stats.window.start} → ${stats.window.end}, days in ${stats.window.timeZone}.`}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-semibold"><Icon name="season.winter" size={24} /> Winter Arc analytics</h1>
+          <p className="mt-1 text-sm text-muted">
+            Internal view.{" "}
+            {stats && `${stats.window.start} → ${stats.window.end}, days in ${stats.window.timeZone}.`}
+          </p>
+        </div>
+        {stats && (
+          <button
+            onClick={() => {
+              setLoading(true);
+              void fetchStats();
+            }}
+            disabled={loading}
+            className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
+          >
+            {loading ? "Loading…" : "Refresh"}
+          </button>
+        )}
       </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          load();
-        }}
-        className="flex flex-wrap gap-2"
-      >
-        <input
-          type="password"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          placeholder="Admin key"
-          aria-label="Admin key"
-          className="min-w-0 flex-1 rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-sm outline-none focus:border-accent"
-        />
-        <button
-          type="submit"
-          disabled={!key.trim() || loading}
-          className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-60"
-        >
-          {loading ? "Loading…" : stats ? "Refresh" : "Load"}
-        </button>
-      </form>
+      {loading && !stats && <p className="text-sm text-muted">Loading…</p>}
       {error && <p className="text-sm text-danger">{error}</p>}
-
       {stats && <StatsView stats={stats} />}
     </div>
   );

@@ -21,7 +21,7 @@ export async function logActivityAndCelebrate(
     const res = await fetch("/api/activities", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email, name: user.name, ...options }),
+      body: JSON.stringify({ ...options }),
     });
     const data = await res.json();
     if (!data.ok) return { ok: false, error: data.error, newMilestones: [] };

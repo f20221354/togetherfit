@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { registerUserScopedStore, userScopedStorage } from "./userScopedStorage";
 
 interface PreferencesState {
   wellnessReminders: boolean;
@@ -14,6 +15,8 @@ export const usePreferencesStore = create<PreferencesState>()(
       wellnessReminders: true,
       setWellnessReminders: (wellnessReminders) => set({ wellnessReminders }),
     }),
-    { name: "vitaos-preferences-store" }
+    { name: "vitaos-preferences-store", storage: userScopedStorage }
   )
 );
+
+registerUserScopedStore(usePreferencesStore);

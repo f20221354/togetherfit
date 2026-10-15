@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { sportMeta } from "@/lib/connect/sports";
 import { formatWhen, timeSlotLabel } from "@/lib/connect/timeSlot";
+import { Icon } from "@/components/ui/Icon";
 
 export interface IncomingRequestView {
   id: string;
-  from: { email: string; name: string; code: string };
+  from: { name: string; code: string; verified?: boolean };
   source?: "search" | "find_a_friend";
   activity?: { sport: string; mode: "now" | "scheduled"; startTime: string; areaLabel: string | null } | null;
   proposedTime?: string | null;
@@ -29,11 +30,9 @@ function toLocalInput(d: Date): string {
  */
 export function IncomingRequestActions({
   request,
-  email,
   onDone,
 }: {
   request: IncomingRequestView;
-  email: string;
   onDone: (outcome: Outcome) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -52,7 +51,7 @@ export function IncomingRequestActions({
       const res = await fetch("/api/friends/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId: request.id, respondingEmail: email, status, proposedTime }),
+        body: JSON.stringify({ requestId: request.id, status, proposedTime }),
       });
       const data = await res.json();
       if (!data.ok) {
@@ -76,11 +75,11 @@ export function IncomingRequestActions({
         <div className="text-xs text-muted">
           {request.proposedTime ? (
             <>
-              {meta.icon} Suggested a new time for {meta.label}: <b className="text-foreground">{formatWhen(request.proposedTime)}</b>
+              <Icon name={meta.icon} size={14} className="inline-block align-[-0.2em]" /> Suggested a new time for {meta.label}: <b className="text-foreground">{formatWhen(request.proposedTime)}</b>
             </>
           ) : (
             <>
-              {meta.icon} Wants to do {meta.label} · <b className="text-foreground">{timeSlotLabel(activity.mode, activity.startTime)}</b>
+              <Icon name={meta.icon} size={14} className="inline-block align-[-0.2em]" /> Wants to do {meta.label} · <b className="text-foreground">{timeSlotLabel(activity.mode, activity.startTime)}</b>
               {activity.areaLabel ? ` · ${activity.areaLabel}` : ""}
             </>
           )}

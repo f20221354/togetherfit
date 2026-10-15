@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { respondToCoachPrompt } from "@/lib/move/aiCoach";
+import { requireUser } from "@/lib/auth/server/session";
+import { rateLimit } from "@/lib/auth/server/rateLimit";
+import { readBody } from "@/lib/network/apiHelpers";
+import { COACH_DISCLAIMER, COACH_SYSTEM_PROMPT, SAFETY_REPLIES, detectSafetyConcern } from "@/lib/move/coachSafety";
 
 export const maxDuration = 30;
 
-const SYSTEM_PROMPT =
-  "You are a supportive, encouraging fitness coach inside a wellness app called togetherfit. " +
-  "Answer in 1-3 short sentences, plain language, no medical claims. " +
-  "You are not a doctor; for pain or injury, tell the person to see a professional.";
 
 async function askGroq(prompt: string, apiKey: string): Promise<string | null> {
   try {
@@ -16,7 +16,7 @@ async function askGroq(prompt: string, apiKey: string): Promise<string | null> {
       body: JSON.stringify({
         model: "openai/gpt-oss-20b",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: COACH_SYSTEM_PROMPT },
           { role: "user", content: prompt },
         ],
         max_tokens: 200,
@@ -40,7 +40,7 @@ async function askOllama(prompt: string): Promise<string | null> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "llama3.2:1b",
-        prompt: `${SYSTEM_PROMPT}\n\nUser: ${prompt}\nCoach:`,
+        prompt: `${COACH_SYSTEM_PROMPT}\n\nUser: ${prompt}\nCoach:`,
         stream: false,
       }),
       signal: AbortSignal.timeout(30000),
@@ -55,9 +55,26 @@ async function askOllama(prompt: string): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
-  const { prompt } = await req.json();
+  const user = await requireUser(req);
+  if (user instanceof NextResponse) return user;
+  const { prompt } = await readBody(req);
   if (typeof prompt !== "string" || !prompt.trim()) {
     return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
+  }
+  if (prompt.length > 1000) {
+    return NextResponse.json({ error: "Keep your question under 1000 characters" }, { status: 400 });
+  }
+  // Each call costs LLM tokens on our key.
+  const limited = await rateLimit(
+    { key: `coach:min:${user.id}`, limit: 5, windowSeconds: 60 },
+    { key: `coach:day:${user.id}`, limit: 100, windowSeconds: 86400 }
+  );
+  if (limited) return limited;
+
+  // Crisis and emergency messages get a fixed, safe answer and never reach the model.
+  const concern = detectSafetyConcern(prompt);
+  if (concern) {
+    return NextResponse.json({ text: SAFETY_REPLIES[concern], source: "safety", safety: concern, disclaimer: null });
   }
 
   const fallback = respondToCoachPrompt(prompt);
@@ -73,7 +90,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (source === "rules") {
+  if (source === "rules" && process.env.NODE_ENV !== "production") {
     const ollamaText = await askOllama(prompt);
     if (ollamaText) {
       text = ollamaText;
@@ -86,5 +103,6 @@ export async function POST(req: NextRequest) {
     ctaLabel: fallback.ctaLabel,
     workoutTemplateId: fallback.workoutTemplateId,
     source,
+    disclaimer: COACH_DISCLAIMER,
   });
 }

@@ -8,23 +8,25 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ManualCounter } from "@/components/ui/ManualCounter";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
 import { Habits } from "@/lib/types";
+import { Icon, type IconName } from "@/components/ui/Icon";
 
-const TOGGLE_HABIT_META: { key: keyof Habits; label: string; icon: string }[] = [
-  { key: "sunlightWalk", label: "Sunlight Walk", icon: "🚶" },
-  { key: "noDoomscroll", label: "0 Doomscrolling", icon: "📵" },
+const TOGGLE_HABIT_META: { key: keyof Habits; label: string; icon: IconName }[] = [
+  { key: "sunlightWalk", label: "Sunlight Walk", icon: "sport.walking" },
+  { key: "noDoomscroll", label: "0 Doomscrolling", icon: "object.phoneOff" },
 ];
 
-const LIGHT_META = {
-  low: { icon: "🌑", label: "Low Light" },
-  moderate: { icon: "🌤", label: "Moderate" },
-  bright: { icon: "☀️", label: "Bright" },
-  optimal: { icon: "☀️", label: "Optimal Sunlight" },
-} as const;
+const LIGHT_META: Record<string, { icon: IconName; label: string }> = {
+  low: { icon: "time.moon", label: "Low Light" },
+  moderate: { icon: "module.circadian", label: "Moderate" },
+  bright: { icon: "time.sun", label: "Bright" },
+  optimal: { icon: "time.sun", label: "Optimal Sunlight" },
+};
 
 export default function SanctuaryPage() {
   const roomBrightness = useWellnessStore((s) => s.roomBrightness);
   const plantGrowth = useWellnessStore((s) => s.plantGrowth);
   const globalScore = useWellnessStore((s) => s.globalScore);
+  const activeToday = useWellnessStore((s) => s.activeToday);
   const habits = useWellnessStore((s) => s.habits);
   const toggleHabit = useWellnessStore((s) => s.toggleHabit);
   const sunlightExposureMinutes = useWellnessStore((s) => s.sunlightExposureMinutes);
@@ -42,7 +44,7 @@ export default function SanctuaryPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <PageHeader
-        icon="🌿"
+        icon="module.sanctuary"
         title="Sanctuary"
         subtitle="Your bio-room reflects the Global Wellness Score in real time — every module you touch changes this room."
       />
@@ -79,19 +81,21 @@ export default function SanctuaryPage() {
                 : undefined
             }
           >
-            <span className="text-3xl">{lightMeta.icon}</span>
+            <Icon name={lightMeta.icon} size={34} />
           </div>
 
           <div
-            className="text-7xl transition-transform duration-700"
+            className="text-accent transition-transform duration-700 motion-reduce:transition-none"
             style={{ transform: `scale(${0.7 + plantGrowth / 200})`, opacity: 0.5 + plantGrowth / 200 }}
           >
-            🪴
+            <Icon name="object.plant" size={88} weight="duotone" />
           </div>
           <div className="text-sm text-muted">
             Room brightness {roomBrightness}% · Plant growth {plantGrowth}%
           </div>
-          <div className="text-xs text-muted">Global Wellness Score {globalScore}/100 is powering this room.</div>
+          <div className="text-xs text-muted">
+            {activeToday ? `Today's score (${globalScore}/100) is powering this room.` : "The room brightens as you complete actions today."}
+          </div>
         </div>
       </div>
 
@@ -107,7 +111,7 @@ export default function SanctuaryPage() {
         <div className="rounded-2xl border border-border bg-surface p-5">
           <h3 className="mb-1 text-sm font-semibold text-foreground">Environmental Light</h3>
           <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
-            <span className="text-lg">{lightMeta.icon}</span>
+            <Icon name={lightMeta.icon} size={18} />
             {lightMeta.label}
           </div>
           <div className="mt-1 text-xs text-muted">{sunlightExposureMinutes} min sunlight exposure today</div>
@@ -118,7 +122,7 @@ export default function SanctuaryPage() {
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">Daily Habits</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <ManualCounter
-            icon="💧"
+            icon="object.water"
             label="Hydration"
             value={hydrationGlasses}
             target={hydrationTarget}
@@ -126,7 +130,7 @@ export default function SanctuaryPage() {
             onChange={setHydrationGlasses}
           />
           <ManualCounter
-            icon="🧘"
+            icon="sport.yoga"
             label="Stretched"
             value={stretchMinutes}
             target={stretchTarget}
@@ -145,7 +149,7 @@ export default function SanctuaryPage() {
                   : "border-border bg-surface text-muted"
               )}
             >
-              <span className="text-xl">{h.icon}</span>
+              <Icon name={h.icon} size={20} />
               {h.label}
             </button>
           ))}

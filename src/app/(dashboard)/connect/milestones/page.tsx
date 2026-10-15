@@ -8,14 +8,15 @@ import { CelebrationCard, MILESTONES, MilestoneDef } from "@/lib/connect/milesto
 import { SPORTS } from "@/lib/connect/sports";
 import { useCelebrationStore } from "@/lib/connect/celebrationStore";
 import { logActivityAndCelebrate } from "@/lib/connect/logActivity";
+import { Icon } from "@/components/ui/Icon";
 
 interface Overview {
   achieved: CelebrationCard[];
   progress: { total: number; streak: number; group: number };
 }
 
-async function fetchOverview(email: string): Promise<Overview | null> {
-  const res = await fetch(`/api/milestones?email=${encodeURIComponent(email)}`);
+async function fetchOverview(): Promise<Overview | null> {
+  const res = await fetch(`/api/milestones`);
   const data = await res.json();
   return data.ok ? { achieved: data.achieved, progress: data.progress } : null;
 }
@@ -38,7 +39,7 @@ export default function MilestonesPage() {
     let cancelled = false;
     async function load() {
       try {
-        const data = await fetchOverview(user!.email);
+        const data = await fetchOverview();
         if (!cancelled) setOverview(data);
       } catch {
         if (!cancelled) setError("Couldn't reach the server — is DATABASE_URL configured?");
@@ -53,8 +54,8 @@ export default function MilestonesPage() {
   async function logSolo(sport: string) {
     if (!user) return;
     const result = await logActivityAndCelebrate(user, { sport });
-    setNotice(result.ok ? (result.newMilestones.length > 0 ? null : "Activity logged ✅") : (result.error ?? "Couldn't log it."));
-    const data = await fetchOverview(user.email);
+    setNotice(result.ok ? (result.newMilestones.length > 0 ? null : "Activity logged.") : (result.error ?? "Couldn't log it."));
+    const data = await fetchOverview();
     if (data) setOverview(data);
   }
 
@@ -63,20 +64,20 @@ export default function MilestonesPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader icon="🏅" title="Milestones" subtitle="Celebrate progress and share it with your friends." />
+      <PageHeader icon="object.medal" title="Milestones" subtitle="Celebrate progress and share it with your friends." />
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
       {overview && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {[
             { label: "Activities", value: overview.progress.total },
             { label: "Day streak", value: overview.progress.streak },
             { label: "Group sessions", value: overview.progress.group },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-border bg-surface p-4 text-center">
-              <div className="text-2xl font-bold text-foreground">{s.value}</div>
-              <div className="text-xs text-muted">{s.label}</div>
+            <div key={s.label} className="rounded-2xl border border-border bg-surface px-2 py-3 text-center sm:p-4">
+              <div className="text-xl font-bold text-foreground sm:text-2xl">{s.value}</div>
+              <div className="text-[11px] leading-tight text-muted sm:text-xs">{s.label}</div>
             </div>
           ))}
         </div>
@@ -91,7 +92,7 @@ export default function MilestonesPage() {
               onClick={() => logSolo(s.key)}
               className="rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-surface-2"
             >
-              {s.icon} {s.label}
+              <Icon name={s.icon} size={14} className="inline-block align-[-0.2em]" /> {s.label}
             </button>
           ))}
         </div>
@@ -113,7 +114,7 @@ export default function MilestonesPage() {
                 card ? "border-accent/40 bg-accent/5" : "border-border bg-surface opacity-70"
               )}
             >
-              <span className={clsx("text-2xl", !card && "grayscale")}>{def.icon}</span>
+              <Icon name={def.icon} size={28} className={card ? "text-accent-foreground" : "text-muted opacity-50"} />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold text-foreground">{def.title}</div>
                 <div className="text-xs text-muted">
@@ -125,7 +126,8 @@ export default function MilestonesPage() {
                   onClick={() => celebrate([card])}
                   className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-black hover:opacity-90"
                 >
-                  🎉 Share
+                  <Icon name="status.celebrate" size={14} className="mr-1 inline-block align-[-0.15em]" />
+              Share
                 </button>
               )}
             </div>

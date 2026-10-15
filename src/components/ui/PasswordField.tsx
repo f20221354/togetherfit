@@ -24,7 +24,7 @@ export function PasswordField({ label, error, hint, className, id, ...props }: P
           id={inputId}
           type={visible ? "text" : "password"}
           className={clsx(
-            "w-full rounded-xl border bg-surface-2 px-3.5 py-2.5 pr-16 text-sm text-foreground outline-none transition-colors",
+            "w-full rounded-xl border bg-surface-2 px-3.5 py-2.5 pr-16 text-base text-foreground md:text-sm outline-none transition-colors",
             "placeholder:text-muted focus:border-accent",
             error ? "border-danger" : "border-border",
             className

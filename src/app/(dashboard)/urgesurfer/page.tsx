@@ -19,14 +19,15 @@ import { CompletionScreen } from "@/components/urgesurfer/CompletionScreen";
 import { RhythmReset } from "@/components/urgesurfer/RhythmReset";
 import { GroundingReset } from "@/components/urgesurfer/GroundingReset";
 import { ActivityExplorer } from "@/components/dashboard/ActivityExplorer";
+import { Icon, type IconName } from "@/components/ui/Icon";
 
 type Stage = "setup" | "session" | "rateAfter" | "complete";
 type ResetMode = "breathe" | "rhythm" | "ground";
 
-const RESET_MODES: { key: ResetMode; icon: string; label: string; detail: string }[] = [
-  { key: "breathe", icon: "🫁", label: "Breathe", detail: "Custom breathing" },
-  { key: "rhythm", icon: "🥁", label: "Rhythm", detail: "Follow a pulse" },
-  { key: "ground", icon: "👁", label: "Ground", detail: "5-4-3-2-1" },
+const RESET_MODES: { key: ResetMode; icon: IconName; label: string; detail: string }[] = [
+  { key: "breathe", icon: "module.reset", label: "Breathe", detail: "Custom breathing" },
+  { key: "rhythm", icon: "object.waves", label: "Rhythm", detail: "Follow a pulse" },
+  { key: "ground", icon: "sense.see", label: "Ground", detail: "5-4-3-2-1" },
 ];
 
 function isToday(iso: string): boolean {
@@ -172,7 +173,7 @@ export default function UrgeSurferPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <PageHeader icon="🫁" title="UrgeSurfer" subtitle="Ride the wave. Reset your attention on your own terms." />
+      <PageHeader icon="module.reset" title="UrgeSurfer" subtitle="Ride the wave. Reset your attention on your own terms." />
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <div className="flex flex-col items-center gap-5 rounded-2xl border border-border bg-surface p-6">
@@ -277,9 +278,9 @@ export default function UrgeSurferPage() {
           {resetMode === "rhythm" &&
             (rhythmResult ? (
               <div className="flex flex-col items-center gap-4 text-center">
-                <span className="text-4xl">🥁</span>
+                <Icon name="object.waves" size={44} className="text-accent-foreground" />
                 <h3 className="text-lg font-semibold text-foreground">Rhythm Complete</h3>
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid w-full max-w-xs grid-cols-3 gap-2 text-center sm:gap-4">
                   <div>
                     <div className="text-lg font-semibold text-foreground">{rhythmResult.duration}s</div>
                     <div className="text-xs text-muted">Duration</div>
@@ -315,7 +316,7 @@ export default function UrgeSurferPage() {
           {resetMode === "ground" &&
             (groundComplete ? (
               <div className="flex flex-col items-center gap-4 text-center">
-                <span className="text-4xl">🌊</span>
+                <Icon name="object.waves" size={44} className="text-accent-foreground" />
                 <h3 className="text-lg font-semibold text-foreground">Grounding Complete</h3>
                 <p className="text-sm text-muted">You noticed 5 things you could see, touch, hear, smell, and taste.</p>
                 <div className="mt-2 flex gap-2">
@@ -360,13 +361,13 @@ export default function UrgeSurferPage() {
                   onClick={() => selectMode(mode.key)}
                   aria-pressed={resetMode === mode.key}
                   className={clsx(
-                    "flex flex-col items-center gap-1 rounded-xl p-3 text-xs font-medium transition-colors",
+                    "flex flex-col items-center gap-1 rounded-xl p-2 text-center text-xs font-medium leading-tight transition-colors sm:p-3",
                     resetMode === mode.key
                       ? "bg-accent/15 text-accent-foreground ring-1 ring-accent/40"
                       : "bg-surface-2 text-foreground hover:bg-border"
                   )}
                 >
-                  <span className="text-lg">{mode.icon}</span>
+                  <Icon name={mode.icon} size={20} />
                   {mode.label}
                   <span className="text-[10px] font-normal text-muted">{mode.detail}</span>
                 </button>
@@ -434,18 +435,18 @@ export default function UrgeSurferPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-surface p-5 text-center">
+      <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border bg-surface p-4 text-center sm:gap-3 sm:p-5">
         <div>
-          <div className="text-xl font-semibold text-foreground">{urgeSurferResetsToday}</div>
-          <div className="text-xs text-muted">Resets</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{urgeSurferResetsToday}</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Resets</div>
         </div>
         <div>
-          <div className="text-xl font-semibold text-foreground">{totalMinutesToday}m</div>
-          <div className="text-xs text-muted">Total</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{totalMinutesToday}m</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Total</div>
         </div>
         <div>
-          <div className="text-xl font-semibold text-foreground">{streak}</div>
-          <div className="text-xs text-muted">Day Streak</div>
+          <div className="text-lg font-semibold text-foreground sm:text-xl">{streak}</div>
+          <div className="text-[11px] leading-tight text-muted sm:text-xs">Day Streak</div>
         </div>
       </div>
 

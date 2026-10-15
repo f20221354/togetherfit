@@ -1,6 +1,8 @@
 import { getPool } from "@/lib/db";
 import { SPORT_KEYS } from "@/lib/connect/sports";
-import { approxDistanceKm, coarsen, geohash } from "./geo";
+import { approxDistanceKm, coarsen, geohash, jitter } from "./geo";
+import { mutualMatchSql } from "@/lib/trust/matching";
+import { evaluateAfterReport } from "@/lib/safety/restrictions";
 import {
   createConnectionRequest,
   getOrCreateIdentity,
@@ -75,8 +77,9 @@ export async function createIntent(email: string, name: string, input: IntentInp
   const me = await getUserRowByEmail(email);
   if (!me) return { ok: false, error: "Account not found" };
 
-  // Never trust the client to have rounded: coarsen again before storing.
-  const { lat, lng } = coarsen(input.lat, input.lng);
+  // Never trust the client to have rounded: coarsen again, then offset randomly for this search.
+  const rounded = coarsen(input.lat, input.lng);
+  const { lat, lng } = jitter(rounded.lat, rounded.lng);
   const pool = getPool();
 
   // One live search per person keeps matching simple and prevents duplicate cards.
@@ -163,6 +166,9 @@ export interface RadarPerson {
   approxDistanceKm: number;
   connection: ConnectionState;
   connectionId: string | null;
+  /** Only when they chose to show their photo on Find a Friend, or you're already friends (Option A). */
+  photoId: string | null;
+  verified: boolean;
 }
 
 export interface RadarGroup {
@@ -237,13 +243,19 @@ export async function radar(email: string, intentId: string): Promise<RadarResul
     conn_status: string | null;
     conn_requester: string | null;
     conn_id: string | null;
+    photo_id: string | null;
+    verified: boolean;
   }>(
     `select o.user_id, u.name, o.mode, ${SLOT_START("o")} as start_time,
+            case when u.photo_on_radar or conn.status = 'accepted' then ph.id end as photo_id,
+            u.verified_at is not null as verified,
             ${HAVERSINE_KM("me", "o")} as distance_km,
             conn.status as conn_status, conn.requester_id as conn_requester, conn.id as conn_id
      from activity_intents me
      join activity_intents o on o.sport = me.sport and o.user_id <> me.user_id
      join app_users u on u.id = o.user_id
+     join app_users meu on meu.id = me.user_id
+     left join profile_photos ph on ph.user_id = u.id
      left join lateral (
        select c.id, c.status, c.requester_id from connections c
        where (c.requester_id = o.user_id and c.receiver_id = me.user_id)
@@ -253,6 +265,8 @@ export async function radar(email: string, intentId: string): Promise<RadarResul
      where me.id = $1
        and o.status = 'active' and o.hidden = false
        and (conn.status is null or conn.status <> 'blocked')
+       and not coalesce(u.restricted_until > now(), false)
+       and ${mutualMatchSql("meu", "u")}
        and ${HAVERSINE_KM("me", "o")} <= me.radius_km
        and ${SLOT_START("o")} < ${SLOT_START("me")} + interval '${SLOT_MINUTES} minutes'
        and ${SLOT_START("me")} < ${SLOT_START("o")} + interval '${SLOT_MINUTES} minutes'
@@ -272,6 +286,8 @@ export async function radar(email: string, intentId: string): Promise<RadarResul
       approxDistanceKm: approxDistanceKm(Number(row.distance_km)),
       connection,
       connectionId: row.conn_status === "accepted" ? row.conn_id : null,
+      photoId: row.photo_id,
+      verified: row.verified,
     };
     (row.mode === "now" ? base.now : base.scheduled).push(person);
   }
@@ -326,11 +342,15 @@ export async function sendRadarRequest(
   const target = await getUserRowById(toUserId);
   if (!target) return { ok: false, reason: "not_found" };
 
-  // Only people who are actually visible on your radar can be requested from here.
+  // Only people who are actually visible on your radar can be requested from here —
+  // including the mutual comfort rule, so the API can't be used to get around it.
   const visible = await getPool().query(
     `select 1 from activity_intents me
      join activity_intents o on o.sport = me.sport and o.user_id = $2
-     where me.id = $1 and o.status = 'active' and o.hidden = false`,
+     join app_users meu on meu.id = me.user_id
+     join app_users u on u.id = o.user_id
+     where me.id = $1 and o.status = 'active' and o.hidden = false
+       and ${mutualMatchSql("meu", "u")}`,
     [intentId, target.id]
   );
   if (visible.rows.length === 0) return { ok: false, reason: "not_on_radar" };
@@ -366,14 +386,6 @@ export async function joinGroup(email: string, groupId: string): Promise<{ ok: b
   if (group.rows.length === 0) return { ok: false };
   await pool.query("insert into group_members (group_id, user_id) values ($1, $2) on conflict do nothing", [groupId, me.id]);
   return { ok: true };
-}
-
-async function groupMember(email: string, groupId: string): Promise<UserRow | null> {
-  if (!isUuid(groupId)) return null;
-  const me = await getUserRowByEmail(email);
-  if (!me) return null;
-  const result = await getPool().query("select 1 from group_members where group_id = $1 and user_id = $2", [groupId, me.id]);
-  return result.rows.length > 0 ? me : null;
 }
 
 export interface GroupSummary {
@@ -417,48 +429,29 @@ export async function listMyGroups(email: string): Promise<GroupSummary[]> {
   }));
 }
 
-export interface GroupChat {
-  group: { id: string; name: string; sport: string; mode: "now" | "scheduled"; startTime: string; members: string[] };
-  messages: { id: string; senderName: string; body: string; createdAt: string; mine: boolean }[];
+export interface GroupInfo {
+  id: string;
+  name: string;
+  sport: string;
+  mode: "now" | "scheduled";
+  startTime: string;
+  members: string[];
 }
 
-export async function getGroupChat(email: string, groupId: string): Promise<GroupChat | null> {
-  const me = await groupMember(email, groupId);
-  if (!me) return null;
+/** A group's header details. Callers check membership first (chatDb does, for the chat route). */
+export async function getGroupInfo(groupId: string): Promise<GroupInfo | null> {
   const pool = getPool();
   const group = await pool.query<{ id: string; name: string; sport: string; mode: "now" | "scheduled"; start_time: string }>(
     "select id, name, sport, mode, start_time from groups where id = $1",
     [groupId]
   );
+  const g = group.rows[0];
+  if (!g) return null;
   const members = await pool.query<{ name: string }>(
     "select u.name from group_members gm join app_users u on u.id = gm.user_id where gm.group_id = $1 order by gm.joined_at",
     [groupId]
   );
-  const messages = await pool.query<{ id: string; name: string; sender_id: string; body: string; created_at: string }>(
-    `select m.id, u.name, m.sender_id, m.body, m.created_at from messages m
-     join app_users u on u.id = m.sender_id
-     where m.group_id = $1 order by m.created_at asc`,
-    [groupId]
-  );
-  const g = group.rows[0];
-  return {
-    group: { id: g.id, name: g.name, sport: g.sport, mode: g.mode, startTime: g.start_time, members: members.rows.map((m) => m.name) },
-    messages: messages.rows.map((m) => ({
-      id: m.id,
-      senderName: m.name,
-      body: m.body,
-      createdAt: m.created_at,
-      mine: m.sender_id === me.id,
-    })),
-  };
-}
-
-export async function sendGroupMessage(email: string, groupId: string, body: string): Promise<{ ok: boolean }> {
-  if (!body.trim()) return { ok: false };
-  const me = await groupMember(email, groupId);
-  if (!me) return { ok: false };
-  await getPool().query("insert into messages (group_id, sender_id, body) values ($1, $2, $3)", [groupId, me.id, body.trim().slice(0, 2000)]);
-  return { ok: true };
+  return { id: g.id, name: g.name, sport: g.sport, mode: g.mode, startTime: g.start_time, members: members.rows.map((m) => m.name) };
 }
 
 // ---------- Safety ----------
@@ -485,14 +478,20 @@ export async function blockUser(email: string, targetUserId: string): Promise<{ 
   return { ok: true };
 }
 
-export async function reportUser(email: string, targetUserId: string, reason: string): Promise<{ ok: boolean }> {
+export const REPORT_CATEGORIES = ["harassment", "photo", "gender", "safety", "spam", "other"] as const;
+export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
+
+export async function reportUser(email: string, targetUserId: string, category: ReportCategory, reason: string): Promise<{ ok: boolean }> {
   const me = await getUserRowByEmail(email);
   const target = await getUserRowById(targetUserId);
   if (!me || !target || me.id === target.id) return { ok: false };
-  await getPool().query("insert into reports (reporter_id, reported_id, reason) values ($1, $2, $3)", [
+  await getPool().query("insert into reports (reporter_id, reported_id, category, reason) values ($1, $2, $3, $4)", [
     me.id,
     target.id,
+    category,
     reason.trim().slice(0, 500) || "No reason given",
   ]);
-  return blockUser(email, targetUserId);
+  const blocked = await blockUser(email, targetUserId);
+  await evaluateAfterReport(target.id, category);
+  return blocked;
 }

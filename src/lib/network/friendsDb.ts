@@ -1,13 +1,21 @@
+import { randomInt } from "node:crypto";
 import { getPool } from "@/lib/db";
 
+/** What other people see about a user: never their email. */
 export interface NetworkUser {
-  email: string;
   name: string;
   code: string;
 }
 
+/** Shown about people you're connected with: their photo (friends can always see it) and ✓ badge. */
+export interface TrustInfo {
+  photoId: string | null;
+  verified: boolean;
+}
+
 export interface UserRow extends NetworkUser {
   id: string;
+  email: string;
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -20,7 +28,7 @@ const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars:
 
 function generateCode(): string {
   let code = "";
-  for (let i = 0; i < 6; i++) code += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+  for (let i = 0; i < 6; i++) code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
   return `SB-${code}`;
 }
 
@@ -48,7 +56,7 @@ export async function getOrCreateIdentity(email: string, name: string): Promise<
     try {
       const code = generateCode();
       const inserted = await pool.query<NetworkUser>(
-        "insert into app_users (email, name, code) values ($1, $2, $3) returning email, name, code",
+        "insert into app_users (email, name, code) values ($1, $2, $3) returning name, code",
         [email, name, code]
       );
       return inserted.rows[0];
@@ -65,10 +73,10 @@ export async function getOrCreateIdentity(email: string, name: string): Promise<
   throw new Error("Could not create a unique friend code after 5 attempts");
 }
 
-export async function lookupByCode(code: string): Promise<NetworkUser | null> {
+async function lookupByCode(code: string): Promise<UserRow | null> {
   const pool = getPool();
-  const result = await pool.query<NetworkUser>(
-    "select email, name, code from app_users where code = $1",
+  const result = await pool.query<UserRow>(
+    "select id, email, name, code from app_users where code = $1",
     [code.trim().toUpperCase()]
   );
   return result.rows[0] ?? null;
@@ -130,10 +138,8 @@ export async function sendFriendRequest(
 ): Promise<SendRequestResult> {
   await getOrCreateIdentity(fromEmail, fromName); // ensure the sender has a row too
   const requester = await getUserRowByEmail(fromEmail);
-  const receiverUser = await lookupByCode(toCode);
-  if (!requester || !receiverUser) return { ok: false, reason: "not_found" };
-  const receiver = await getUserRowByEmail(receiverUser.email);
-  if (!receiver) return { ok: false, reason: "not_found" };
+  const receiver = await lookupByCode(toCode);
+  if (!requester || !receiver) return { ok: false, reason: "not_found" };
   return createConnectionRequest(requester, receiver, options);
 }
 
@@ -173,7 +179,7 @@ export async function respondToRequest(
 
 export interface IncomingRequest {
   id: string;
-  from: NetworkUser;
+  from: NetworkUser & { verified: boolean };
   createdAt: string;
   source: ConnectionSource;
   activity: { sport: string; mode: "now" | "scheduled"; startTime: string; areaLabel: string | null } | null;
@@ -183,7 +189,7 @@ export interface IncomingRequest {
 }
 
 export interface FriendsList {
-  friends: (NetworkUser & { connectionId: string })[];
+  friends: (NetworkUser & TrustInfo & { connectionId: string })[];
   incoming: IncomingRequest[];
   outgoing: { id: string; to: NetworkUser; createdAt: string }[];
   totalUnread: number;
@@ -194,16 +200,16 @@ export async function listFriends(email: string): Promise<FriendsList> {
   const me = await getUserRowByEmail(email);
   if (!me) return { friends: [], incoming: [], outgoing: [], totalUnread: 0 };
 
-  const friends = await pool.query<NetworkUser & { connection_id: string }>(
-    `select u.email, u.name, u.code, c.id as connection_id from connections c
+  const friends = await pool.query<NetworkUser & { connection_id: string; photo_id: string | null; verified: boolean }>(
+    `select u.name, u.code, c.id as connection_id, ph.id as photo_id, u.verified_at is not null as verified from connections c
      join app_users u on u.id = (case when c.requester_id = $1 then c.receiver_id else c.requester_id end)
+     left join profile_photos ph on ph.user_id = u.id
      where c.status = 'accepted' and (c.requester_id = $1 or c.receiver_id = $1)`,
     [me.id]
   );
 
   const incoming = await pool.query<{
     id: string;
-    email: string;
     name: string;
     code: string;
     created_at: string;
@@ -214,8 +220,9 @@ export async function listFriends(email: string): Promise<FriendsList> {
     start_time: string | null;
     area_label: string | null;
     has_matching_schedule: boolean;
+    verified: boolean;
   }>(
-    `select c.id, u.email, u.name, u.code, c.created_at, c.source, c.proposed_time,
+    `select c.id, u.name, u.code, c.created_at, c.source, c.proposed_time, u.verified_at is not null as verified,
             ai.sport, ai.mode, ai.start_time, ai.area_label,
             exists (
               select 1 from activity_intents mine
@@ -231,8 +238,8 @@ export async function listFriends(email: string): Promise<FriendsList> {
     [me.id]
   );
 
-  const outgoing = await pool.query<{ id: string; email: string; name: string; code: string; created_at: string }>(
-    `select c.id, u.email, u.name, u.code, c.created_at from connections c
+  const outgoing = await pool.query<{ id: string; name: string; code: string; created_at: string }>(
+    `select c.id, u.name, u.code, c.created_at from connections c
      join app_users u on u.id = c.receiver_id
      where c.requester_id = $1 and c.status = 'pending'`,
     [me.id]
@@ -241,15 +248,22 @@ export async function listFriends(email: string): Promise<FriendsList> {
   const unread = await pool.query<{ count: string }>(
     `select count(*) from messages m
      join connections c on c.id = m.connection_id
-     where m.sender_id != $1 and m.read_at is null and (c.requester_id = $1 or c.receiver_id = $1)`,
+     where m.sender_id != $1 and m.read_at is null and (c.requester_id = $1 or c.receiver_id = $1)
+       and (m.expires_at is null or m.expires_at > now())`,
     [me.id]
   );
 
   return {
-    friends: friends.rows.map((r) => ({ email: r.email, name: r.name, code: r.code, connectionId: r.connection_id })),
+    friends: friends.rows.map((r) => ({
+      name: r.name,
+      code: r.code,
+      connectionId: r.connection_id,
+      photoId: r.photo_id,
+      verified: r.verified,
+    })),
     incoming: incoming.rows.map((r) => ({
       id: r.id,
-      from: { email: r.email, name: r.name, code: r.code },
+      from: { name: r.name, code: r.code, verified: r.verified },
       createdAt: r.created_at,
       source: r.source,
       activity:
@@ -259,75 +273,50 @@ export async function listFriends(email: string): Promise<FriendsList> {
       proposedTime: r.proposed_time,
       hasMatchingSchedule: r.has_matching_schedule,
     })),
-    outgoing: outgoing.rows.map((r) => ({ id: r.id, to: { email: r.email, name: r.name, code: r.code }, createdAt: r.created_at })),
+    outgoing: outgoing.rows.map((r) => ({ id: r.id, to: { name: r.name, code: r.code }, createdAt: r.created_at })),
     totalUnread: Number(unread.rows[0]?.count ?? 0),
   };
 }
 
 // ---------- Chat (unlocked only once a connection is accepted) ----------
 
-export interface ChatMessage {
-  id: string;
-  senderEmail: string;
-  type: "text" | "celebration";
-  body: string;
-  createdAt: string;
-  mine: boolean;
-  /** Celebration cards disappear after 24h; the receiver can react once. */
-  expiresAt?: string | null;
-  reaction?: string | null;
-}
-
 export interface ConversationSummary {
   connectionId: string;
-  with: NetworkUser;
+  with: NetworkUser & TrustInfo;
   lastMessage: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
-}
-
-async function assertParticipant(connectionId: string, email: string): Promise<UserRow | null> {
-  if (!isUuid(connectionId)) return null;
-  const pool = getPool();
-  const me = await getUserRowByEmail(email);
-  if (!me) return null;
-  const result = await pool.query(
-    "select 1 from connections where id = $1 and status = 'accepted' and (requester_id = $2 or receiver_id = $2)",
-    [connectionId, me.id]
-  );
-  return result.rows.length > 0 ? me : null;
-}
-
-/** Celebration cards are ephemeral: once expired they're deleted, not just hidden. */
-async function deleteExpiredMessages(): Promise<void> {
-  await getPool().query("delete from messages where expires_at is not null and expires_at <= now()");
 }
 
 export async function listConversations(email: string): Promise<ConversationSummary[]> {
   const pool = getPool();
   const me = await getUserRowByEmail(email);
   if (!me) return [];
-  await deleteExpiredMessages();
 
   const result = await pool.query<{
     connection_id: string;
-    email: string;
     name: string;
     code: string;
+    photo_id: string | null;
+    verified: boolean;
     last_message: string | null;
     last_message_at: string | null;
     unread_count: string;
   }>(
     `select
        c.id as connection_id,
-       u.email, u.name, u.code,
-       case when lm.type = 'celebration' then '🎉 Sent a celebration' else lm.body end as last_message,
+       u.name, u.code, ph.id as photo_id, u.verified_at is not null as verified,
+       case when lm.type = 'celebration' then 'Sent a celebration' else lm.body end as last_message,
        lm.created_at as last_message_at,
-       (select count(*) from messages um where um.connection_id = c.id and um.sender_id != $1 and um.read_at is null) as unread_count
+       (select count(*) from messages um where um.connection_id = c.id and um.sender_id != $1 and um.read_at is null
+          and (um.expires_at is null or um.expires_at > now())) as unread_count
      from connections c
      join app_users u on u.id = (case when c.requester_id = $1 then c.receiver_id else c.requester_id end)
+     left join profile_photos ph on ph.user_id = u.id
      left join lateral (
-       select type, body, created_at from messages m where m.connection_id = c.id order by m.created_at desc limit 1
+       select type, body, created_at from messages m
+       where m.connection_id = c.id and (m.expires_at is null or m.expires_at > now())
+       order by m.created_at desc, m.id desc limit 1
      ) lm on true
      where c.status = 'accepted' and (c.requester_id = $1 or c.receiver_id = $1)
      order by coalesce(lm.created_at, c.created_at) desc`,
@@ -336,85 +325,46 @@ export async function listConversations(email: string): Promise<ConversationSumm
 
   return result.rows.map((r) => ({
     connectionId: r.connection_id,
-    with: { email: r.email, name: r.name, code: r.code },
+    with: { name: r.name, code: r.code, photoId: r.photo_id, verified: r.verified },
     lastMessage: r.last_message,
     lastMessageAt: r.last_message_at,
     unreadCount: Number(r.unread_count),
   }));
 }
 
-export type MessagesResult = { ok: true; messages: ChatMessage[] } | { ok: false; reason: "not_a_participant" };
+// ---------- Managing connections (by connection id, so other users' ids never reach the browser) ----------
 
-export async function getMessages(connectionId: string, email: string): Promise<MessagesResult> {
-  const pool = getPool();
-  const me = await assertParticipant(connectionId, email);
-  if (!me) return { ok: false, reason: "not_a_participant" };
-  await deleteExpiredMessages();
-
-  // Viewing a thread marks the other person's messages as read.
-  await pool.query(
-    "update messages set read_at = now() where connection_id = $1 and sender_id != $2 and read_at is null",
-    [connectionId, me.id]
+/** The other person in a connection you're part of (any status), or null. */
+export async function otherParticipantId(connectionId: string, userId: string): Promise<string | null> {
+  if (!isUuid(connectionId)) return null;
+  const result = await getPool().query<{ other: string }>(
+    `select case when requester_id = $2 then receiver_id else requester_id end as other
+     from connections where id = $1 and (requester_id = $2 or receiver_id = $2)`,
+    [connectionId, userId]
   );
-
-  const result = await pool.query<{
-    id: string;
-    email: string;
-    type: "text" | "celebration";
-    body: string;
-    created_at: string;
-    expires_at: string | null;
-    reaction: string | null;
-  }>(
-    `select m.id, u.email, m.type, m.body, m.created_at, m.expires_at, m.reaction from messages m
-     join app_users u on u.id = m.sender_id
-     where m.connection_id = $1
-     order by m.created_at asc`,
-    [connectionId]
-  );
-
-  return {
-    ok: true,
-    messages: result.rows.map((r) => ({
-      id: r.id,
-      senderEmail: r.email,
-      type: r.type,
-      body: r.body,
-      createdAt: r.created_at,
-      mine: r.email === email,
-      expiresAt: r.expires_at,
-      reaction: r.reaction,
-    })),
-  };
+  return result.rows[0]?.other ?? null;
 }
 
-export type SendMessageResult = { ok: true; message: ChatMessage } | { ok: false; reason: "not_a_participant" | "empty" };
-
-export async function sendMessage(
-  connectionId: string,
-  email: string,
-  body: string,
-  type: "text" | "celebration" = "text"
-): Promise<SendMessageResult> {
-  if (!body.trim()) return { ok: false, reason: "empty" };
-  const pool = getPool();
-  const me = await assertParticipant(connectionId, email);
-  if (!me) return { ok: false, reason: "not_a_participant" };
-
-  const inserted = await pool.query<{ id: string; created_at: string }>(
-    "insert into messages (connection_id, sender_id, type, body) values ($1, $2, $3, $4) returning id, created_at",
-    [connectionId, me.id, type, body.trim()]
+/**
+ * Silently ends a friendship: the other person isn't notified, chat access
+ * ends for both (the conversation is deleted with the connection), and either
+ * can send a new request later.
+ */
+export async function removeFriend(connectionId: string, userId: string): Promise<boolean> {
+  if (!isUuid(connectionId)) return false;
+  const result = await getPool().query(
+    "delete from connections where id = $1 and status = 'accepted' and (requester_id = $2 or receiver_id = $2)",
+    [connectionId, userId]
   );
+  return (result.rowCount ?? 0) > 0;
+}
 
-  return {
-    ok: true,
-    message: {
-      id: inserted.rows[0].id,
-      senderEmail: email,
-      type,
-      body: body.trim(),
-      createdAt: inserted.rows[0].created_at,
-      mine: true,
-    },
-  };
+/** Withdraws a request you sent that hasn't been answered yet. */
+export async function cancelSentRequest(connectionId: string, userId: string): Promise<boolean> {
+  if (!isUuid(connectionId)) return false;
+  const result = await getPool().query(
+    "delete from connections where id = $1 and status = 'pending' and requester_id = $2",
+    [connectionId, userId]
+  );
+  return (result.rowCount ?? 0) > 0;
 }

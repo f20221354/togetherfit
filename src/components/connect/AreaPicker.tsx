@@ -148,7 +148,7 @@ export function AreaPicker({
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-xl border border-border bg-surface-2 p-3 text-xs text-muted">
-        📍 We only use your location to centre the map. It&apos;s rounded to about 500 m, and your exact position is
+        We only use your location to centre the map. It&apos;s rounded to about 500 m, and your exact position is
         never stored or shown to anyone.
         <button
           type="button"

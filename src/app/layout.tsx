@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Baloo_2, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -32,6 +32,15 @@ export const metadata: Metadata = {
     siteName: "togetherfit",
     images: [{ url: "/brand/togetherfit-logo-light.png", width: 520, height: 506, alt: "togetherfit logo" }],
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Lets the bottom tab bar and chat composer pad themselves with env(safe-area-inset-bottom).
+  viewportFit: "cover",
+  // The on-screen keyboard shrinks the layout instead of covering the chat composer.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
